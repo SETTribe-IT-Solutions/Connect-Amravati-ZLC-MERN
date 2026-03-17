@@ -23,7 +23,7 @@ public class Announcement {
 
     private String title;
     private String message;
-
+    //ganesh
     @Enumerated(EnumType.STRING)
     private Role targetRole;   // NULL = broadcast to ALL
 
