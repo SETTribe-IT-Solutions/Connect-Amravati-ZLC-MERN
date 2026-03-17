@@ -1,0 +1,36 @@
+Connect Amravati - Software Requirements Specification (SRS)
+Version - 1.1
+1. Introduction
+1.1 PurposeThis document defines the complete Software Requirements Specification (SRS) for the Online Communication and Task Allocation Portal for the Collector Office, Amravati. It describes functional and non-functional requirements in detail.
+1.2 ScopeThe system will enable senior officials to allocate tasks, track progress, send official communications, announcements, appreciations, and automated alerts including push notifications.
+1.3 Intended AudienceDistrict Administration, Project Approving Authorities, Development Team, Testing Team, and System Administrators.
+2. Overall Description
+2.1 Product PerspectiveA centralized, role-based web system with notification engine and audit trail.
+2.2 User Classes (only blue coloured user can allocate the task).- Collector [this can assign task]- Additional / Deputy Collector   [this can assign task]- SDO   [this can assign task]- Tehsildar   [this can assign task]- BDO- Talathi- Gramsevak- System Administrator
+2.3 Operating Environment- Web Browser (Chrome, Edge, Firefox)- Android/iOS (for push notifications)- Secure Government Hosting
+2.4 Constraints- Government data security compliance- Role-based access
+3. Functional Requirements
+3.1 User Authentication & Authorization- Secure login with username/password- Role-based access control- Password reset & session timeout
+3.2 User Management- Add/Edit/Deactivate users- Assign roles and jurisdiction (district/taluka/village)
+3.4 Task Allocation Module
+- Create tasks with title, description, priority, due date- Assign to individual or role- Attach documents- Task status: Pending/In Progress/Completed/Overdue- Task reassignment & remarks
+3.5 Task Tracking & Monitoring
+- Dashboard for seniors showing task status- Auto escalation on delay- Audit trail of actions
+3.6 Notification & Push Alerts
+- System-generated notifications for:  - New task assignment  - Due date reminder  - Overdue task  - Task completion- Push notifications on mobile/email/SMS (optional)- Alerts to assigner if task not completed on time
+3.7 Communication & Announcement Module
+- Send circulars and messages- Target users by role/area- Message acknowledgment (optional)
+3.8 Appreciation Module
+- Send appreciation messages- Visible on dashboard- Permanent record for employee motivation
+3.9 Reports & Analytics
+- Task completion reports- Overdue task reports- User performance reports
+4. Non-Functional Requirements
+4.1 Performance- System should support concurrent users- Notifications delivered in near real-time
+4.2 Security- Encrypted data- Role-based access- Audit logs
+4.3 Usability- Simple UI- Multi-language support (Marathi/English)
+4.4 Reliability- 99% uptime- Backup & recovery
+4.5 Scalability- Support future integration (WhatsApp, SMS, mobile app)
+5. System Interfaces
+- Web Interface- Notification Gateway- Email/SMS APIs
+6. Future Enhancements
+- Mobile App- WhatsApp chatbot integration- AI-based performance analytics

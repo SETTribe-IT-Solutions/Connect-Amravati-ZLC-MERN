@@ -1,0 +1,57 @@
+{
+  "app": {
+    "title": "DISTRICT CONNECT",
+    "subtitle": "Collector Office, Amravati",
+    "welcome": "Welcome",
+    "welcome_subtitle": "to Connect Amravati Portal"
+  },
+  "login": {
+    "title": "Login",
+    "subtitle": "Access your dashboard securely",
+    "role": "Select Role",
+    "username": "Username",
+    "password": "Password",
+    "forgot_password": "Forgot Password?",
+    "login_button": "Login",
+    "logging_in": "Logging in...",
+    "success": "Login Successful! Redirecting...",
+    "error_required": "Please fill in all fields",
+    "error_invalid": "Invalid username or password"
+  },
+  "roles": {
+    "collector": "Collector",
+    "deputy_collector": "Additional / Deputy Collector",
+    "sdo": "SDO",
+    "tehsildar": "Tehsildar",
+    "bdo": "BDO",
+    "talathi": "Talathi",
+    "gramsevak": "Gramsevak",
+    "sysadmin": "System Administrator"
+  },
+  "demo": {
+    "title": "Demo Credentials",
+    "admin": "Collector",
+    "employee": "SDO",
+    "admin_cred": "dist_admin / password123",
+    "employee_cred": "sdo_user / password123"
+  },
+  "security": {
+    "notice": "This is a secure government portal. Unauthorized access is prohibited."
+  },
+  "footer": {
+    "copyright": "© Copyright 2026 Collector Office, Amravati",
+    "rights": "All Rights Reserved"
+  },
+  "language": {
+    "select": "Language",
+    "en": "English",
+    "mr": "मराठी",
+    "hi": "हिन्दी"
+  },
+  "cultural": {
+    "admin_title": "District Administration Communication Portal",
+    "a": "A",
+    "ma": "M",
+    "ra": "R"
+  }
+}
