@@ -1,122 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  html {
+    @apply scroll-smooth;
   }
-
+  
   body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
+    @apply antialiased bg-gray-50 text-gray-900 m-0 p-0 min-h-screen;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  h1 {
+    @apply text-4xl font-bold;
+  }
+  
+  button {
+    @apply cursor-pointer transition-colors;
   }
 }
 
 @layer components {
-  .gradient-border {
-    @apply h-1 w-full absolute top-0 left-0 z-50;
-    background: linear-gradient(90deg, #ff9933 0%, #ffffff 25%, #1e40af 50%, #ffffff 75%, #138808 100%);
-    background-size: 200% 200%;
-    animation: gradient 3s ease infinite;
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300;
   }
-
-  .floating-label {
-    @apply absolute left-12 transition-all duration-300 pointer-events-none text-gray-500 bg-transparent px-1;
-    top: 50%;
-    transform: translateY(-50%);
+  
+  .stat-card {
+    @apply p-6 rounded-xl bg-gradient-to-br from-white to-gray-50 border border-gray-100;
   }
-
-  .floating-label.active {
-    @apply top-0 text-xs text-blue-700 font-medium bg-white;
+  
+  .btn-primary {
+    @apply px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium;
   }
-
-  .input-field {
-    @apply w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-2xl outline-none transition-all bg-gray-50/50 backdrop-blur-sm;
-  }
-
-  .input-field:focus {
-    @apply border-blue-700 ring-4 ring-blue-100;
-  }
-
-  .gradient-button {
-    @apply relative overflow-hidden bg-gradient-to-r from-orange-500 via-blue-500 to-green-500 bg-[length:200%_200%] text-white font-semibold py-4 px-8 rounded-2xl cursor-pointer w-full text-lg flex items-center justify-center gap-3 transition-all disabled:opacity-80 disabled:cursor-not-allowed;
-    animation: gradient 3s ease infinite;
-  }
-
-  .gradient-button:hover:not(:disabled) {
-    @apply scale-105 shadow-xl;
-  }
-
-  .gradient-button:active:not(:disabled) {
-    @apply scale-95;
-  }
-
-  .spinner {
-    @apply w-6 h-6 border-4 border-white border-t-transparent rounded-full;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  .toast {
-    @apply fixed top-5 right-5 p-4 rounded-xl bg-white shadow-xl z-50 max-w-sm transform translate-x-full transition-transform duration-300;
-  }
-
-  .toast.show {
-    @apply translate-x-0;
-  }
-
-  .toast.success {
-    @apply border-l-4 border-green-500;
-  }
-
-  .toast.error {
-    @apply border-l-4 border-red-500;
-  }
-
-  .toast.info {
-    @apply border-l-4 border-blue-500;
-  }
-
-  .language-dropdown {
-    @apply absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl overflow-hidden z-50 opacity-0 invisible transform -translate-y-2 transition-all;
-  }
-
-  .language-dropdown.open {
-    @apply opacity-100 visible translate-y-0;
-  }
-
-  .language-option {
-    @apply w-full px-4 py-3 text-left flex items-center gap-3 transition-colors hover:bg-gray-100;
-  }
-
-  .language-option.active {
-    @apply bg-blue-50 text-blue-700;
-  }
-
-  .welcome-overlay {
-    @apply fixed inset-0 bg-gradient-to-r from-blue-900 to-blue-800 flex items-center justify-center z-[1000];
-    animation: fadeOut 0.5s ease forwards 2.5s;
-  }
-
-  @keyframes fadeOut {
-    to {
-      opacity: 0;
-      visibility: hidden;
-    }
-  }
-
-  .animation-delay-2000 {
-    animation-delay: 2s;
-  }
-
-  .animation-delay-4000 {
-    animation-delay: 4s;
+  
+  .btn-secondary {
+    @apply px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-medium;
   }
 }
+
+/* Remove or comment out the conflicting default Vite styles below */
+
+/* :root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+} */
