@@ -1,0 +1,236 @@
+{
+  "app": {
+    "name": "Amravati Connect",
+    "subtitle": "Collector Office Portal",
+    "tagline": "Digital Governance for Amravati District"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "tasks": "Tasks",
+    "communications": "Communications",
+    "reports": "Reports",
+    "users": "Users",
+    "appreciation": "Appreciation",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back,",
+    "collectorOffice": "Collector Office - Amravati",
+    "stats": {
+      "totalTasks": "Total Tasks",
+      "completed": "Completed",
+      "inProgress": "In Progress",
+      "overdue": "Overdue",
+      "pending": "Pending"
+    },
+    "recentActivities": "Recent Activities",
+    "viewAll": "View All",
+    "taskOverview": "Task Overview",
+    "weeklyReport": "Weekly Report"
+  },
+  "tasks": {
+    "title": "Task Management",
+    "subtitle": "Monitor and manage all departmental tasks",
+    "createNew": "Create New Task",
+    "editTask": "Edit Task",
+    "deleteTask": "Delete Task",
+    "searchPlaceholder": "Search tasks by title, description, or assignee...",
+    "filters": {
+      "all": "All Tasks",
+      "pending": "Pending",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "overdue": "Overdue"
+    },
+    "fields": {
+      "title": "Task Title",
+      "description": "Description",
+      "priority": "Priority",
+      "dueDate": "Due Date",
+      "assignedTo": "Assigned To",
+      "status": "Status",
+      "attachments": "Attachments"
+    },
+    "priority": {
+      "high": "High Priority",
+      "medium": "Medium Priority",
+      "low": "Low Priority"
+    },
+    "status": {
+      "pending": "Pending",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "overdue": "Overdue"
+    },
+    "actions": {
+      "save": "Save Task",
+      "update": "Update Task",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "viewDetails": "View Details"
+    }
+  },
+  "users": {
+    "title": "User Management",
+    "subtitle": "Manage users, roles, and permissions across all departments",
+    "addUser": "Add User",
+    "editUser": "Edit User",
+    "deleteUser": "Delete User",
+    "searchPlaceholder": "Search users by name, email, or role...",
+    "filters": {
+      "all": "All Roles",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "fields": {
+      "name": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "role": "Role",
+      "jurisdiction": "Jurisdiction",
+      "status": "Status",
+      "password": "Password"
+    },
+    "roles": {
+      "collector": "Collector",
+      "additionalCollector": "Additional Collector",
+      "sdo": "SDO",
+      "tehsildar": "Tehsildar",
+      "bdo": "BDO",
+      "talathi": "Talathi",
+      "gramSevak": "Gram Sevak",
+      "admin": "System Administrator"
+    },
+    "stats": {
+      "total": "Total Users",
+      "active": "Active Users",
+      "new": "New This Month",
+      "avgRating": "Avg. Rating"
+    }
+  },
+  "reports": {
+    "title": "Reports & Analytics",
+    "subtitle": "Comprehensive insights and performance metrics",
+    "export": "Export",
+    "filters": {
+      "week": "This Week",
+      "month": "This Month",
+      "quarter": "This Quarter",
+      "year": "This Year"
+    },
+    "charts": {
+      "taskTrends": "Task Trends",
+      "taskDistribution": "Task Distribution",
+      "departmentPerformance": "Department Performance",
+      "weeklyActivity": "Weekly Activity",
+      "summary": "Summary"
+    },
+    "table": {
+      "department": "Department",
+      "total": "Total",
+      "completed": "Completed",
+      "pending": "Pending",
+      "overdue": "Overdue",
+      "rate": "Rate"
+    }
+  },
+  "communications": {
+    "title": "Communications",
+    "subtitle": "Send messages, announcements, and manage communications",
+    "newMessage": "New Message",
+    "newAnnouncement": "New Announcement",
+    "tabs": {
+      "inbox": "Inbox",
+      "sent": "Sent",
+      "drafts": "Drafts"
+    },
+    "stats": {
+      "unread": "Unread Messages",
+      "announcements": "Announcements",
+      "drafts": "Drafts",
+      "sent": "Sent Today"
+    },
+    "priority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    }
+  },
+  "appreciation": {
+    "title": "Appreciation Wall",
+    "subtitle": "Celebrate and recognize outstanding contributions",
+    "send": "Send Appreciation",
+    "searchPlaceholder": "Search appreciations by message or recipient...",
+    "filters": {
+      "all": "All Appreciations",
+      "liked": "Most Liked",
+      "mine": "From Me"
+    },
+    "stats": {
+      "total": "Total Appreciations",
+      "thisMonth": "This Month",
+      "departments": "Departments",
+      "topPerformer": "Top Performer"
+    },
+    "badges": {
+      "excellence": "Excellence Award",
+      "community": "Community Service",
+      "quick": "Quick Resolution",
+      "innovation": "Innovation Award",
+      "team": "Team Excellence"
+    },
+    "from": "From",
+    "to": "To",
+    "message": "Message",
+    "viewDetails": "View Details"
+  },
+  "common": {
+    "search": "Search",
+    "filter": "Filter",
+    "apply": "Apply",
+    "reset": "Reset",
+    "loading": "Loading...",
+    "noData": "No data found",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "download": "Download",
+    "upload": "Upload",
+    "attachments": "Attachments",
+    "comments": "Comments",
+    "likes": "Likes",
+    "share": "Share"
+  },
+  "auth": {
+    "login": "Sign In",
+    "logout": "Sign Out",
+    "username": "Username",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember Me",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign Up"
+  },
+  "footer": {
+    "copyright": "© 2024 Amravati Collector Office. All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "contact": "Contact Us"
+  },
+  "language": {
+    "select": "Select Language",
+    "english": "English",
+    "hindi": "हिन्दी",
+    "marathi": "मराठी"
+  }
+}
