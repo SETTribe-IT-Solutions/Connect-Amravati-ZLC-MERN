@@ -17,11 +17,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, user, onLogout }) => {
 
   const navigation = [
     { name: t('navigation.dashboard') || 'Dashboard', href: '/dashboard', icon: HomeIcon, color: 'from-blue-500 to-blue-600' },
-    { name: t('navigation.tasks') || 'Tasks', href: '/tasks', icon: ClipboardDocumentListIcon, color: 'from-green-500 to-green-600' },
-    { name: t('navigation.communications') || 'Communications', href: '/communications', icon: ChatBubbleLeftRightIcon, color: 'from-yellow-500 to-yellow-600' },
-    { name: t('navigation.reports') || 'Reports', href: '/reports', icon: ChartBarIcon, color: 'from-purple-500 to-purple-600' },
-    { name: t('navigation.users') || 'Users', href: '/users', icon: UserGroupIcon, color: 'from-pink-500 to-pink-600' },
-    { name: t('navigation.appreciation') || 'Appreciation', href: '/appreciation', icon: HeartIcon, color: 'from-red-500 to-red-600' },
+    { name: t('navigation.tasks') || 'Tasks', href: '/tasks', icon: ClipboardDocumentListIcon, color: 'from-blue-500 to-blue-600' },
+    { name: t('navigation.communications') || 'Communications', href: '/communications', icon: ChatBubbleLeftRightIcon, color: 'from-blue-500 to-blue-600' },
+    { name: t('navigation.reports') || 'Reports', href: '/reports', icon: ChartBarIcon, color: 'from-blue-500 to-blue-600' },
+    { name: t('navigation.users') || 'Users', href: '/users', icon: UserGroupIcon, color: 'from-blue-500 to-blue-600' },
+    { name: t('navigation.appreciation') || 'Appreciation', href: '/appreciation', icon: HeartIcon, color: 'from-blue-500 to-blue-600' },
   ];
 
   return (
