@@ -1,10 +1,10 @@
 import React from 'react';
-import { useLanguage } from '../../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 import { GiPeaceDove } from 'react-icons/gi';
 import { motion } from 'framer-motion';
 
 const Footer = () => {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
 
   return (
     <motion.footer
@@ -17,10 +17,10 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-600 text-sm flex items-center">
             <GiPeaceDove className="mr-2 text-blue-600" />
-            {t('footer.copyright')}
+            {t('footer.copyright') || '© 2024 Amravati Connect'}
           </p>
           <p className="text-gray-500 text-xs">
-            {t('footer.rights')}
+            {t('All Rights Reserved')|| 'All Rights Reserved'}
           </p>
         </div>
       </div>

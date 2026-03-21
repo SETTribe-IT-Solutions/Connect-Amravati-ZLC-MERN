@@ -1,0 +1,236 @@
+{
+  "app": {
+    "name": "अमरावती कनेक्ट",
+    "subtitle": "कलेक्टर कार्यालय पोर्टल",
+    "tagline": "अमरावती जिल्ह्यासाठी डिजिटल गव्हर्नन्स"
+  },
+  "navigation": {
+    "dashboard": "डॅशबोर्ड",
+    "tasks": "कार्ये",
+    "communications": "संप्रेषण",
+    "reports": "अहवाल",
+    "users": "वापरकर्ते",
+    "appreciation": "प्रशंसा",
+    "settings": "सेटिंग्ज",
+    "logout": "लॉग आउट"
+  },
+  "dashboard": {
+    "title": "डॅशबोर्ड",
+    "welcome": "पुन्हा स्वागत आहे,",
+    "collectorOffice": "कलेक्टर कार्यालय - अमरावती",
+    "stats": {
+      "totalTasks": "एकूण कार्ये",
+      "completed": "पूर्ण",
+      "inProgress": "प्रगतीपथावर",
+      "overdue": "विलंबित",
+      "pending": "प्रलंबित"
+    },
+    "recentActivities": "अलीकडील क्रियाकलाप",
+    "viewAll": "सर्व पहा",
+    "taskOverview": "कार्य विहंगावलोकन",
+    "weeklyReport": "साप्ताहिक अहवाल"
+  },
+  "tasks": {
+    "title": "कार्य व्यवस्थापन",
+    "subtitle": "सर्व विभागीय कार्यांचे निरीक्षण आणि व्यवस्थापन करा",
+    "createNew": "नवीन कार्य तयार करा",
+    "editTask": "कार्य संपादित करा",
+    "deleteTask": "कार्य हटवा",
+    "searchPlaceholder": "शीर्षक, वर्णन किंवा नियुक्त व्यक्तीद्वारे कार्ये शोधा...",
+    "filters": {
+      "all": "सर्व कार्ये",
+      "pending": "प्रलंबित",
+      "inProgress": "प्रगतीपथावर",
+      "completed": "पूर्ण",
+      "overdue": "विलंबित"
+    },
+    "fields": {
+      "title": "कार्य शीर्षक",
+      "description": "वर्णन",
+      "priority": "प्राथमिकता",
+      "dueDate": "अंतिम तारीख",
+      "assignedTo": "नियुक्त व्यक्ती",
+      "status": "स्थिती",
+      "attachments": "संलग्नक"
+    },
+    "priority": {
+      "high": "उच्च प्राथमिकता",
+      "medium": "मध्यम प्राथमिकता",
+      "low": "कमी प्राथमिकता"
+    },
+    "status": {
+      "pending": "प्रलंबित",
+      "inProgress": "प्रगतीपथावर",
+      "completed": "पूर्ण",
+      "overdue": "विलंबित"
+    },
+    "actions": {
+      "save": "कार्य जतन करा",
+      "update": "कार्य अद्यतनित करा",
+      "cancel": "रद्द करा",
+      "delete": "हटवा",
+      "viewDetails": "तपशील पहा"
+    }
+  },
+  "users": {
+    "title": "वापरकर्ता व्यवस्थापन",
+    "subtitle": "सर्व विभागांमध्ये वापरकर्ते, भूमिका आणि परवानग्या व्यवस्थापित करा",
+    "addUser": "वापरकर्ता जोडा",
+    "editUser": "वापरकर्ता संपादित करा",
+    "deleteUser": "वापरकर्ता हटवा",
+    "searchPlaceholder": "नाव, ईमेल किंवा भूमिकेद्वारे वापरकर्ते शोधा...",
+    "filters": {
+      "all": "सर्व भूमिका",
+      "active": "सक्रिय",
+      "inactive": "निष्क्रिय"
+    },
+    "fields": {
+      "name": "पूर्ण नाव",
+      "email": "ईमेल",
+      "phone": "फोन",
+      "role": "भूमिका",
+      "jurisdiction": "अधिकार क्षेत्र",
+      "status": "स्थिती",
+      "password": "पासवर्ड"
+    },
+    "roles": {
+      "collector": "कलेक्टर",
+      "additionalCollector": "अतिरिक्त कलेक्टर",
+      "sdo": "एसडीओ",
+      "tehsildar": "तहसीलदार",
+      "bdo": "बीडीओ",
+      "talathi": "तलाठी",
+      "gramSevak": "ग्रामसेवक",
+      "admin": "सिस्टम प्रशासक"
+    },
+    "stats": {
+      "total": "एकूण वापरकर्ते",
+      "active": "सक्रिय वापरकर्ते",
+      "new": "या महिन्यात नवीन",
+      "avgRating": "सरासरी रेटिंग"
+    }
+  },
+  "reports": {
+    "title": "अहवाल आणि विश्लेषण",
+    "subtitle": "व्यापक अंतर्दृष्टी आणि कार्यप्रदर्शन मेट्रिक्स",
+    "export": "निर्यात",
+    "filters": {
+      "week": "या आठवड्यात",
+      "month": "या महिन्यात",
+      "quarter": "या तिमाहीत",
+      "year": "या वर्षी"
+    },
+    "charts": {
+      "taskTrends": "कार्य ट्रेंड",
+      "taskDistribution": "कार्य वितरण",
+      "departmentPerformance": "विभागीय कार्यप्रदर्शन",
+      "weeklyActivity": "साप्ताहिक क्रियाकलाप",
+      "summary": "सारांश"
+    },
+    "table": {
+      "department": "विभाग",
+      "total": "एकूण",
+      "completed": "पूर्ण",
+      "pending": "प्रलंबित",
+      "overdue": "विलंबित",
+      "rate": "दर"
+    }
+  },
+  "communications": {
+    "title": "संप्रेषण",
+    "subtitle": "संदेश, घोषणा पाठवा आणि संप्रेषण व्यवस्थापित करा",
+    "newMessage": "नवीन संदेश",
+    "newAnnouncement": "नवीन घोषणा",
+    "tabs": {
+      "inbox": "इनबॉक्स",
+      "sent": "पाठवलेले",
+      "drafts": "मसुदे"
+    },
+    "stats": {
+      "unread": "न वाचलेले संदेश",
+      "announcements": "घोषणा",
+      "drafts": "मसुदे",
+      "sent": "आज पाठवलेले"
+    },
+    "priority": {
+      "high": "उच्च",
+      "medium": "मध्यम",
+      "low": "कमी"
+    }
+  },
+  "appreciation": {
+    "title": "प्रशंसा भिंत",
+    "subtitle": "उत्कृष्ट योगदान साजरे करा आणि ओळखा",
+    "send": "प्रशंसा पाठवा",
+    "searchPlaceholder": "संदेश किंवा प्राप्तकर्त्याद्वारे प्रशंसा शोधा...",
+    "filters": {
+      "all": "सर्व प्रशंसा",
+      "liked": "सर्वाधिक आवडलेले",
+      "mine": "माझ्याकडून"
+    },
+    "stats": {
+      "total": "एकूण प्रशंसा",
+      "thisMonth": "या महिन्यात",
+      "departments": "विभाग",
+      "topPerformer": "टॉप परफॉर्मर"
+    },
+    "badges": {
+      "excellence": "उत्कृष्टता पुरस्कार",
+      "community": "सामुदायिक सेवा",
+      "quick": "त्वरित निराकरण",
+      "innovation": "नवकल्पना पुरस्कार",
+      "team": "संघ उत्कृष्टता"
+    },
+    "from": "कडून",
+    "to": "ला",
+    "message": "संदेश",
+    "viewDetails": "तपशील पहा"
+  },
+  "common": {
+    "search": "शोधा",
+    "filter": "फिल्टर",
+    "apply": "लागू करा",
+    "reset": "रीसेट",
+    "loading": "लोड होत आहे...",
+    "noData": "डेटा आढळला नाही",
+    "confirm": "पुष्टी करा",
+    "yes": "होय",
+    "no": "नाही",
+    "save": "जतन करा",
+    "cancel": "रद्द करा",
+    "edit": "संपादित करा",
+    "delete": "हटवा",
+    "close": "बंद करा",
+    "back": "मागे",
+    "next": "पुढे",
+    "previous": "मागील",
+    "download": "डाउनलोड",
+    "upload": "अपलोड",
+    "attachments": "संलग्नक",
+    "comments": "टिप्पण्या",
+    "likes": "आवडी",
+    "share": "शेअर करा"
+  },
+  "auth": {
+    "login": "साइन इन",
+    "logout": "साइन आउट",
+    "username": "वापरकर्तानाव",
+    "password": "पासवर्ड",
+    "forgotPassword": "पासवर्ड विसरलात?",
+    "rememberMe": "मला लक्षात ठेवा",
+    "noAccount": "खाते नाही?",
+    "signUp": "साइन अप"
+  },
+  "footer": {
+    "copyright": "© 2024 अमरावती कलेक्टर कार्यालय. सर्व हक्क राखीव.",
+    "privacy": "गोपनीयता धोरण",
+    "terms": "वापरण्याच्या अटी",
+    "contact": "संपर्क करा"
+  },
+  "language": {
+    "select": "भाषा निवडा",
+    "english": "English",
+    "hindi": "हिन्दी",
+    "marathi": "मराठी"
+  }
+}

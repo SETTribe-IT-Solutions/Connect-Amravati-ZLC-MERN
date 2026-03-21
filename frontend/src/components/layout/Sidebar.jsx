@@ -8,19 +8,20 @@ import {
   ChartBarIcon,
   UserGroupIcon,
   HeartIcon,
-  KeyIcon
+  KeyIcon,
+  ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline';
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
+const Sidebar = ({ sidebarOpen, setSidebarOpen, user, onLogout }) => {
   const { t } = useTranslation();
 
   const navigation = [
-    { name: t('navigation.dashboard'), href: '/dashboard', icon: HomeIcon, color: 'from-blue-500 to-blue-600' },
-    { name: t('navigation.tasks'), href: '/tasks', icon: ClipboardDocumentListIcon, color: 'from-green-500 to-green-600' },
-    { name: t('navigation.communications'), href: '/communications', icon: ChatBubbleLeftRightIcon, color: 'from-yellow-500 to-yellow-600' },
-    { name: t('navigation.reports'), href: '/reports', icon: ChartBarIcon, color: 'from-purple-500 to-purple-600' },
-    { name: t('navigation.users'), href: '/users', icon: UserGroupIcon, color: 'from-pink-500 to-pink-600' },
-    { name: t('navigation.appreciation'), href: '/appreciation', icon: HeartIcon, color: 'from-red-500 to-red-600' },
+    { name: t('navigation.dashboard') || 'Dashboard', href: '/dashboard', icon: HomeIcon, color: 'from-blue-500 to-blue-600' },
+    { name: t('navigation.tasks') || 'Tasks', href: '/tasks', icon: ClipboardDocumentListIcon, color: 'from-green-500 to-green-600' },
+    { name: t('navigation.communications') || 'Communications', href: '/communications', icon: ChatBubbleLeftRightIcon, color: 'from-yellow-500 to-yellow-600' },
+    { name: t('navigation.reports') || 'Reports', href: '/reports', icon: ChartBarIcon, color: 'from-purple-500 to-purple-600' },
+    { name: t('navigation.users') || 'Users', href: '/users', icon: UserGroupIcon, color: 'from-pink-500 to-pink-600' },
+    { name: t('navigation.appreciation') || 'Appreciation', href: '/appreciation', icon: HeartIcon, color: 'from-red-500 to-red-600' },
   ];
 
   return (
@@ -41,7 +42,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-center border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600">
-          <h1 className="text-xl font-bold text-white">{t('app.name')}</h1>
+          <h1 className="text-xl font-bold text-white">{t('app.name') || 'Amravati Connect'}</h1>
         </div>
 
         {/* Navigation */}
@@ -71,7 +72,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
               </li>
             ))}
 
-            {/* Divider line before Change Password */}
+            {/* Divider line */}
             <li className="border-t border-gray-200 my-4"></li>
 
             {/* Change Password Option */}
@@ -91,6 +92,20 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <span>Change Password</span>
               </NavLink>
             </li>
+
+            {/* Logout Button */}
+            <li>
+              <button
+                onClick={() => {
+                  setSidebarOpen(false);
+                  if (onLogout) onLogout();
+                }}
+                className="w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group text-red-600 hover:bg-red-50"
+              >
+                <ArrowRightOnRectangleIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
+                <span>Logout</span>
+              </button>
+            </li>
           </ul>
         </nav>
 
@@ -99,12 +114,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white font-semibold shadow-md">
-                CO
+                {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'CO'}
               </div>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-700">{t('dashboard.collectorOffice')}</p>
-              <p className="text-xs text-gray-500">Amravati</p>
+              <p className="text-sm font-medium text-gray-700">{user?.name || t('dashboard.collectorOffice') || 'Collector Office'}</p>
+              <p className="text-xs text-gray-500">{user?.department || 'Amravati'}</p>
             </div>
           </div>
         </div>
@@ -112,5 +127,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     </>
   );
 };
+
 
 export default Sidebar;
