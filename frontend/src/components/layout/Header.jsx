@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 
-const Header = ({ setSidebarOpen }) => {
+const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed }) => {
   const { t } = useTranslation();
 
   return (
@@ -14,20 +14,28 @@ const Header = ({ setSidebarOpen }) => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 100 }}
-      className="bg-white/90 backdrop-blur-md shadow-lg sticky top-0 z-40"
+      className="bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 sticky top-0 z-50 w-full"
     >
-      <div className="container mx-auto px-4 py-3">
+      <div className="px-4 py-3 lg:px-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            {setSidebarOpen && (
-              <button
-                type="button"
-                className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Bars3Icon className="h-6 w-6" />
-              </button>
-            )}
+            {/* Hamburger for Mobile */}
+            <button
+              type="button"
+              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Bars3Icon className="h-6 w-6" />
+            </button>
+
+            {/* Hamburger for Desktop */}
+            <button
+              type="button"
+              className="hidden lg:flex p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+            >
+              <Bars3Icon className="h-6 w-6" />
+            </button>
             <motion.div
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.5 }}
