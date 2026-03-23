@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  KeyIcon, 
-  LockClosedIcon, 
+import {
+  KeyIcon,
+  LockClosedIcon,
   CheckCircleIcon,
   XMarkIcon,
   EyeIcon,
@@ -27,13 +27,13 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
     securityQuestion: 'What is your favorite color?',
     securityAnswer: ''
   });
-  
+
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
     confirm: false
   });
-  
+
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -185,9 +185,8 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                     scale: step >= i ? 1 : 0.8,
                     backgroundColor: step >= i ? '#2563eb' : '#e5e7eb'
                   }}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold shadow-lg ${
-                    step >= i ? 'bg-blue-600' : 'bg-gray-200'
-                  }`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold shadow-lg ${step >= i ? 'bg-blue-600' : 'bg-gray-200'
+                    }`}
                 >
                   {step > i ? (
                     <CheckCircleIcon className="h-6 w-6" />
@@ -200,9 +199,8 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                 </span>
               </div>
               {i < 3 && (
-                <div className={`flex-1 h-1 mx-2 rounded ${
-                  step > i ? 'bg-blue-600' : 'bg-gray-200'
-                }`} />
+                <div className={`flex-1 h-1 mx-2 rounded ${step > i ? 'bg-blue-600' : 'bg-gray-200'
+                  }`} />
               )}
             </React.Fragment>
           ))}
@@ -244,15 +242,14 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                       <input
                         type={showPasswords.current ? 'text' : 'password'}
                         value={formData.currentPassword}
-                        onChange={(e) => setFormData({...formData, currentPassword: e.target.value})}
-                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 transition-all ${
-                          errors.currentPassword ? 'border-red-500' : 'border-gray-200'
-                        }`}
+                        onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 transition-all ${errors.currentPassword ? 'border-red-500' : 'border-gray-200'
+                          }`}
                         placeholder="Enter current password"
                       />
                       <button
                         type="button"
-                        onClick={() => setShowPasswords({...showPasswords, current: !showPasswords.current})}
+                        onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
                         {showPasswords.current ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
@@ -270,7 +267,7 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                     </label>
                     <select
                       value={formData.securityQuestion}
-                      onChange={(e) => setFormData({...formData, securityQuestion: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, securityQuestion: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                     >
                       <option>What is your favorite color?</option>
@@ -288,10 +285,9 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                     <input
                       type="text"
                       value={formData.securityAnswer}
-                      onChange={(e) => setFormData({...formData, securityAnswer: e.target.value})}
-                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
-                        errors.securityAnswer ? 'border-red-500' : 'border-gray-200'
-                      }`}
+                      onChange={(e) => setFormData({ ...formData, securityAnswer: e.target.value })}
+                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.securityAnswer ? 'border-red-500' : 'border-gray-200'
+                        }`}
                       placeholder="Enter your answer"
                     />
                     {errors.securityAnswer && (
@@ -312,11 +308,10 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                       <button
                         onClick={handleSendOTP}
                         disabled={isLoading || otpSent}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                          otpSent
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${otpSent
                             ? 'bg-green-100 text-green-700'
                             : 'bg-blue-600 text-white hover:bg-blue-700'
-                        }`}
+                          }`}
                       >
                         {isLoading ? (
                           <ArrowPathIcon className="h-4 w-4 animate-spin" />
@@ -394,17 +389,16 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                         type={showPasswords.new ? 'text' : 'password'}
                         value={formData.newPassword}
                         onChange={(e) => {
-                          setFormData({...formData, newPassword: e.target.value});
+                          setFormData({ ...formData, newPassword: e.target.value });
                           checkPasswordStrength(e.target.value);
                         }}
-                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
-                          errors.newPassword ? 'border-red-500' : 'border-gray-200'
-                        }`}
+                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.newPassword ? 'border-red-500' : 'border-gray-200'
+                          }`}
                         placeholder="Enter new password"
                       />
                       <button
                         type="button"
-                        onClick={() => setShowPasswords({...showPasswords, new: !showPasswords.new})}
+                        onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
                         {showPasswords.new ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
@@ -442,15 +436,14 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                       <input
                         type={showPasswords.confirm ? 'text' : 'password'}
                         value={formData.confirmPassword}
-                        onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
-                          errors.confirmPassword ? 'border-red-500' : 'border-gray-200'
-                        }`}
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.confirmPassword ? 'border-red-500' : 'border-gray-200'
+                          }`}
                         placeholder="Confirm new password"
                       />
                       <button
                         type="button"
-                        onClick={() => setShowPasswords({...showPasswords, confirm: !showPasswords.confirm})}
+                        onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
                         {showPasswords.confirm ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
@@ -474,9 +467,8 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                         { text: 'No common patterns', met: !/(password|123|qwerty)/i.test(formData.newPassword) }
                       ].map((req, idx) => (
                         <div key={idx} className="flex items-center text-xs">
-                          <span className={`w-4 h-4 rounded-full flex items-center justify-center mr-2 ${
-                            req.met ? 'bg-green-500' : 'bg-gray-300'
-                          }`}>
+                          <span className={`w-4 h-4 rounded-full flex items-center justify-center mr-2 ${req.met ? 'bg-green-500' : 'bg-gray-300'
+                            }`}>
                             {req.met && <CheckCircleIcon className="h-3 w-3 text-white" />}
                           </span>
                           <span className={req.met ? 'text-gray-700' : 'text-gray-400'}>{req.text}</span>
