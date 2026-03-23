@@ -8,16 +8,16 @@
   html {
     @apply scroll-smooth;
   }
-  
+
   body {
     @apply antialiased bg-gray-50 text-gray-900 m-0 p-0 min-h-screen;
     font-family: 'Inter', system-ui, sans-serif;
   }
-  
+
   h1 {
     @apply text-4xl font-bold;
   }
-  
+
   button {
     @apply cursor-pointer transition-colors;
   }
@@ -27,15 +27,15 @@
   .card {
     @apply bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300;
   }
-  
+
   .stat-card {
     @apply p-6 rounded-xl bg-gradient-to-br from-white to-gray-50 border border-gray-100;
   }
-  
+
   .btn-primary {
     @apply px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium;
   }
-  
+
   .btn-secondary {
     @apply px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-medium;
   }
@@ -85,14 +85,27 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .animation-delay-2000 {

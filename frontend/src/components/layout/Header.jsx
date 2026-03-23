@@ -4,10 +4,15 @@ import { FaMapMarkerAlt } from 'react-icons/fa';
 import { GiIndiaGate } from 'react-icons/gi';
 import { motion } from 'framer-motion';
 import LanguageSwitcher from '../common/LanguageSwitcher';
+import { useLocation } from 'react-router-dom';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 
 const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed }) => {
   const { t } = useTranslation();
+  const location = useLocation();
+
+  // Show hamburger only on protected/dashboard pages
+  const showHamburger = !['/login', '/register'].some(path => location.pathname.startsWith(path));
 
   return (
     <motion.header
@@ -19,23 +24,27 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed }) => {
       <div className="px-4 py-3 lg:px-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            {/* Hamburger for Mobile */}
-            <button
-              type="button"
-              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Bars3Icon className="h-6 w-6" />
-            </button>
+            {showHamburger && (
+              <>
+                {/* Hamburger for Mobile */}
+                <button
+                  type="button"
+                  className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  onClick={() => setSidebarOpen(true)}
+                >
+                  <Bars3Icon className="h-6 w-6" />
+                </button>
 
-            {/* Hamburger for Desktop */}
-            <button
-              type="button"
-              className="hidden lg:flex p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-            >
-              <Bars3Icon className="h-6 w-6" />
-            </button>
+                {/* Hamburger for Desktop */}
+                <button
+                  type="button"
+                  className="hidden lg:flex p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                >
+                  <Bars3Icon className="h-6 w-6" />
+                </button>
+              </>
+            )}
             <motion.div
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.5 }}
