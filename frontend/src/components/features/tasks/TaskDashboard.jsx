@@ -1,99 +1,159 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PlusCircleIcon, 
   ArrowPathIcon, 
   ClockIcon,
-  ClipboardDocumentListIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
   CalendarIcon,
   UserIcon,
-  DocumentTextIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
   PaperClipIcon,
   ChatBubbleLeftRightIcon,
   PaperAirplaneIcon,
-  XMarkIcon
+  XMarkIcon,
+  InformationCircleIcon,
+  CheckCircleIcon,
+  FlagIcon,
+  EyeIcon,
+  BuildingOfficeIcon,
+  UsersIcon,
+  MapPinIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  DocumentTextIcon,
+  ChartBarIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
 const TaskDashboard = () => {
-  const [activeTab, setActiveTab] = useState('create'); // 'create', 'tracking', 'pending'
+  const [activeTab, setActiveTab] = useState('create');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [selectedDateRange, setSelectedDateRange] = useState({ start: null, end: null });
+  const [showPopup, setShowPopup] = useState({ show: false, message: '', type: '' });
+  const [filterAnimation, setFilterAnimation] = useState(false);
+  const [pendingSearchTerm, setPendingSearchTerm] = useState('');
+  const [pendingStatusFilter, setPendingStatusFilter] = useState('all');
+  const [expandedTasks, setExpandedTasks] = useState({});
+  const [remarksInput, setRemarksInput] = useState({});
+  const [forwardInput, setForwardInput] = useState({});
+  const fileInputRef = useRef(null);
+  
+  // Popup helper function
+  const showInfoPopup = (message, type = 'info') => {
+    setShowPopup({ show: true, message, type });
+    setTimeout(() => setShowPopup({ show: false, message: '', type: '' }), 2000);
+  };
 
   // Mock data for tasks
   const [tasks, setTasks] = useState([
     {
       id: 1,
-      title: 'New Land Registrations',
-      description: 'Complete registration of newly acquired government land parcels',
+      title: 'Land',
+      description: 'New Land Registrations - Complete registration of newly acquired government land parcels',
       department: 'Revenue',
       priority: 'High',
       status: 'In Progress',
       assignedTo: 'Tehsildar Office',
+      assignedType: 'role',
       dueDate: '2024-03-20',
       progress: 45,
-      attachments: 2,
-      remarks: ['Survey completed for 3 parcels', 'Need additional documents for 2 pending surveys']
+      attachments: [{ name: 'land_survey.pdf', url: '#', size: '245 KB' }],
+      remarks: ['Survey completed for 3 parcels', 'Need additional documents for 2 pending surveys'],
+      target: '5 Surveys',
+      achievement: '3 Completed',
+      location: 'Tehsildar Office',
+      timeline: [
+        { date: '2024-03-10', action: 'Task Created', by: 'Shri. Ashish Yerekar (I.A.S.)' },
+        { date: '2024-03-12', action: 'Assigned to Tehsildar', by: 'System' },
+        { date: '2024-03-15', action: 'Survey Started', by: 'Tehsildar Office' }
+      ]
     },
     {
       id: 2,
-      title: 'Revenue Collection Report',
-      description: 'Quarterly revenue collection report for Amravati district',
+      title: 'Users',
+      description: 'Revenue Collection Report - Quarterly revenue collection report for Amravati district',
       department: 'Finance',
       priority: 'Medium',
       status: 'In Progress',
       assignedTo: 'SDO Office',
+      assignedType: 'role',
       dueDate: '2024-03-25',
       progress: 70,
-      attachments: 1,
-      remarks: ['Collection target 70% achieved']
+      attachments: [{ name: 'q1_report.pdf', url: '#', size: '1.2 MB' }],
+      remarks: ['Collection target 70% achieved'],
+      target: '£50L Collection',
+      achievement: '£35L Collected',
+      location: 'SDO Office',
+      timeline: [
+        { date: '2024-03-05', action: 'Task Created', by: 'Shri. Ashish Yerekar (I.A.S.)' },
+        { date: '2024-03-07', action: 'Assigned to SDO', by: 'System' }
+      ]
     },
     {
       id: 3,
-      title: 'Gram Sabha Meeting Minutes',
-      description: 'Documentation of Gram Sabha meeting minutes',
+      title: 'Appreciation',
+      description: 'Gram Sabha Meeting Minutes - Documentation of Gram Sabha meeting minutes',
       department: 'Administration',
       priority: 'Low',
       status: 'Pending',
       assignedTo: 'Gram Sevak',
+      assignedType: 'role',
       dueDate: '2024-03-18',
       progress: 30,
-      attachments: 3,
-      remarks: ['Meeting scheduled for next week']
+      attachments: [],
+      remarks: ['Meeting scheduled for next week'],
+      target: 'Minutes Documented',
+      achievement: 'In Progress',
+      location: 'Gram Panchayat',
+      timeline: [
+        { date: '2024-03-08', action: 'Task Created', by: 'Shri. Ashish Yerekar (I.A.S.)' }
+      ]
     },
     {
       id: 4,
-      title: 'Infrastructure Development',
-      description: 'Oversight of infrastructure projects',
+      title: 'Structure',
+      description: 'Infrastructure Development - Oversight of infrastructure projects',
       department: 'Development',
       priority: 'High',
       status: 'Overdue',
       assignedTo: 'BDO Office',
+      assignedType: 'role',
       dueDate: '2024-03-15',
       progress: 60,
-      attachments: 1,
-      remarks: ['Delay due to material shortage']
+      attachments: [{ name: 'project_status.pdf', url: '#', size: '890 KB' }],
+      remarks: ['Delay due to material shortage'],
+      target: '10 Projects',
+      achievement: '6 Completed',
+      location: 'BDO Office',
+      timeline: [
+        { date: '2024-03-01', action: 'Task Created', by: 'Shri. Ashish Yerekar (I.A.S.)' },
+        { date: '2024-03-03', action: 'Assigned to BDO', by: 'System' }
+      ]
     },
     {
       id: 5,
-      title: 'Water Supply Scheme',
-      description: 'Implementation of water supply in 5 villages',
+      title: 'Supply',
+      description: 'Water Supply Scheme - Implementation of water supply in 5 villages',
       department: 'Infrastructure',
       priority: 'High',
       status: 'Overdue',
       assignedTo: 'Executive Engineer',
+      assignedType: 'role',
       dueDate: '2024-03-01',
       progress: 40,
-      attachments: 4,
-      remarks: ['Delay in material supply']
+      attachments: [{ name: 'scheme_details.pdf', url: '#', size: '567 KB' }],
+      remarks: ['Delay in material supply'],
+      target: '2 Villages Connected',
+      achievement: '1 Connected',
+      location: 'Executive Engineer Office',
+      timeline: [
+        { date: '2024-02-20', action: 'Task Created', by: 'Shri. Ashish Yerekar (I.A.S.)' }
+      ]
     }
   ]);
 
@@ -103,16 +163,22 @@ const TaskDashboard = () => {
     description: '',
     department: 'Revenue',
     priority: 'Medium',
+    assignedType: 'role',
     assignedTo: '',
     dueDate: null,
-    target: '',
-    location: ''
+    targetType: 'target',
+    targetValue: '',
+    location: '',
+    attachments: []
   });
 
+  const [selectedTaskForTracking, setSelectedTaskForTracking] = useState(null);
+  const [showTrackingDetails, setShowTrackingDetails] = useState(false);
+
   const tabs = [
-    { id: 'create', name: 'Create Task', icon: PlusCircleIcon, color: 'from-green-500 to-emerald-500' },
-    { id: 'tracking', name: 'Task Tracking', icon: ArrowPathIcon, color: 'from-blue-500 to-cyan-500' },
-    { id: 'pending', name: 'Pending Report', icon: ClockIcon, color: 'from-orange-500 to-red-500' },
+    { id: 'create', name: 'Create Task', icon: PlusCircleIcon },
+    { id: 'tracking', name: 'Task Tracking', icon: ArrowPathIcon },
+    { id: 'pending', name: 'Pending Report', icon: ClockIcon },
   ];
 
   // Filter tasks based on search and filters
@@ -125,25 +191,32 @@ const TaskDashboard = () => {
     return matchesSearch && matchesStatus && matchesDept;
   });
 
-  // Get pending/overdue tasks
-  const pendingTasks = tasks.filter(t => t.status === 'Pending' || t.status === 'Overdue');
+  // Get pending/overdue tasks with filters
+  const filteredPendingTasks = tasks.filter(t => {
+    const isPending = t.status === 'Pending' || t.status === 'Overdue';
+    const matchesSearch = t.title.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
+                         t.description.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
+                         t.assignedTo.toLowerCase().includes(pendingSearchTerm.toLowerCase());
+    const matchesStatus = pendingStatusFilter === 'all' || t.status === pendingStatusFilter;
+    return isPending && matchesSearch && matchesStatus;
+  });
 
   const getStatusColor = (status) => {
     switch(status) {
-      case 'Completed': return 'bg-green-100 text-green-800';
-      case 'In Progress': return 'bg-blue-100 text-blue-800';
-      case 'Pending': return 'bg-yellow-100 text-yellow-800';
-      case 'Overdue': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Completed': return 'bg-green-100 text-green-700';
+      case 'In Progress': return 'bg-blue-100 text-blue-700';
+      case 'Pending': return 'bg-amber-100 text-amber-700';
+      case 'Overdue': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
   const getPriorityColor = (priority) => {
     switch(priority) {
-      case 'High': return 'bg-red-100 text-red-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'High': return 'bg-red-100 text-red-700';
+      case 'Medium': return 'bg-amber-100 text-amber-700';
+      case 'Low': return 'bg-green-100 text-green-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -159,429 +232,961 @@ const TaskDashboard = () => {
     e.preventDefault();
     const taskToAdd = {
       id: tasks.length + 1,
-      ...newTask,
+      title: newTask.title,
+      description: newTask.description,
+      department: newTask.department,
+      priority: newTask.priority,
       status: 'Pending',
+      assignedTo: newTask.assignedTo,
+      assignedType: newTask.assignedType,
+      dueDate: newTask.dueDate ? newTask.dueDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       progress: 0,
-      attachments: 0,
-      remarks: ['Task created']
+      attachments: newTask.attachments,
+      remarks: ['Task created'],
+      target: newTask.targetType === 'target' ? newTask.targetValue : 'NA',
+      achievement: 'Not Started',
+      location: newTask.location,
+      timeline: [{ date: new Date().toISOString().split('T')[0], action: 'Task Created', by: 'Current User' }]
     };
     setTasks([...tasks, taskToAdd]);
-    setShowCreateForm(false);
     setNewTask({
       title: '',
       description: '',
       department: 'Revenue',
       priority: 'Medium',
+      assignedType: 'role',
       assignedTo: '',
       dueDate: null,
-      target: '',
-      location: ''
+      targetType: 'target',
+      targetValue: '',
+      location: '',
+      attachments: []
     });
+    setShowCreateForm(false);
+    showInfoPopup('Task created successfully!', 'success');
   };
 
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const newAttachments = files.map(file => ({
+      name: file.name,
+      url: URL.createObjectURL(file),
+      size: (file.size / 1024).toFixed(1) + ' KB'
+    }));
+    setNewTask({ ...newTask, attachments: [...newTask.attachments, ...newAttachments] });
+    showInfoPopup(`${files.length} file(s) uploaded successfully!`, 'success');
+  };
+
+  const handleRemoveAttachment = (index) => {
+    const updatedAttachments = newTask.attachments.filter((_, i) => i !== index);
+    setNewTask({ ...newTask, attachments: updatedAttachments });
+    showInfoPopup('Attachment removed', 'info');
+  };
+
+  const handleApplyFilters = () => {
+    setFilterAnimation(true);
+    setTimeout(() => setFilterAnimation(false), 300);
+    showInfoPopup('Filters applied successfully', 'info');
+  };
+
+  const handleResetFilters = () => {
+    setSearchTerm('');
+    setSelectedStatus('all');
+    setSelectedDepartment('all');
+    showInfoPopup('Filters reset', 'info');
+  };
+
+  const handleAddRemark = (taskId, remarkText) => {
+    if (!remarkText?.trim()) {
+      showInfoPopup('Please enter a remark', 'error');
+      return;
+    }
+    setTasks(tasks.map(task => 
+      task.id === taskId 
+        ? { ...task, remarks: [...task.remarks, remarkText] }
+        : task
+    ));
+    setRemarksInput({ ...remarksInput, [taskId]: '' });
+    showInfoPopup('Remark added successfully!', 'success');
+  };
+
+  const handleForwardTask = (taskId, forwardTo) => {
+    if (!forwardTo?.trim()) {
+      showInfoPopup('Please enter who to forward to', 'error');
+      return;
+    }
+    setTasks(tasks.map(task => 
+      task.id === taskId 
+        ? { 
+            ...task, 
+            assignedTo: forwardTo,
+            timeline: [...task.timeline, { 
+              date: new Date().toISOString().split('T')[0], 
+              action: `Forwarded to ${forwardTo}`, 
+              by: 'Current User' 
+            }]
+          }
+        : task
+    ));
+    setForwardInput({ ...forwardInput, [taskId]: '' });
+    showInfoPopup(`Task forwarded to ${forwardTo} successfully!`, 'success');
+  };
+
+  const handleUpdateProgress = (taskId, newProgress) => {
+    const progress = Math.min(100, Math.max(0, parseInt(newProgress) || 0));
+    setTasks(tasks.map(task => 
+      task.id === taskId 
+        ? { ...task, progress: progress }
+        : task
+    ));
+    showInfoPopup(`Progress updated to ${progress}%`, 'success');
+  };
+
+  const handleViewTaskDetails = (task) => {
+    setSelectedTaskForTracking(task);
+    setShowTrackingDetails(true);
+  };
+
+  const getStatDetails = (statName, value) => {
+    let details = '';
+    switch(statName) {
+      case 'Total':
+        details = `Total tasks: ${value}\nBreakdown:\n- Completed: ${tasks.filter(t => t.status === 'Completed').length}\n- In Progress: ${tasks.filter(t => t.status === 'In Progress').length}\n- Pending: ${tasks.filter(t => t.status === 'Pending').length}\n- Overdue: ${tasks.filter(t => t.status === 'Overdue').length}`;
+        break;
+      case 'Completed':
+        details = `Completed tasks: ${value}\nAchievement rate: ${((value/156)*100).toFixed(1)}%`;
+        break;
+      case 'In Progress':
+        details = `In Progress tasks: ${value}\nTasks currently being worked on`;
+        break;
+      case 'Overdue':
+        const overdueTasks = tasks.filter(t => t.status === 'Overdue');
+        details = `Overdue tasks: ${value}\n\nDetails:\n${overdueTasks.map(t => `- ${t.title} (Due: ${t.dueDate})`).join('\n')}`;
+        break;
+      case 'Achievement':
+        details = `Achievement: ${value}\nTarget: ₹75L\nAchievement Rate: 60.3%`;
+        break;
+      case 'Target':
+        details = `Target: ${value}\nCurrent Achievement: ₹45.2L\nRemaining: ₹29.8L`;
+        break;
+      case 'Pending':
+        details = `Pending tasks: ${value}\n- Overdue: ${tasks.filter(t => t.status === 'Overdue').length}\n- Pending: ${tasks.filter(t => t.status === 'Pending').length}`;
+        break;
+      default:
+        details = `${statName}: ${value}`;
+    }
+    return details;
+  };
+
+  const getAssignedIcon = (type) => {
+    switch(type) {
+      case 'role': return <UsersIcon className="h-4 w-4" />;
+      case 'employee': return <UserIcon className="h-4 w-4" />;
+      case 'village': return <MapPinIcon className="h-4 w-4" />;
+      default: return <BuildingOfficeIcon className="h-4 w-4" />;
+    }
+  };
+
+  const stats = [
+    { name: 'Total', value: '156', change: '+12%', color: 'blue', icon: DocumentTextIcon },
+    { name: 'Completed', value: '98', change: '+8%', color: 'green', icon: CheckCircleIcon },
+    { name: 'In Progress', value: '42', change: '-3%', color: 'amber', icon: ArrowPathIcon },
+    { name: 'Overdue', value: '16', change: '+5%', color: 'red', icon: ClockIcon },
+    { name: 'Achievement', value: '₹45.2L', change: '+15%', color: 'purple', icon: FlagIcon },
+    { name: 'Target', value: '₹75L', change: '+15%', color: 'indigo', icon: ChartBarIcon },
+    { name: 'Pending', value: '8', change: '+15%', color: 'orange', icon: ClockIcon },
+  ];
+
   return (
-    <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-      <div className="mb-6">
-        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          Task Management
-        </h1>
-        <p className="text-gray-600 mt-2 flex items-center gap-2">
-          <span className="w-1 h-1 bg-blue-600 rounded-full"></span>
-          Create, track and manage all your tasks in one place
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
-        <div className="bg-white rounded-xl shadow-sm p-3 border-l-4 border-blue-500">
-          <p className="text-xs text-gray-500">Total</p>
-          <p className="text-lg font-bold text-gray-900">156</p>
-          <p className="text-xs text-green-600">↑ +12%</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-3 border-l-4 border-green-500">
-          <p className="text-xs text-gray-500">Completed</p>
-          <p className="text-lg font-bold text-green-600">98</p>
-          <p className="text-xs text-green-600">↑ +8%</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-3 border-l-4 border-yellow-500">
-          <p className="text-xs text-gray-500">In Progress</p>
-          <p className="text-lg font-bold text-yellow-600">42</p>
-          <p className="text-xs text-red-600">↓ -3%</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-3 border-l-4 border-red-500">
-          <p className="text-xs text-gray-500">Overdue</p>
-          <p className="text-lg font-bold text-red-600">16</p>
-          <p className="text-xs text-red-600">↑ +5%</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-3 border-l-4 border-purple-500">
-          <p className="text-xs text-gray-500">Achievement</p>
-          <p className="text-lg font-bold text-purple-600">₹45.2L</p>
-          <p className="text-xs text-purple-600">↑ +15%</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-3 border-l-4 border-indigo-500">
-          <p className="text-xs text-gray-500">Target</p>
-          <p className="text-lg font-bold text-indigo-600">₹75L</p>
-          <div className="w-full h-1 bg-gray-200 rounded-full mt-1">
-            <div className="w-3/5 h-full bg-indigo-500 rounded-full"></div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-3 border-l-4 border-orange-500">
-          <p className="text-xs text-gray-500">Pending</p>
-          <p className="text-lg font-bold text-orange-600">8</p>
-          <p className="text-xs text-orange-600">3 in progress</p>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm p-1.5 mb-6 inline-flex flex-wrap">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-              activeTab === tab.id
-                ? `bg-gradient-to-r ${tab.color} text-white shadow-md`
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            <tab.icon className="h-5 w-5 mr-2" />
-            {tab.name}
-          </button>
-        ))}
-      </div>
-
-      <AnimatePresence mode="wait">
-        {activeTab === 'create' && (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      {/* Popup Notification */}
+      <AnimatePresence>
+        {showPopup.show && (
           <motion.div
-            key="create"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-white rounded-xl shadow-sm p-6"
+            initial={{ opacity: 0, y: -50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: -50, x: '-50%' }}
+            className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3"
+            style={{
+              background: showPopup.type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 
+                         showPopup.type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 
+                         'linear-gradient(135deg, #3b82f6, #2563eb)'
+            }}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Create New Task</h2>
-              <button
-                onClick={() => setShowCreateForm(!showCreateForm)}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                <PlusCircleIcon className="h-5 w-5 mr-2" />
-                New Task
-              </button>
-            </div>
-
-            {showCreateForm ? (
-              <form onSubmit={handleCreateTask} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
-                    <input 
-                      type="text"
-                      value={newTask.title}
-                      onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter task title"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                    <select
-                      value={newTask.department}
-                      onChange={(e) => setNewTask({...newTask, department: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option>Revenue</option>
-                      <option>Finance</option>
-                      <option>Administration</option>
-                      <option>Development</option>
-                      <option>Infrastructure</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
-                    <select
-                      value={newTask.priority}
-                      onChange={(e) => setNewTask({...newTask, priority: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option>High</option>
-                      <option>Medium</option>
-                      <option>Low</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
-                    <DatePicker
-                      selected={newTask.dueDate}
-                      onChange={(date) => setNewTask({...newTask, dueDate: date})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      placeholderText="Select due date"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Assign To</label>
-                    <input
-                      type="text"
-                      value={newTask.assignedTo}
-                      onChange={(e) => setNewTask({...newTask, assignedTo: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter assignee"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                    <input
-                      type="text"
-                      value={newTask.location}
-                      onChange={(e) => setNewTask({...newTask, location: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter location"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                  <textarea 
-                    rows="4"
-                    value={newTask.description}
-                    onChange={(e) => setNewTask({...newTask, description: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter task description"
-                    required
-                  ></textarea>
-                </div>
-
-                <div className="flex justify-end gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateForm(false)}
-                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700"
-                  >
-                    Create Task
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                Click "New Task" button to create a task
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* Task Tracking Tab */}
-        {activeTab === 'tracking' && (
-          <motion.div
-            key="tracking"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-white rounded-xl shadow-sm p-6"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="relative">
-                <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search tasks..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <select
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-              >
-                <option value="all">All Status</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Pending">Pending</option>
-                <option value="Completed">Completed</option>
-                <option value="Overdue">Overdue</option>
-              </select>
-              <select
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                value={selectedDepartment}
-                onChange={(e) => setSelectedDepartment(e.target.value)}
-              >
-                <option value="all">All Departments</option>
-                <option>Revenue</option>
-                <option>Finance</option>
-                <option>Administration</option>
-                <option>Development</option>
-                <option>Infrastructure</option>
-              </select>
-              <button className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                <FunnelIcon className="h-5 w-5 mr-2" />
-                Apply Filters
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {filteredTasks.map((task) => (
-                <div key={task.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3">
-                    <div className="flex items-start space-x-3">
-                      <div className="text-2xl">
-                        {task.department === 'Revenue' ? '📋' :
-                         task.department === 'Finance' ? '📊' :
-                         task.department === 'Administration' ? '📝' :
-                         task.department === 'Development' ? '🏗️' : '💧'}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{task.title}</h3>
-                        <p className="text-sm text-gray-600">{task.description}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 mt-2 md:mt-0">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
-                      </span>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(task.status)}`}>
-                        {task.status}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                    <div className="flex items-center">
-                      <UserIcon className="h-4 w-4 text-gray-400 mr-2" />
-                      {task.assignedTo}
-                    </div>
-                    <div className="flex items-center">
-                      <CalendarIcon className="h-4 w-4 text-gray-400 mr-2" />
-                      Due: {new Date(task.dueDate).toLocaleDateString()}
-                    </div>
-                    <div>
-                      <div className="flex items-center">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2">
-                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${task.progress}%` }}></div>
-                        </div>
-                        <span className="ml-2 text-xs text-gray-600">{task.progress}%</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Add Remark">
-                        <ChatBubbleLeftRightIcon className="h-4 w-4" />
-                      </button>
-                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Forward">
-                        <PaperAirplaneIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'pending' && (
-          <motion.div
-            key="pending"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-white rounded-xl shadow-sm p-6"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-yellow-50 rounded-lg p-4">
-                <p className="text-sm text-yellow-700">Pending Tasks</p>
-                <p className="text-2xl font-bold text-yellow-700">
-                  {tasks.filter(t => t.status === 'Pending').length}
-                </p>
-              </div>
-              <div className="bg-red-50 rounded-lg p-4">
-                <p className="text-sm text-red-700">Overdue Tasks</p>
-                <p className="text-2xl font-bold text-red-700">
-                  {tasks.filter(t => t.status === 'Overdue').length}
-                </p>
-              </div>
-              <div className="bg-orange-50 rounded-lg p-4">
-                <p className="text-sm text-orange-700">Total Pending</p>
-                <p className="text-2xl font-bold text-orange-700">
-                  {tasks.filter(t => t.status === 'Pending' || t.status === 'Overdue').length}
-                </p>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Task</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Owner</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Days</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {pendingTasks.map((task) => {
-                    const daysOverdue = task.status === 'Overdue' ? getDaysOverdue(task.dueDate) : 0;
-                    return (
-                      <tr key={task.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3">
-                          <p className="text-sm font-medium text-gray-900">{task.title}</p>
-                          <p className="text-xs text-gray-500">{task.description}</p>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{task.department}</td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(task.priority)}`}>
-                            {task.priority}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          {new Date(task.dueDate).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{task.assignedTo}</td>
-                        <td className="px-4 py-3">
-                          {task.status === 'Overdue' ? (
-                            <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                              {daysOverdue} days
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-                              Pending
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(task.status)}`}>
-                            {task.status}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <InformationCircleIcon className="h-5 w-5 text-white" />
+            <span className="font-medium text-white">{showPopup.message}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="mt-6 flex items-center justify-between text-sm text-gray-500 border-t border-gray-200 pt-4">
-        <div className="flex items-center space-x-2">
-          <span className="font-semibold text-gray-700">Collector Office - Amravati</span>
-          <span>•</span>
-          <span>Amravati</span>
+      <div className="container mx-auto px-6 py-8">
+        {/* Header Title - Aligned Left */}
+        <div className="mb-8">
+          <h2 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+            Task Management
+          </h2>
+          <p className="text-gray-500 mt-1">Create, track and manage all your tasks in one place</p>
         </div>
-        <div className="flex items-center">
-          <span className="w-2 h-2 bg-yellow-400 rounded-full mr-1 animate-pulse"></span>
-          30°C Sunny
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+          {stats.map((stat) => (
+            <motion.div
+              key={stat.name}
+              whileHover={{ y: -4, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                const details = getStatDetails(stat.name, stat.value);
+                showInfoPopup(details, 'info');
+              }}
+              className="bg-white rounded-2xl shadow-md p-4 cursor-pointer hover:shadow-xl transition-all duration-300 border border-gray-100"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <stat.icon className={`h-5 w-5 text-${stat.color}-500`} />
+                <span className={`text-xs font-semibold ${stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                  {stat.change}
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
+              <p className="text-xs text-gray-500 mt-1">{stat.name}</p>
+            </motion.div>
+          ))}
         </div>
+
+        {/* Tab Navigation - Aligned Left */}
+        <div className="bg-white rounded-2xl shadow-md p-1.5 mb-8 inline-flex flex-wrap gap-1">
+          {tabs.map((tab) => (
+            <motion.button
+              key={tab.id}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setActiveTab(tab.id);
+                if (tab.id === 'create') setShowCreateForm(false);
+                showInfoPopup(`Switched to ${tab.name}`, 'info');
+              }}
+              className={`flex items-center px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <tab.icon className="h-5 w-5 mr-2" />
+              {tab.name}
+            </motion.button>
+          ))}
+        </div>
+
+        <AnimatePresence mode="wait">
+          {/* Create Task Tab */}
+          {activeTab === 'create' && (
+            <motion.div
+              key="create"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-white rounded-2xl shadow-xl overflow-hidden"
+            >
+              {!showCreateForm ? (
+                <div className="text-center py-20">
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowCreateForm(true)}
+                    className="inline-flex flex-col items-center cursor-pointer"
+                  >
+                    <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg mb-4">
+                      <PlusCircleIcon className="h-12 w-12 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Click to create new task</h3>
+                    <p className="text-gray-500">Create and manage your tasks efficiently</p>
+                  </motion.div>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      <PlusCircleIcon className="h-6 w-6" />
+                      Create New Task
+                    </h2>
+                  </div>
+                  <form onSubmit={handleCreateTask} className="p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Task Title *</label>
+                        <input 
+                          type="text"
+                          value={newTask.title}
+                          onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                          placeholder="Enter task title"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Department *</label>
+                        <select
+                          value={newTask.department}
+                          onChange={(e) => setNewTask({...newTask, department: e.target.value})}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option>Revenue</option>
+                          <option>Finance</option>
+                          <option>Administration</option>
+                          <option>Development</option>
+                          <option>Infrastructure</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Priority *</label>
+                        <select
+                          value={newTask.priority}
+                          onChange={(e) => setNewTask({...newTask, priority: e.target.value})}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option>High</option>
+                          <option>Medium</option>
+                          <option>Low</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Due Date *</label>
+                        <DatePicker
+                          selected={newTask.dueDate}
+                          onChange={(date) => setNewTask({...newTask, dueDate: date})}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                          placeholderText="Select due date"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Allocate To *</label>
+                        <div className="flex gap-4 mb-3">
+                          {['role', 'employee', 'village', 'other'].map((type) => (
+                            <label key={type} className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="assignedType"
+                                value={type}
+                                checked={newTask.assignedType === type}
+                                onChange={(e) => setNewTask({...newTask, assignedType: e.target.value, assignedTo: ''})}
+                                className="w-4 h-4 text-blue-600"
+                              />
+                              <span className="text-sm capitalize font-medium text-gray-700">{type === 'other' ? 'Other' : type}</span>
+                            </label>
+                          ))}
+                        </div>
+                        
+                        {newTask.assignedType === 'role' && (
+                          <select
+                            value={newTask.assignedTo}
+                            onChange={(e) => setNewTask({...newTask, assignedTo: e.target.value})}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                            required
+                          >
+                            <option value="">Select Role</option>
+                            <option value="Gram Talathi">Gram Talathi</option>
+                            <option value="Grampanchayat Adhikari">Grampanchayat Adhikari</option>
+                            <option value="SUB-DIVISIONAL OFFICERS">SUB-DIVISIONAL OFFICERS</option>
+                            <option value="TAHSILDAR">TAHSILDAR</option>
+                            <option value="TAHSILDAR- REVENUE">TAHSILDAR- REVENUE</option>
+                          </select>
+                        )}
+                        
+                        {(newTask.assignedType === 'employee' || newTask.assignedType === 'other') && (
+                          <input
+                            type="text"
+                            value={newTask.assignedTo}
+                            onChange={(e) => setNewTask({...newTask, assignedTo: e.target.value})}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                            placeholder={`Enter ${newTask.assignedType} name`}
+                            required
+                          />
+                        )}
+                        
+                        {newTask.assignedType === 'village' && (
+                          <input
+                            type="text"
+                            value={newTask.assignedTo}
+                            onChange={(e) => setNewTask({...newTask, assignedTo: e.target.value})}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter village name"
+                            required
+                          />
+                        )}
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Location</label>
+                        <input
+                          type="text"
+                          value={newTask.location}
+                          onChange={(e) => setNewTask({...newTask, location: e.target.value})}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter location"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Target *</label>
+                        <div className="flex gap-4 mb-3">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="targetType"
+                              value="target"
+                              checked={newTask.targetType === 'target'}
+                              onChange={(e) => setNewTask({...newTask, targetType: e.target.value})}
+                              className="w-4 h-4 text-blue-600"
+                            />
+                            <span className="text-sm font-medium text-gray-700">Target</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="targetType"
+                              value="na"
+                              checked={newTask.targetType === 'na'}
+                              onChange={(e) => setNewTask({...newTask, targetType: e.target.value, targetValue: 'NA'})}
+                              className="w-4 h-4 text-blue-600"
+                            />
+                            <span className="text-sm font-medium text-gray-700">NA</span>
+                          </label>
+                        </div>
+                        
+                        {newTask.targetType === 'target' && (
+                          <input
+                            type="text"
+                            value={newTask.targetValue}
+                            onChange={(e) => setNewTask({...newTask, targetValue: e.target.value})}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter target value"
+                            required
+                          />
+                        )}
+                        {newTask.targetType === 'na' && (
+                          <div className="px-4 py-3 bg-gray-50 rounded-xl text-gray-500 font-medium">Target set to NA</div>
+                        )}
+                      </div>
+                      
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Attachments</label>
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleFileUpload}
+                          multiple
+                          className="hidden"
+                        />
+                        <div className="flex flex-col gap-3">
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex items-center justify-center w-full p-4 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"
+                          >
+                            <PaperClipIcon className="h-5 w-5 mr-2 text-gray-400" />
+                            <span className="text-sm text-gray-500">Click to upload files</span>
+                          </button>
+                          
+                          {newTask.attachments.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium text-gray-700">Uploaded Files:</p>
+                              {newTask.attachments.map((file, index) => (
+                                <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+                                  <div className="flex items-center gap-2">
+                                    <PaperClipIcon className="h-4 w-4 text-gray-500" />
+                                    <span className="text-sm text-gray-600">{file.name}</span>
+                                    <span className="text-xs text-gray-400">({file.size})</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveAttachment(index)}
+                                    className="text-red-500 hover:text-red-700"
+                                  >
+                                    <TrashIcon className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Description *</label>
+                      <textarea 
+                        rows="4"
+                        value={newTask.description}
+                        onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter task description"
+                        required
+                      ></textarea>
+                    </div>
+
+                    <div className="flex justify-end gap-4">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="button"
+                        onClick={() => setShowCreateForm(false)}
+                        className="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition-all"
+                      >
+                        Cancel
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="submit"
+                        className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold shadow-md hover:shadow-xl transition-all"
+                      >
+                        Create Task
+                      </motion.button>
+                    </div>
+                  </form>
+                </>
+              )}
+            </motion.div>
+          )}
+
+          {/* Task Tracking Tab - Table Format */}
+          {activeTab === 'tracking' && (
+            <motion.div
+              key="tracking"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-white rounded-2xl shadow-xl overflow-hidden"
+            >
+              <div className="p-6">
+                <div className="flex gap-4 mb-6">
+                  <div className="relative flex-1">
+                    <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search tasks by title or department..."
+                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <select
+                    className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Overdue">Overdue</option>
+                  </select>
+                  <div className="flex gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      animate={filterAnimation ? { scale: [1, 1.05, 1] } : {}}
+                      onClick={handleApplyFilters}
+                      className="flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all"
+                    >
+                      <FunnelIcon className="h-5 w-5 mr-2" />
+                      Apply Filters
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleResetFilters}
+                      className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all"
+                    >
+                      Reset
+                    </motion.button>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b-2 border-gray-200">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">TASK</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">PRIORITY</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">STATUS</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ASSIGNED TO</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">DUE DATE</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">TARGET</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ACHIEVEMENT</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ATTACHMENTS</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">REMARK</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ACTIONS</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredTasks.map((task) => (
+                        <tr key={task.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3">
+                            <div>
+                              <p className="font-semibold text-gray-900">{task.title}</p>
+                              <p className="text-xs text-gray-500 mt-1">{task.description.substring(0, 50)}...</p>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(task.priority)}`}>
+                              {task.priority}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(task.status)}`}>
+                              {task.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1">
+                              {getAssignedIcon(task.assignedType)}
+                              <span className="text-sm text-gray-600">{task.assignedTo}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {new Date(task.dueDate).toLocaleDateString()}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{task.target || 'NA'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{task.achievement || 'Not Started'}</td>
+                          <td className="px-4 py-3">
+                            {task.attachments.length > 0 ? (
+                              <button
+                                onClick={() => showInfoPopup(`${task.attachments.length} attachment(s)`, 'info')}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                <PaperClipIcon className="h-5 w-5" />
+                              </button>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => {
+                                const remarkInput = prompt('Enter remark:', '');
+                                if (remarkInput) handleAddRemark(task.id, remarkInput);
+                              }}
+                              className="text-green-600 hover:text-green-800"
+                              title="Add Remark"
+                            >
+                              <ChatBubbleLeftRightIcon className="h-5 w-5" />
+                            </button>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleViewTaskDetails(task)}
+                                className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                title="View Details"
+                              >
+                                <EyeIcon className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const forwardTo = prompt('Forward to (name/role):', '');
+                                  if (forwardTo) handleForwardTask(task.id, forwardTo);
+                                }}
+                                className="p-1 text-emerald-600 hover:bg-emerald-50 rounded"
+                                title="Forward"
+                              >
+                                <PaperAirplaneIcon className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const progress = prompt('Update progress (0-100):', task.progress);
+                                  if (progress) handleUpdateProgress(task.id, progress);
+                                }}
+                                className="p-1 text-purple-600 hover:bg-purple-50 rounded"
+                                title="Update Progress"
+                              >
+                                <ArrowPathIcon className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Pending Task Report Tab - Grey, Orange, Red colors */}
+          {activeTab === 'pending' && (
+            <motion.div
+              key="pending"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-white rounded-2xl shadow-xl p-6"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  onClick={() => setPendingStatusFilter('all')}
+                  className={`rounded-xl p-4 cursor-pointer transition-all ${pendingStatusFilter === 'all' ? 'bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:shadow-md'}`}
+                >
+                  <p className="text-sm font-medium">All Pending</p>
+                  <p className={`text-2xl font-bold ${pendingStatusFilter === 'all' ? 'text-white' : 'text-gray-700'}`}>
+                    {tasks.filter(t => t.status === 'Pending' || t.status === 'Overdue').length}
+                  </p>
+                </motion.div>
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  onClick={() => setPendingStatusFilter('Pending')}
+                  className={`rounded-xl p-4 cursor-pointer transition-all ${pendingStatusFilter === 'Pending' ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg' : 'bg-orange-50 text-orange-700 hover:shadow-md'}`}
+                >
+                  <p className="text-sm font-medium">Pending Tasks</p>
+                  <p className={`text-2xl font-bold ${pendingStatusFilter === 'Pending' ? 'text-white' : 'text-orange-700'}`}>
+                    {tasks.filter(t => t.status === 'Pending').length}
+                  </p>
+                </motion.div>
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  onClick={() => setPendingStatusFilter('Overdue')}
+                  className={`rounded-xl p-4 cursor-pointer transition-all ${pendingStatusFilter === 'Overdue' ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg' : 'bg-red-50 text-red-700 hover:shadow-md'}`}
+                >
+                  <p className="text-sm font-medium">Overdue Tasks</p>
+                  <p className={`text-2xl font-bold ${pendingStatusFilter === 'Overdue' ? 'text-white' : 'text-red-700'}`}>
+                    {tasks.filter(t => t.status === 'Overdue').length}
+                  </p>
+                </motion.div>
+              </div>
+              
+              <div className="relative mb-6">
+                <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search pending tasks..."
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  value={pendingSearchTerm}
+                  onChange={(e) => setPendingSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="overflow-x-auto">
+                {filteredPendingTasks.length === 0 ? (
+                  <div className="text-center py-12">
+                    <ClockIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">No pending tasks found</p>
+                  </div>
+                ) : (
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Task</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Department</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Priority</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Due Date</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Owner</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredPendingTasks.map((task) => {
+                        const daysOverdue = task.status === 'Overdue' ? getDaysOverdue(task.dueDate) : 0;
+                        return (
+                          <tr key={task.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-4 py-3">
+                              <p className="text-sm font-semibold text-gray-900">{task.title}</p>
+                              <p className="text-xs text-gray-500">{task.description.substring(0, 50)}...</p>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600">{task.department}</td>
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(task.priority)}`}>
+                                {task.priority}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600">
+                              {new Date(task.dueDate).toLocaleDateString()}
+                              {task.status === 'Overdue' && (
+                                <p className="text-xs text-red-500 mt-1">({daysOverdue} days overdue)</p>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600 flex items-center gap-1">
+                              {getAssignedIcon(task.assignedType)}
+                              <span>{task.assignedTo}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(task.status)}`}>
+                                {task.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => handleViewTaskDetails(task)}
+                                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                  title="View Details"
+                                >
+                                  <EyeIcon className="h-4 w-4" />
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    setActiveTab('tracking');
+                                    showInfoPopup(`Navigate to Task Tracking for ${task.title}`, 'info');
+                                  }}
+                                  className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                  title="Track Task"
+                                >
+                                  <ArrowPathIcon className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
+      {/* Task Details Modal */}
+      <AnimatePresence>
+        {showTrackingDetails && selectedTaskForTracking && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowTrackingDetails(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-5 rounded-t-2xl flex justify-between items-center">
+                <h3 className="text-xl font-bold">Task Details</h3>
+                <button
+                  onClick={() => setShowTrackingDetails(false)}
+                  className="p-1 hover:bg-white/20 rounded-full transition-all"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+              <div className="p-6 space-y-5">
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <UserIcon className="h-5 w-5 text-blue-600" />
+                    <span className="font-semibold text-gray-900">Created By: Shri. Ashish Yerekar (I.A.S.)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">Created on: {selectedTaskForTracking.timeline?.[0]?.date || new Date().toISOString().split('T')[0]}</span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Task Title</p>
+                    <p className="font-semibold text-gray-900">{selectedTaskForTracking.title}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Assigned To</p>
+                    <p className="font-semibold text-gray-900 flex items-center gap-1">
+                      {getAssignedIcon(selectedTaskForTracking.assignedType)}
+                      {selectedTaskForTracking.assignedTo}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Priority</p>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(selectedTaskForTracking.priority)}`}>
+                      {selectedTaskForTracking.priority}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Status</p>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(selectedTaskForTracking.status)}`}>
+                      {selectedTaskForTracking.status}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Due Date</p>
+                    <p className="font-medium text-gray-900">{new Date(selectedTaskForTracking.dueDate).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Progress</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full" style={{ width: `${selectedTaskForTracking.progress}%` }}></div>
+                      </div>
+                      <span className="text-sm font-medium">{selectedTaskForTracking.progress}%</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">Description</p>
+                  <p className="text-gray-700">{selectedTaskForTracking.description}</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 font-medium mb-1">Target</p>
+                    <p className="font-semibold text-gray-900 flex items-center gap-1">
+                      <FlagIcon className="h-4 w-4 text-gray-400" />
+                      {selectedTaskForTracking.target || 'NA'}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 font-medium mb-1">Achievement</p>
+                    <p className="font-semibold text-gray-900 flex items-center gap-1">
+                      <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                      {selectedTaskForTracking.achievement || 'Not Started'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-xs text-gray-500 font-medium mb-2">Timeline</p>
+                  <div className="space-y-2">
+                    {selectedTaskForTracking.timeline?.map((item, idx) => (
+                      <div key={idx} className="flex items-start gap-3">
+                        <div className="relative">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5"></div>
+                          {idx !== (selectedTaskForTracking.timeline?.length || 0) - 1 && (
+                            <div className="absolute top-3 left-0.5 w-0.5 h-full bg-gray-300"></div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{item.action}</p>
+                          <p className="text-xs text-gray-500">{item.date} • By: {item.by}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {selectedTaskForTracking.remarks?.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium mb-2">Remarks</p>
+                    <div className="space-y-1">
+                      {selectedTaskForTracking.remarks.map((remark, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
+                          <ChatBubbleLeftRightIcon className="h-4 w-4 text-gray-400 mt-0.5" />
+                          <span>{remark}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
