@@ -10,6 +10,7 @@ const Layout = ({ user, onLogout }) => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+
       {/* Fixed Header */}
       <Header
         setSidebarOpen={setSidebarOpen}
