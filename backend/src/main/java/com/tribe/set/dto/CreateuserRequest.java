@@ -30,6 +30,9 @@ public class CreateuserRequest {
     private String taluka;
     private String village;
 
+    @NotNull(message = "Requester ID is required")
+    private Long requesterId;
+
     // ─── Getters ───
 
     public Long getUserID() {
@@ -96,5 +99,13 @@ public class CreateuserRequest {
 
     public void setVillage(String village) {
         this.village = village;
+    }
+
+    public Long getRequesterId() {
+        return requesterId;
+    }
+
+    public void setRequesterId(Long requesterId) {
+        this.requesterId = requesterId;
     }
 }
