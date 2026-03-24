@@ -4,41 +4,42 @@ import {
   KeyIcon,
   LockClosedIcon,
   CheckCircleIcon,
-  XMarkIcon,
   EyeIcon,
   EyeSlashIcon,
   ShieldCheckIcon,
-  FingerPrintIcon,
   DevicePhoneMobileIcon,
-  ClockIcon,
   ArrowPathIcon,
-  ExclamationTriangleIcon
+  EnvelopeIcon,
+  PhoneIcon,
+  ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 
 const ChangePassword = ({ onPasswordChange, onClose }) => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1: verification, 2: new password, 3: success
+  const [activeTab, setActiveTab] = useState('change'); // 'change' or 'forgot'
+  const [step, setStep] = useState(1); // 1: verify, 2: new password, 3: success
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
     otp: '',
-    securityQuestion: 'What is your favorite color?',
-    securityAnswer: ''
+    email: '',
+    phone: ''
   });
-
+  
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
     confirm: false
   });
-
+  
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [verificationMethod, setVerificationMethod] = useState('email'); // 'email' or 'phone'
 
   // Password strength checker
   const checkPasswordStrength = (password) => {
@@ -61,13 +62,17 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
 
   // Handle OTP send
   const handleSendOTP = () => {
+    const identifier = verificationMethod === 'email' ? formData.email : formData.phone;
+    if (!identifier) {
+      setErrors({ [verificationMethod]: `${verificationMethod === 'email' ? 'Email' : 'Phone number'} is required` });
+      return;
+    }
+    
     setIsLoading(true);
-    // Simulate OTP send
     setTimeout(() => {
       setOtpSent(true);
       setCountdown(60);
       setIsLoading(false);
-      // Start countdown
       const timer = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
@@ -86,11 +91,19 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
     const newErrors = {};
 
     if (step === 1) {
-      if (!formData.currentPassword) {
-        newErrors.currentPassword = 'Current password is required';
-      }
-      if (!formData.securityAnswer) {
-        newErrors.securityAnswer = 'Security answer is required';
+      if (activeTab === 'change') {
+        if (!formData.currentPassword) {
+          newErrors.currentPassword = 'Current password is required';
+        }
+      } else {
+        if (verificationMethod === 'email' && !formData.email) {
+          newErrors.email = 'Email is required';
+        } else if (verificationMethod === 'phone' && !formData.phone) {
+          newErrors.phone = 'Phone number is required';
+        }
+        if (!formData.otp && otpSent) {
+          newErrors.otp = 'OTP is required';
+        }
       }
     }
 
@@ -108,10 +121,6 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
       } else if (formData.newPassword !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Passwords do not match';
       }
-
-      if (!formData.otp && otpSent) {
-        newErrors.otp = 'OTP is required';
-      }
     }
 
     return newErrors;
@@ -122,11 +131,20 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
     const newErrors = validateForm();
     if (Object.keys(newErrors).length === 0) {
       if (step === 1) {
-        // Verify current password (demo)
-        if (formData.currentPassword === 'admin123') {
-          setStep(2);
+        if (activeTab === 'change') {
+          // Verify current password (demo)
+          if (formData.currentPassword === 'admin123') {
+            setStep(2);
+          } else {
+            setErrors({ currentPassword: 'Current password is incorrect' });
+          }
         } else {
-          setErrors({ currentPassword: 'Current password is incorrect' });
+          // Verify OTP (demo)
+          if (formData.otp === '123456') {
+            setStep(2);
+          } else {
+            setErrors({ otp: 'Invalid OTP' });
+          }
         }
       } else if (step === 2) {
         // Process password change
@@ -155,14 +173,30 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
 
   const strength = getStrengthText();
 
+  // Reset form when switching tabs
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setStep(1);
+    setOtpSent(false);
+    setErrors({});
+    setFormData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+      otp: '',
+      email: '',
+      phone: ''
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-2xl"
+        className="w-full max-w-md"
       >
-        {/* Header with Steps */}
+        {/* Header */}
         <div className="mb-8 text-center">
           <motion.div
             initial={{ scale: 0 }}
@@ -172,39 +206,11 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
             <KeyIcon className="h-10 w-10 text-white" />
           </motion.div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Change Password</h1>
-          <p className="text-gray-600">Secure your account with a strong password</p>
+          <p className="text-gray-600">Reset your password</p>
         </div>
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-between mb-8 px-4">
-          {[1, 2, 3].map((i) => (
-            <React.Fragment key={i}>
-              <div className="flex flex-col items-center">
-                <motion.div
-                  animate={{
-                    scale: step >= i ? 1 : 0.8,
-                    backgroundColor: step >= i ? '#2563eb' : '#e5e7eb'
-                  }}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold shadow-lg ${step >= i ? 'bg-blue-600' : 'bg-gray-200'
-                    }`}
-                >
-                  {step > i ? (
-                    <CheckCircleIcon className="h-6 w-6" />
-                  ) : (
-                    i
-                  )}
-                </motion.div>
-                <span className="text-xs mt-2 text-gray-600">
-                  {i === 1 ? 'Verify' : i === 2 ? 'New Password' : 'Success'}
-                </span>
-              </div>
-              {i < 3 && (
-                <div className={`flex-1 h-1 mx-2 rounded ${step > i ? 'bg-blue-600' : 'bg-gray-200'
-                  }`} />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
+        {/* Tab Switcher - Moved to bottom */}
+        
 
         {/* Main Card */}
         <motion.div
@@ -216,9 +222,9 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
             {step === 1 && (
               <motion.div
                 key="step1"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 className="p-8"
               >
                 <div className="flex items-center space-x-3 mb-6">
@@ -227,124 +233,158 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900">Verify Your Identity</h2>
-                    <p className="text-sm text-gray-500">Please confirm your credentials</p>
+                    <p className="text-sm text-gray-500">
+                      {activeTab === 'change' 
+                        ? 'Enter your current password' 
+                        : 'Enter the verification code sent to your registered email/phone'}
+                    </p>
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  {/* Current Password */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Current Password
-                    </label>
-                    <div className="relative">
-                      <LockClosedIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                      <input
-                        type={showPasswords.current ? 'text' : 'password'}
-                        value={formData.currentPassword}
-                        onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 transition-all ${errors.currentPassword ? 'border-red-500' : 'border-gray-200'
+                {activeTab === 'change' ? (
+                  // Change Password Option - Current Password Only
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Current Password
+                      </label>
+                      <div className="relative">
+                        <LockClosedIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                        <input
+                          type={showPasswords.current ? 'text' : 'password'}
+                          value={formData.currentPassword}
+                          onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                          className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 transition-all ${
+                            errors.currentPassword ? 'border-red-500' : 'border-gray-200'
                           }`}
-                        placeholder="Enter current password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showPasswords.current ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                      </button>
+                          placeholder="Enter current password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showPasswords.current ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                        </button>
+                      </div>
+                      {errors.currentPassword && (
+                        <p className="mt-1 text-xs text-red-600">{errors.currentPassword}</p>
+                      )}
                     </div>
-                    {errors.currentPassword && (
-                      <p className="mt-1 text-xs text-red-600">{errors.currentPassword}</p>
-                    )}
                   </div>
-
-                  {/* Security Question */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Security Question
-                    </label>
-                    <select
-                      value={formData.securityQuestion}
-                      onChange={(e) => setFormData({ ...formData, securityQuestion: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option>What is your favorite color?</option>
-                      <option>What is your mother's maiden name?</option>
-                      <option>What was your first pet's name?</option>
-                      <option>What city were you born in?</option>
-                    </select>
-                  </div>
-
-                  {/* Security Answer */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Your Answer
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.securityAnswer}
-                      onChange={(e) => setFormData({ ...formData, securityAnswer: e.target.value })}
-                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.securityAnswer ? 'border-red-500' : 'border-gray-200'
+                ) : (
+                  // Forgot Password Option - Email/Phone + OTP
+                  <div className="space-y-6">
+                    {/* Method Selection */}
+                    <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+                      <button
+                        onClick={() => setVerificationMethod('email')}
+                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                          verificationMethod === 'email'
+                            ? 'bg-white text-blue-600 shadow-md'
+                            : 'text-gray-600'
                         }`}
-                      placeholder="Enter your answer"
-                    />
-                    {errors.securityAnswer && (
-                      <p className="mt-1 text-xs text-red-600">{errors.securityAnswer}</p>
-                    )}
-                  </div>
-
-                  {/* 2FA Option */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <DevicePhoneMobileIcon className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">Two-Factor Authentication</p>
-                          <p className="text-xs text-gray-500">Get OTP on your registered mobile</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={handleSendOTP}
-                        disabled={isLoading || otpSent}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${otpSent
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-blue-600 text-white hover:bg-blue-700'
-                          }`}
                       >
-                        {isLoading ? (
-                          <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                        ) : otpSent ? (
-                          `Resend in ${countdown}s`
-                        ) : (
-                          'Send OTP'
-                        )}
+                        <EnvelopeIcon className="h-4 w-4 inline mr-1" />
+                        Email
+                      </button>
+                      <button
+                        onClick={() => setVerificationMethod('phone')}
+                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                          verificationMethod === 'phone'
+                            ? 'bg-white text-blue-600 shadow-md'
+                            : 'text-gray-600'
+                        }`}
+                      >
+                        <PhoneIcon className="h-4 w-4 inline mr-1" />
+                        Phone
                       </button>
                     </div>
-                  </div>
 
-                  {/* OTP Input (shown after sending) */}
-                  {otpSent && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="space-y-2"
-                    >
-                      <label className="block text-sm font-medium text-gray-700">Enter OTP</label>
-                      <div className="flex gap-2">
-                        {[1, 2, 3, 4, 5, 6].map((digit) => (
+                    {/* Email or Phone Input */}
+                    {verificationMethod === 'email' ? (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Email Address
+                        </label>
+                        <div className="relative">
+                          <EnvelopeIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                           <input
-                            key={digit}
-                            type="text"
-                            maxLength="1"
-                            className="w-10 h-12 text-center border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
+                              errors.email ? 'border-red-500' : 'border-gray-200'
+                            }`}
+                            placeholder="Enter your registered email"
                           />
-                        ))}
+                        </div>
+                        {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
                       </div>
-                    </motion.div>
-                  )}
-                </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Phone Number
+                        </label>
+                        <div className="relative">
+                          <PhoneIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                          <input
+                            type="tel"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
+                              errors.phone ? 'border-red-500' : 'border-gray-200'
+                            }`}
+                            placeholder="Enter your registered phone number"
+                          />
+                        </div>
+                        {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
+                      </div>
+                    )}
+
+                    {/* Send OTP Button */}
+                    <button
+                      onClick={handleSendOTP}
+                      disabled={isLoading || otpSent}
+                      className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-medium disabled:opacity-50"
+                    >
+                      {isLoading ? (
+                        <ArrowPathIcon className="h-5 w-5 animate-spin mx-auto" />
+                      ) : otpSent ? (
+                        `Resend OTP in ${countdown}s`
+                      ) : (
+                        'Send Verification Code'
+                      )}
+                    </button>
+
+                    {/* OTP Input */}
+                    {otpSent && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="space-y-2"
+                      >
+                        <label className="block text-sm font-medium text-gray-700">
+                          Verification Code
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.otp}
+                          onChange={(e) => setFormData({ ...formData, otp: e.target.value })}
+                          className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 text-center text-2xl tracking-widest ${
+                            errors.otp ? 'border-red-500' : 'border-gray-200'
+                          }`}
+                          placeholder="000000"
+                          maxLength="6"
+                        />
+                        <p className="text-xs text-gray-500 text-center">
+                          Please enter the 6-digit verification code sent to your {verificationMethod === 'email' ? 'email inbox' : 'mobile number'}
+                        </p>
+                        {errors.otp && <p className="mt-1 text-xs text-red-600 text-center">{errors.otp}</p>}
+                      </motion.div>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex justify-end mt-8">
                   <button
@@ -362,14 +402,14 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
             {step === 2 && (
               <motion.div
                 key="step2"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 className="p-8"
               >
                 <div className="flex items-center space-x-3 mb-6">
                   <div className="p-2 bg-green-100 rounded-lg">
-                    <FingerPrintIcon className="h-6 w-6 text-green-600" />
+                    <LockClosedIcon className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900">Create New Password</h2>
@@ -392,8 +432,9 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                           setFormData({ ...formData, newPassword: e.target.value });
                           checkPasswordStrength(e.target.value);
                         }}
-                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.newPassword ? 'border-red-500' : 'border-gray-200'
-                          }`}
+                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
+                          errors.newPassword ? 'border-red-500' : 'border-gray-200'
+                        }`}
                         placeholder="Enter new password"
                       />
                       <button
@@ -409,10 +450,10 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                     )}
                   </div>
 
-                  {/* Password Strength Meter */}
+                  {/* Password Strength */}
                   {formData.newPassword && (
                     <div className="space-y-2">
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between">
                         <span className="text-xs text-gray-500">Password strength:</span>
                         <span className={`text-xs font-medium ${strength.color}`}>{strength.text}</span>
                       </div>
@@ -437,8 +478,9 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                         type={showPasswords.confirm ? 'text' : 'password'}
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${errors.confirmPassword ? 'border-red-500' : 'border-gray-200'
-                          }`}
+                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
+                          errors.confirmPassword ? 'border-red-500' : 'border-gray-200'
+                        }`}
                         placeholder="Confirm new password"
                       />
                       <button
@@ -456,39 +498,29 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
 
                   {/* Password Requirements */}
                   <div className="bg-gray-50 p-4 rounded-xl">
-                    <p className="text-xs font-medium text-gray-700 mb-3">Password Requirements:</p>
+                    <p className="text-xs font-medium text-gray-700 mb-2">Password Requirements:</p>
                     <div className="grid grid-cols-2 gap-2">
                       {[
                         { text: 'At least 8 characters', met: formData.newPassword.length >= 8 },
                         { text: 'Uppercase letter', met: /[A-Z]/.test(formData.newPassword) },
                         { text: 'Number', met: /[0-9]/.test(formData.newPassword) },
-                        { text: 'Special character', met: /[^A-Za-z0-9]/.test(formData.newPassword) },
-                        { text: 'At least 12 chars (bonus)', met: formData.newPassword.length >= 12 },
-                        { text: 'No common patterns', met: !/(password|123|qwerty)/i.test(formData.newPassword) }
+                        { text: 'Special character', met: /[^A-Za-z0-9]/.test(formData.newPassword) }
                       ].map((req, idx) => (
                         <div key={idx} className="flex items-center text-xs">
-                          <span className={`w-4 h-4 rounded-full flex items-center justify-center mr-2 ${req.met ? 'bg-green-500' : 'bg-gray-300'
-                            }`}>
-                            {req.met && <CheckCircleIcon className="h-3 w-3 text-white" />}
-                          </span>
+                          <CheckCircleIcon className={`h-3 w-3 mr-1 ${req.met ? 'text-green-500' : 'text-gray-300'}`} />
                           <span className={req.met ? 'text-gray-700' : 'text-gray-400'}>{req.text}</span>
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  {/* Last Changed Info */}
-                  <div className="flex items-center text-sm text-gray-500 bg-yellow-50 p-3 rounded-lg">
-                    <ClockIcon className="h-5 w-5 text-yellow-600 mr-2" />
-                    <span>Last password change: 45 days ago</span>
-                  </div>
                 </div>
 
-                <div className="flex justify-end space-x-3 mt-8">
+                <div className="flex justify-between mt-8">
                   <button
                     onClick={() => setStep(1)}
-                    className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all"
+                    className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all flex items-center"
                   >
+                    <ArrowLeftIcon className="h-5 w-5 mr-2" />
                     Back
                   </button>
                   <button
@@ -529,34 +561,9 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Password Changed!</h2>
                 <p className="text-gray-600 mb-6">Your password has been updated successfully</p>
 
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl mb-6">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Last changed:</span>
-                    <span className="font-medium text-gray-900">Just now</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm mt-2">
-                    <span className="text-gray-600">Next change recommended:</span>
-                    <span className="font-medium text-gray-900">In 60 days</span>
-                  </div>
-                </div>
-
-                {/* Security Tips */}
-                <div className="text-left bg-yellow-50 p-4 rounded-xl mb-6">
-                  <h3 className="text-sm font-medium text-yellow-800 mb-2 flex items-center">
-                    <ShieldCheckIcon className="h-4 w-4 mr-1" />
-                    Security Tips
-                  </h3>
-                  <ul className="text-xs text-yellow-700 space-y-1">
-                    <li>• Never share your password with anyone</li>
-                    <li>• Use different passwords for different accounts</li>
-                    <li>• Enable two-factor authentication for extra security</li>
-                    <li>• Change your password every 60 days</li>
-                  </ul>
-                </div>
-
                 <button
                   onClick={handleDone}
-                  className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl font-medium"
+                  className="w-full px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl font-medium"
                 >
                   Go to Dashboard
                 </button>
@@ -565,9 +572,30 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
           </AnimatePresence>
         </motion.div>
 
-        {/* Additional Info */}
-        <div className="mt-6 text-center text-sm text-gray-500">
-          <p>Having trouble? <button className="text-blue-600 hover:underline">Contact Support</button></p>
+        {/* Tab Switcher - Now at bottom */}
+        <div className="bg-white/80 backdrop-blur rounded-2xl p-1 mt-6 shadow-lg">
+          <div className="flex gap-1">
+            <button
+              onClick={() => handleTabChange('change')}
+              className={`flex-1 py-3 rounded-xl font-medium transition-all ${
+                activeTab === 'change'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Change Password
+            </button>
+            <button
+              onClick={() => handleTabChange('forgot')}
+              className={`flex-1 py-3 rounded-xl font-medium transition-all ${
+                activeTab === 'forgot'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Forgot Password
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>
