@@ -32,8 +32,11 @@ function App() {
       const savedAuth = localStorage.getItem('isAuthenticated');
       
       if (savedUser && savedAuth === 'true') {
-        setUser(JSON.parse(savedUser));
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
         setIsAuthenticated(true);
+        // Ensure role is in localStorage for RBAC check
+        localStorage.setItem('role', userData.role);
       }
       setLoading(false);
     };
@@ -43,9 +46,10 @@ function App() {
 
   // Handle login
   const handleLogin = (credentials) => {
-    // Demo authentication - In production, this would be an API call
+    let userData = null;
+
     if (credentials.username === 'collector' && credentials.password === 'admin123') {
-      const userData = {
+      userData = {
         name: 'SUDARSHAN SHAHARE',
         role: 'Collector',
         department: 'Collector Office',
@@ -54,13 +58,36 @@ function App() {
         permissions: ['all'],
         loginTime: new Date().toISOString()
       };
-      
+    } else if (credentials.username === 'talathi' && credentials.password === 'admin123') {
+      userData = {
+        name: 'RAMESH KUMAR',
+        role: 'Talathi',
+        department: 'Revenue Department',
+        email: 'talathi@amravati.gov.in',
+        avatar: null,
+        permissions: ['view_tasks'],
+        loginTime: new Date().toISOString()
+      };
+    } else if (credentials.username === 'admin' && credentials.password === 'admin123') {
+      userData = {
+        name: 'System Admin',
+        role: 'System Administrator',
+        department: 'IT Cell',
+        email: 'admin@amravati.gov.in',
+        avatar: null,
+        permissions: ['manage_users'],
+        loginTime: new Date().toISOString()
+      };
+    }
+
+    if (userData) {
       setIsAuthenticated(true);
       setUser(userData);
       
       // Save to localStorage
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('role', userData.role);
       localStorage.setItem('sessionToken', 'sess_' + Math.random().toString(36).substr(2, 9));
       
       return true;
