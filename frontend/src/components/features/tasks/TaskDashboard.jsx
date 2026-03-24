@@ -28,8 +28,12 @@ import {
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
-const TaskDashboard = () => {
-  const [activeTab, setActiveTab] = useState('create');
+const TaskDashboard = ({ user }) => {
+  const role = user?.role || localStorage.getItem('role') || 'user';
+  const roleLower = role.toLowerCase();
+  const canCreateTask = ['collector', 'additional collector', 'sdo', 'tehsildar'].includes(roleLower);
+
+  const [activeTab, setActiveTab] = useState(canCreateTask ? 'create' : 'tracking');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedDepartment, setSelectedDepartment] = useState('all');
@@ -175,11 +179,13 @@ const TaskDashboard = () => {
   const [selectedTaskForTracking, setSelectedTaskForTracking] = useState(null);
   const [showTrackingDetails, setShowTrackingDetails] = useState(false);
 
-  const tabs = [
+  const allTabs = [
     { id: 'create', name: 'Create Task', icon: PlusCircleIcon },
     { id: 'tracking', name: 'Task Tracking', icon: ArrowPathIcon },
     { id: 'pending', name: 'Pending Report', icon: ClockIcon },
   ];
+
+  const tabs = canCreateTask ? allTabs : allTabs.filter(tab => tab.id !== 'create');
 
   // Filter tasks based on search and filters
   const filteredTasks = tasks.filter(task => {

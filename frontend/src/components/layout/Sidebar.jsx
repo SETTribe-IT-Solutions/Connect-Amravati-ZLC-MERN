@@ -14,8 +14,10 @@ import {
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) => {
   const { t } = useTranslation();
+  const role = user?.role || localStorage.getItem('role') || 'user';
+  const roleLower = role.toLowerCase();
 
-  const navigation = [
+  const allNavItems = [
     { name: t('navigation.dashboard') || 'Dashboard', href: '/dashboard', icon: HomeIcon, color: 'from-blue-500 to-blue-600' },
     { name: t('navigation.tasks') || 'Tasks', href: '/tasks', icon: ClipboardDocumentListIcon, color: 'from-blue-500 to-blue-600' },
     { name: t('navigation.communications') || 'Communications', href: '/communications', icon: ChatBubbleLeftRightIcon, color: 'from-blue-500 to-blue-600' },
@@ -23,6 +25,16 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) =
     { name: t('navigation.users') || 'Users', href: '/users', icon: UserGroupIcon, color: 'from-blue-500 to-blue-600' },
     { name: t('navigation.appreciation') || 'Appreciation', href: '/appreciation', icon: HeartIcon, color: 'from-blue-500 to-blue-600' },
   ];
+
+  let navigation = [];
+  if (roleLower === 'system administrator') {
+    navigation = allNavItems.filter(item => item.href === '/users');
+  } else if (['collector', 'additional collector', 'sdo', 'tehsildar', 'bdo', 'talathi', 'gramsevak'].includes(roleLower)) {
+    navigation = allNavItems.filter(item => item.href !== '/users');
+  } else {
+    // Default fallback
+    navigation = allNavItems.filter(item => item.href !== '/users');
+  }
 
   const sidebarWidth = isCollapsed ? 'lg:w-20' : 'lg:w-64';
 
