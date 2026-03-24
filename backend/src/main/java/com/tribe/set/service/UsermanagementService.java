@@ -4,6 +4,7 @@ import com.tribe.set.Entity.Role;
 import com.tribe.set.Entity.User;
 
 import com.tribe.set.dto.CreateuserRequest;
+import com.tribe.set.dto.UpdateUserRequest;
 import com.tribe.set.dto.UserResponse;
 import com.tribe.set.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -148,6 +149,67 @@ public class UsermanagementService {
         User target = findUser(targetUserId);
         target.setRole(newRole);
         return UserResponse.from(userRepository.save(target));
+    }
+
+    // ═══════════════════════════════════════════════════
+    // UPDATE USER
+    // ═══════════════════════════════════════════════════
+
+    public UserResponse updateUser(Long targetUserId, UpdateUserRequest request, Long requesterId) {
+        User requester = findUser(requesterId);
+
+        // Only SYSTEM_ADMINISTRATOR or the user themselves can update profile
+        // But usually "Management" implies Admin. Let's stick with Admin for management controller.
+        if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR && !requester.getUserID().equals(targetUserId)) {
+            throw new RuntimeException(
+                "Access Denied: You do not have permission to update this user"
+            );
+        }
+
+        User target = findUser(targetUserId);
+
+        if (request.getName() != null) target.setName(request.getName());
+        if (request.getEmail() != null) {
+            // Check duplicate email if it's changing
+            if (!target.getEmail().equals(request.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
+                throw new RuntimeException("Email already in use: " + request.getEmail());
+            }
+            target.setEmail(request.getEmail());
+        }
+        if (request.getRole() != null) {
+            if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
+                throw new RuntimeException("Access Denied: Only System Administrator can change roles");
+            }
+            target.setRole(request.getRole());
+        }
+        if (request.getDistrict() != null) target.setDistrict(request.getDistrict());
+        if (request.getTaluka() != null) target.setTaluka(request.getTaluka());
+        if (request.getVillage() != null) target.setVillage(request.getVillage());
+
+        return UserResponse.from(userRepository.save(target));
+    }
+
+    // ═══════════════════════════════════════════════════
+    // DELETE USER
+    // ═══════════════════════════════════════════════════
+
+    public void deleteUser(Long targetUserId, Long requesterId) {
+        User requester = findUser(requesterId);
+
+        if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
+            throw new RuntimeException(
+                "Access Denied: Only System Administrator can delete users"
+            );
+        }
+
+        User target = findUser(targetUserId);
+        
+        // Cannot delete yourself
+        if (target.getUserID().equals(requesterId)) {
+            throw new RuntimeException("You cannot delete your own account");
+        }
+
+        userRepository.delete(target);
     }
 
     // ═══════════════════════════════════════════════════
