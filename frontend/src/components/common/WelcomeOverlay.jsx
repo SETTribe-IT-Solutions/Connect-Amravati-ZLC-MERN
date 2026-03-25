@@ -3,14 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GiIndiaGate } from 'react-icons/gi';
 import { useLanguage } from "../../context/LanguageContext";
 
-const WelcomeOverlay = () => {
+const WelcomeOverlay = ({ onComplete }) => {
   const { t } = useLanguage();
   const [showWelcome, setShowWelcome] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowWelcome(false), 2500);
+    const timer = setTimeout(() => {
+      setShowWelcome(false);
+      if (onComplete) onComplete();
+    }, 2500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [onComplete]);
 
   return (
     <AnimatePresence>

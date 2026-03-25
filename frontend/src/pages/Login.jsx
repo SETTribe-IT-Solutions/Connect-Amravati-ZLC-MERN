@@ -19,6 +19,7 @@ const LoginPage = ({ onLogin }) => {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const [isWelcomeActive, setIsWelcomeActive] = useState(true);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -74,8 +75,8 @@ const LoginPage = ({ onLogin }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 relative overflow-hidden flex flex-col">
       <AnimatedBackground />
-      <WelcomeOverlay />
-      <Header />
+      <WelcomeOverlay onComplete={() => setIsWelcomeActive(false)} />
+      {!isWelcomeActive && <Header />}
 
       <main className="container mx-auto px-4 py-12 relative z-10 flex-grow">
         <motion.div

@@ -8,13 +8,14 @@ import CulturalSection from '../../components/common/CulturalSection';
 import LoginForm from './LoginForm';
 
 const LoginPage = ({ showToast }) => {
+  const [isWelcomeActive, setIsWelcomeActive] = React.useState(true);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 relative overflow-hidden flex flex-col">
       <AnimatedBackground />
 
-      <WelcomeOverlay />
+      <WelcomeOverlay onComplete={() => setIsWelcomeActive(false)} />
 
-      <Header />
+      {!isWelcomeActive && <Header />}
 
       <main className="container mx-auto px-4 py-12 relative z-10 flex-grow">
         <motion.div
