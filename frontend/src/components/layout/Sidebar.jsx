@@ -27,12 +27,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) =
   ];
 
   let navigation = [];
-  if (roleLower === 'system administrator') {
+  if (roleLower === 'system_administrator' || roleLower === 'system administrator') {
     navigation = allNavItems.filter(item => item.href === '/users');
-  } else if (['collector', 'additional collector', 'sdo', 'tehsildar', 'bdo', 'talathi', 'gramsevak'].includes(roleLower)) {
+  } else if (['collector', 'additional_deputy_collector', 'additional collector', 'sdo', 'tehsildar', 'bdo', 'talathi', 'gramsevak'].includes(roleLower)) {
     navigation = allNavItems.filter(item => item.href !== '/users');
   } else {
-    // Default fallback
+    // Default fallback (usually Dashboard and Tasks)
     navigation = allNavItems.filter(item => item.href !== '/users');
   }
 
@@ -79,7 +79,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) =
                   </span>
                   {!isCollapsed && item.href === '/tasks' && (
                     <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap">
-                      3
+                      0
                     </span>
                   )}
                 </NavLink>

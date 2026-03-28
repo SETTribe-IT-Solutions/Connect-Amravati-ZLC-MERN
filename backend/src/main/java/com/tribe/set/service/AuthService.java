@@ -69,4 +69,17 @@ public class AuthService {
 
         return "User registered successfully";
     }
+
+    public String changePassword(com.tribe.set.dto.ChangePasswordRequest request) {
+        User user = userRepository.findByUserID(request.getUserID())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("Current password does not match");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        return "Password changed successfully";
+    }
 }

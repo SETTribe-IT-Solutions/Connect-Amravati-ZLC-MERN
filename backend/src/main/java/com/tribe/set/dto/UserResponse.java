@@ -13,8 +13,15 @@ public class UserResponse {
     private String district;
     private String taluka;
     private String village;
+    private String phone;
+    private Double rating;
     private Boolean active;
-    private LocalDateTime createdAt;
+    private String createdAt;
+
+    // Real-time calculated stats
+    private Long tasksCompleted = 0L;
+    private Long achievements = 0L;
+    private Long pendingTasks = 0L;
 
     public static UserResponse from(User user) {
         UserResponse res = new UserResponse();
@@ -25,8 +32,10 @@ public class UserResponse {
         res.district = user.getDistrict();
         res.taluka = user.getTaluka();
         res.village = user.getVillage();
+        res.phone = user.getPhone();
+        res.rating = user.getRating();
         res.active = user.getActive();
-        res.createdAt = user.getCreatedAt();
+        res.createdAt = user.getCreatedAt() != null ? user.getCreatedAt().toString() : null;
         return res;
     }
 
@@ -38,8 +47,13 @@ public class UserResponse {
     public String getDistrict() { return district; }
     public String getTaluka() { return taluka; }
     public String getVillage() { return village; }
+    public String getPhone() { return phone; }
+    public Double getRating() { return rating; }
     public Boolean getActive() { return active; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public String getCreatedAt() { return createdAt; }
+    public Long getTasksCompleted() { return tasksCompleted; }
+    public Long getAchievements() { return achievements; }
+    public Long getPendingTasks() { return pendingTasks; }
 
     // Setters
     public void setUserID(Long userID) { this.userID = userID; }
@@ -49,6 +63,11 @@ public class UserResponse {
     public void setDistrict(String district) { this.district = district; }
     public void setTaluka(String taluka) { this.taluka = taluka; }
     public void setVillage(String village) { this.village = village; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public void setRating(Double rating) { this.rating = rating; }
     public void setActive(Boolean active) { this.active = active; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public void setTasksCompleted(Long tasksCompleted) { this.tasksCompleted = tasksCompleted; }
+    public void setAchievements(Long achievements) { this.achievements = achievements; }
+    public void setPendingTasks(Long pendingTasks) { this.pendingTasks = pendingTasks; }
 }

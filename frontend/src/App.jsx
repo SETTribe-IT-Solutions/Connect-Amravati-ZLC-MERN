@@ -19,6 +19,7 @@ import Reports from './pages/Reports';
 import UserManagement from './pages/UserManagement';
 import Appreciation from './pages/Appreciation';
 import ChangePassword from './pages/ChangePassword';
+import { changePassword } from './services/authService';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -35,8 +36,9 @@ function App() {
         const userData = JSON.parse(savedUser);
         setUser(userData);
         setIsAuthenticated(true);
-        // Ensure role is in localStorage for RBAC check
+        // Restore all essential bits to localStorage
         localStorage.setItem('role', userData.role);
+        localStorage.setItem('userID', userData.userID);
       }
       setLoading(false);
     };
@@ -45,49 +47,32 @@ function App() {
   }, []);
 
   // Handle login
-  const handleLogin = (credentials) => {
-    let userData = null;
-
-    if (credentials.username === 'collector' && credentials.password === 'admin123') {
-      userData = {
-        name: 'SUDARSHAN SHAHARE',
-        role: 'Collector',
-        department: 'Collector Office',
-        email: 'collector@amravati.gov.in',
-        avatar: null,
-        permissions: ['all'],
-        loginTime: new Date().toISOString()
-      };
-    } else if (credentials.username === 'talathi' && credentials.password === 'admin123') {
-      userData = {
-        name: 'RAMESH KUMAR',
-        role: 'Talathi',
-        department: 'Revenue Department',
-        email: 'talathi@amravati.gov.in',
-        avatar: null,
-        permissions: ['view_tasks'],
-        loginTime: new Date().toISOString()
-      };
-    } else if (credentials.username === 'admin' && credentials.password === 'admin123') {
-      userData = {
-        name: 'System Admin',
-        role: 'System Administrator',
-        department: 'IT Cell',
-        email: 'admin@amravati.gov.in',
-        avatar: null,
-        permissions: ['manage_users'],
-        loginTime: new Date().toISOString()
-      };
-    }
-
+  const handleLogin = (userData) => {
     if (userData) {
+      // Normalize role because backend might return ADMIN but frontend uses Collector/SDO in some places
+      // We'll store both for compatibility
+      const normalizedRole = userData.role;
+      
+      const userToStore = {
+        userID: userData.userID,
+        name: userData.name,
+        role: normalizedRole,
+        email: userData.email,
+        district: userData.district,
+        taluka: userData.taluka,
+        village: userData.village,
+        loginTime: new Date().toISOString(),
+        permissions: normalizedRole === 'ADMIN' ? ['all'] : ['view_tasks']
+      };
+
       setIsAuthenticated(true);
-      setUser(userData);
+      setUser(userToStore);
       
       // Save to localStorage
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('role', userData.role);
+      localStorage.setItem('user', JSON.stringify(userToStore));
+      localStorage.setItem('role', normalizedRole);
+      localStorage.setItem('userID', userData.userID);
       localStorage.setItem('sessionToken', 'sess_' + Math.random().toString(36).substr(2, 9));
       
       return true;
@@ -111,14 +96,17 @@ function App() {
   };
 
   // Handle password change
-  const handlePasswordChange = (oldPassword, newPassword) => {
-    // Demo password change validation
-    if (oldPassword === 'admin123') {
-      // In production, this would be an API call
-      console.log('Password changed successfully');
+  const handlePasswordChange = async (oldPassword, newPassword) => {
+    try {
+      if (!user?.userID) return false;
+      await changePassword(user.userID, oldPassword, newPassword);
+      toast.success('Password changed successfully');
       return true;
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Failed to change password';
+      toast.error(msg);
+      return false;
     }
-    return false;
   };
 
   // Show loading state
@@ -175,7 +163,7 @@ function App() {
                 path="/login" 
                 element={
                   isAuthenticated ? 
-                  <Navigate to="/dashboard" replace /> : 
+                  <Navigate to={user?.role === 'SYSTEM_ADMINISTRATOR' ? "/users" : "/dashboard"} replace /> : 
                   <Login onLogin={handleLogin} />
                 } 
               />
@@ -192,7 +180,7 @@ function App() {
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route index element={<Navigate to={user?.role === 'SYSTEM_ADMINISTRATOR' ? "/users" : "/dashboard"} replace />} />
                 
                 {/* Main Pages */}
                 <Route 
@@ -243,7 +231,7 @@ function App() {
               {/* Redirect root to appropriate page */}
               <Route 
                 path="*" 
-                element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} 
+                element={<Navigate to={isAuthenticated ? (user?.role === 'SYSTEM_ADMINISTRATOR' ? "/users" : "/dashboard") : "/login"} replace />} 
               />
             </Routes>
           </AnimatePresence>

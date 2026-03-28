@@ -25,6 +25,27 @@ public class ReportService {
     @Autowired
     private UserRepository userRepository;
 
+    public Map<String, Object> getGlobalStats(Long requesterId) {
+        checkAccess(requesterId);
+        List<Task> allTasks = taskRepository.findAll();
+        
+        long total = allTasks.size();
+        long completed = allTasks.stream().filter(t -> t.getStatus() == TaskStatus.COMPLETED).count();
+        long pending = allTasks.stream().filter(t -> t.getStatus() == TaskStatus.PENDING).count();
+        long progress = allTasks.stream().filter(t -> t.getStatus() == TaskStatus.IN_PROGRESS).count();
+        long overdue = allTasks.stream().filter(t -> t.getStatus() == TaskStatus.OVERDUE).count();
+        
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("total", total);
+        stats.put("completed", completed);
+        stats.put("pending", pending);
+        stats.put("inProgress", progress);
+        stats.put("overdue", overdue);
+        stats.put("completionRate", Math.round((total > 0 ? (double) completed / total * 100 : 0) * 10.0) / 10.0);
+        
+        return stats;
+    }
+
     public List<Map<String, Object>> getPerformanceReport(Long requesterId) {
         checkAccess(requesterId);
 
@@ -66,7 +87,10 @@ public class ReportService {
         User requester = userRepository.findByUserID(requesterId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + requesterId));
 
-        if (!requester.getRole().canAllocateTask() && requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
+        // Allow access if user is System Admin, can allocate tasks (Higher officials), or is a Field Officer (BDO, Talathi, Gramsevak)
+        if (!requester.getRole().canAllocateTask() && 
+            !requester.getRole().isFieldOfficer() && 
+            requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
             throw new RuntimeException("Access Denied: You do not have permission to view reports.");
         }
     }

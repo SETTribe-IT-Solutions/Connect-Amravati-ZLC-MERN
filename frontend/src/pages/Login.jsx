@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { FaUser, FaLock, FaArrowRight, FaBell, FaShieldAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { loginUser } from '../api/authService';
+import { loginUser } from '../services/authService';
 import { toast } from 'react-hot-toast';
 
 import Header from '../components/layout/Header';
@@ -31,43 +31,28 @@ const LoginPage = ({ onLogin }) => {
 
     setLoading(true);
 
-    // Try onLogin from props if provided (from App.jsx)
-    if (onLogin) {
-      const success = onLogin(formData);
-      if (success) {
-        toast.success(t('Login successful') || 'Login successful');
-        setLoading(false);
-        navigate('/dashboard');
-        return;
-      }
-    }
-
-    // Fallback to authService
+    // Call authService
     try {
       const data = await loginUser(formData.username, formData.password);
 
-      if (data.message === "Login Successful") {
-        const role =
-          data.role === "ADMIN"
-            ? "collector"
-            : data.role === "SDO"
-              ? "sdo"
-              : "user";
-
-        localStorage.setItem("role", role);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        localStorage.setItem("isAuthenticated", "true");
-
-        toast.success(t('Login successful') || 'Login successful');
-        setLoading(false);
-        navigate("/dashboard");
+      if (data.message && data.message.toLowerCase() === "login successful") {
+        if (onLogin) {
+          const success = onLogin(data);
+          if (success) {
+            toast.success(t('Login successful') || 'Login successful');
+            setLoading(false);
+            navigate("/dashboard");
+            return;
+          }
+        }
       } else {
-        toast.error(t('Invalid credentials') || 'Invalid credentials');
+        toast.error(t('Invalid credentials') || data.message || 'Invalid credentials');
         setLoading(false);
       }
     } catch (error) {
       console.error("Login Error:", error.response || error.message);
-      toast.error(t('login.error_invalid') || 'Login failed');
+      const errorMessage = error.response?.data?.message || 'Login failed';
+      toast.error(errorMessage);
       setLoading(false);
     }
   };
@@ -166,29 +151,7 @@ const LoginPage = ({ onLogin }) => {
                       )}
                     </button>
 
-                    {/* Demo Credentials */}
-                    <div className="mt-8 p-5 bg-gradient-to-r from-blue-50 to-orange-50 rounded-2xl border border-blue-100">
-                      <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <FaBell className="mr-2 text-blue-600 animate-pulse" />
-                        {t('demo.title') || 'Demo Credentials'}
-                      </p>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div
-                          className="bg-white p-2 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer border border-blue-50"
-                          onClick={() => setFormData({ username: 'collector', password: 'admin123' })}
-                        >
-                          <span className="text-xs text-blue-700 block font-bold text-center">{t('demo.admin') || 'Collector'}</span>
-                          <span className="text-[10px] text-gray-500 block text-center">collector / admin123</span>
-                        </div>
-                        <div
-                          className="bg-white p-2 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer border border-green-50"
-                          onClick={() => setFormData({ username: 'sdo_user', password: 'password123' })}
-                        >
-                          <span className="text-xs text-green-700 block font-bold text-center">{t('demo.employee') || 'SDO'}</span>
-                          <span className="text-[10px] text-gray-500 block text-center">sdo_user / password123</span>
-                        </div>
-                      </div>
-                    </div>
+
 
                     {/* Security Notice */}
                     <p className="text-xs text-gray-500 text-center mt-6 flex items-center justify-center">

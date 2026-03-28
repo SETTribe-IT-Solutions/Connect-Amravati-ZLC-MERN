@@ -6,6 +6,8 @@ import com.tribe.set.Entity.User;
 import com.tribe.set.dto.CreateuserRequest;
 import com.tribe.set.dto.UpdateUserRequest;
 import com.tribe.set.dto.UserResponse;
+import com.tribe.set.repository.AppreciationRepository;
+import com.tribe.set.repository.TaskRepository;
 import com.tribe.set.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,15 @@ public class UsermanagementService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private TaskRepository taskRepository;
+
+    @Autowired
+    private AppreciationRepository appreciationRepository;
+
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     // ═══════════════════════════════════════════════════
     // CREATE USER
@@ -53,14 +64,16 @@ public class UsermanagementService {
         user.setUserID(request.getUserID());
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        // Fix: Encode the password before saving
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole());
         user.setDistrict(request.getDistrict());
         user.setTaluka(request.getTaluka());
         user.setVillage(request.getVillage());
+        user.setPhone(request.getPhone());
         user.setActive(true);
 
-        return UserResponse.from(userRepository.save(user));
+        return enrichWithStats(UserResponse.from(userRepository.save(user)));
     }
 
     // ═══════════════════════════════════════════════════
@@ -68,17 +81,14 @@ public class UsermanagementService {
     // ═══════════════════════════════════════════════════
 
     public List<UserResponse> getAllUsers(Long requesterId) {
-        User requester = findUser(requesterId);
-
-        if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
-            throw new RuntimeException(
-                "Access Denied: Only System Administrator can view all users"
-            );
+        if (requesterId != null) {
+            findUser(requesterId);
         }
 
+        // Allow any active user to see the list for assignment/appreciation purposes
         return userRepository.findAll()
                 .stream()
-                .map(UserResponse::from)
+                .map(u -> enrichWithStats(UserResponse.from(u)))
                 .collect(Collectors.toList());
     }
 
@@ -103,7 +113,7 @@ public class UsermanagementService {
     public UserResponse getUserProfile(Long targetUserId, Long requesterId) {
         findUser(requesterId);
         User target = findUser(targetUserId);
-        return UserResponse.from(target);
+        return enrichWithStats(UserResponse.from(target));
     }
 
     // ═══════════════════════════════════════════════════
@@ -185,8 +195,12 @@ public class UsermanagementService {
         if (request.getDistrict() != null) target.setDistrict(request.getDistrict());
         if (request.getTaluka() != null) target.setTaluka(request.getTaluka());
         if (request.getVillage() != null) target.setVillage(request.getVillage());
+        if (request.getPhone() != null) target.setPhone(request.getPhone());
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            target.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
 
-        return UserResponse.from(userRepository.save(target));
+        return enrichWithStats(UserResponse.from(userRepository.save(target)));
     }
 
     // ═══════════════════════════════════════════════════
@@ -220,5 +234,18 @@ public class UsermanagementService {
         return userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException(
                     "User not found with ID: " + userId));
+    }
+
+    private UserResponse enrichWithStats(UserResponse res) {
+        User user = userRepository.findByUserID(res.getUserID()).orElse(null);
+        if (user != null) {
+            res.setTasksCompleted(taskRepository.countByAssignedToAndStatus(user, com.tribe.set.Entity.TaskStatus.COMPLETED));
+            res.setAchievements(appreciationRepository.countByToUser(user));
+            
+            // Pending tasks = Total tasks - Completed tasks
+            long totalTasks = taskRepository.countByAssignedTo(user);
+            res.setPendingTasks(totalTasks - res.getTasksCompleted());
+        }
+        return res;
     }
 }

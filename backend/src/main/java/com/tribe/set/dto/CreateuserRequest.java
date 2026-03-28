@@ -29,6 +29,7 @@ public class CreateuserRequest {
     private String district;
     private String taluka;
     private String village;
+    private String phone;
 
     @NotNull(message = "Requester ID is required")
     private Long requesterId;
@@ -67,6 +68,10 @@ public class CreateuserRequest {
         return village;
     }
 
+    public String getPhone() {
+        return phone;
+    }
+
     // ─── Setters ───
 
     public void setUserID(Long userID) {
@@ -99,6 +104,10 @@ public class CreateuserRequest {
 
     public void setVillage(String village) {
         this.village = village;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public Long getRequesterId() {
