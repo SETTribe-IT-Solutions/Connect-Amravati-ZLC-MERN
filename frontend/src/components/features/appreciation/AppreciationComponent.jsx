@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getAllAppreciations, sendAppreciation } from '../../../services/appreciationService';
+import { getAllUsers } from '../../../services/userService';
+import { toast } from 'react-hot-toast';
 import {
   HeartIcon,
   StarIcon,
@@ -15,79 +18,62 @@ import {
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 
-const AppreciationComponent = () => {
+const AppreciationComponent = ({ user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
 
-  // Sample appreciations data
-  const [appreciations, setAppreciations] = useState([
-    {
-      id: 1,
-      from: 'Collector Office',
-      fromAvatar: 'CO',
-      to: 'Tehsildar Office',
-      toAvatar: 'TO',
-      message: 'Outstanding work in completing the land survey project ahead of schedule. Your dedication and efficiency are truly commendable. The entire department appreciates your hard work.',
-      date: '2024-03-11',
-      likes: 45,
-      comments: 12,
-      badge: 'Excellence Award',
-      liked: false
-    },
-    {
-      id: 2,
-      from: 'SDO Office',
-      fromAvatar: 'SO',
-      to: 'Gram Sevak - Sunita Gaikwad',
-      toAvatar: 'SG',
-      message: 'Exceptional effort in organizing the Gram Sabha meeting and ensuring maximum participation from villagers. Your community engagement skills are remarkable.',
-      date: '2024-03-10',
-      likes: 32,
-      comments: 8,
-      badge: 'Community Service',
-      liked: true
-    },
-    {
-      id: 3,
-      from: 'Additional Collector',
-      fromAvatar: 'AC',
-      to: 'Talathi - Vikas Pawar',
-      toAvatar: 'VP',
-      message: 'Quick resolution of the land dispute case in Circle 1. Your prompt action and fair judgment have been appreciated by all parties involved.',
-      date: '2024-03-09',
-      likes: 28,
-      comments: 5,
-      badge: 'Quick Resolution',
-      liked: false
-    },
-    {
-      id: 4,
-      from: 'BDO Office',
-      fromAvatar: 'BO',
-      to: 'Gram Sevak - Village A',
-      toAvatar: 'GS',
-      message: 'Excellent work on the water conservation project. Your initiative has helped improve groundwater levels in the area.',
-      date: '2024-03-08',
-      likes: 56,
-      comments: 15,
-      badge: 'Innovation Award',
-      liked: true
-    },
-    {
-      id: 5,
-      from: 'Tehsildar Office',
-      fromAvatar: 'TO',
-      to: 'Revenue Department',
-      toAvatar: 'RD',
-      message: 'Team effort in completing the digital land record digitization. Your collaboration and teamwork are exemplary.',
-      date: '2024-03-07',
-      likes: 41,
-      comments: 9,
-      badge: 'Team Excellence',
-      liked: false
-    },
-  ]);
+  const [appreciations, setAppreciations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [staff, setStaff] = useState([]);
+
+  // Use props user id if available, fallback to localStorage
+  const currentUserID = user?.userID || localStorage.getItem('userID');
+  const currentUserRole = user?.role || localStorage.getItem('role');
+
+  const fetchAppreciations = async () => {
+    try {
+      const data = await getAllAppreciations();
+      // Map backend AppreciationResponse to frontend expected format
+      const mapped = data.map(app => ({
+        id: app.id,
+        from: app.fromUserName,
+        fromAvatar: app.fromUserName.substring(0, 2).toUpperCase(),
+        to: app.toUserName,
+        toAvatar: app.toUserName.substring(0, 2).toUpperCase(),
+        message: app.message,
+        date: app.createdAt.split('T')[0],
+        likes: 0,
+        comments: 0,
+        badge: app.badge || 'Excellence Award',
+        liked: false
+      }));
+      setAppreciations(mapped);
+    } catch (error) {
+      console.error("Fetch Appreciations Error:", error);
+      toast.error("Failed to load appreciations");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStaff = async () => {
+    try {
+      const uID = user?.userID || localStorage.getItem('userID');
+      if (uID) {
+        const data = await getAllUsers(uID);
+        setStaff(data || []);
+      }
+    } catch (error) {
+      console.error("Fetch Staff Error:", error);
+      toast.error("Failed to load staff members");
+    }
+  };
+
+  useEffect(() => {
+    fetchAppreciations();
+    fetchStaff();
+  }, []);
 
   // Updated Statistics with Dashboard-like styling
   const stats = [
@@ -97,31 +83,31 @@ const AppreciationComponent = () => {
       icon: HeartIcon, 
       bgColor: 'bg-blue-50',
       textColor: 'text-blue-600',
-      change: '+15%'
+      change: ''
     },
     { 
       label: 'This Month', 
-      value: '12', 
+      value: appreciations.filter(a => new Date(a.date).getMonth() === new Date().getMonth()).length, 
       icon: StarIcon, 
       bgColor: 'bg-green-50',
       textColor: 'text-green-600',
-      change: '+8%'
+      change: ''
     },
     { 
-      label: 'Departments', 
-      value: '8', 
+      label: 'Unique Recipients', 
+      value: new Set(appreciations.map(a => a.to)).size, 
       icon: UserGroupIcon, 
       bgColor: 'bg-purple-50',
       textColor: 'text-purple-600',
-      change: '+2'
+      change: ''
     },
     { 
-      label: 'Top Performer', 
-      value: 'Gram Sevak', 
+      label: 'Latest Badge', 
+      value: appreciations.length > 0 ? appreciations[0].badge.split(' ')[0] : 'None', 
       icon: TrophyIcon, 
       bgColor: 'bg-yellow-50',
       textColor: 'text-yellow-600',
-      change: '★ 4.9'
+      change: ''
     },
   ];
 
@@ -142,9 +128,13 @@ const AppreciationComponent = () => {
     const matchesSearch = apt.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          apt.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          apt.to.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Improved "mine" filter logic to use actual logged-in user name
+    const currentUserName = user?.name || JSON.parse(localStorage.getItem('user') || '{}').name || '';
+    
     const matchesFilter = filter === 'all' || 
                          (filter === 'liked' && apt.liked) ||
-                         (filter === 'mine' && apt.from === 'Collector Office');
+                         (filter === 'mine' && apt.from === currentUserName);
     return matchesSearch && matchesFilter;
   });
 
@@ -340,7 +330,11 @@ const AppreciationComponent = () => {
       {/* Send Appreciation Modal - Updated with blue theme */}
       <AnimatePresence>
         {isModalOpen && (
-          <AppreciationModal onClose={() => setIsModalOpen(false)} />
+          <AppreciationModal 
+            onClose={() => setIsModalOpen(false)} 
+            staff={staff} 
+            onSuccess={fetchAppreciations} 
+          />
         )}
       </AnimatePresence>
     </div>
@@ -348,21 +342,14 @@ const AppreciationComponent = () => {
 };
 
 // Appreciation Modal Component - Updated with blue theme
-const AppreciationModal = ({ onClose }) => {
+const AppreciationModal = ({ onClose, staff, onSuccess }) => {
   const [formData, setFormData] = useState({
     to: '',
     message: '',
     badge: 'Excellence Award'
   });
 
-  const users = [
-    { id: 1, name: 'Tehsildar Office', avatar: 'TO' },
-    { id: 2, name: 'SDO Office', avatar: 'SO' },
-    { id: 3, name: 'Gram Sevak - Sunita Gaikwad', avatar: 'SG' },
-    { id: 4, name: 'Talathi - Vikas Pawar', avatar: 'VP' },
-    { id: 5, name: 'BDO Office', avatar: 'BO' },
-    { id: 6, name: 'Revenue Department', avatar: 'RD' },
-  ];
+  const users = staff || [];
 
   const badges = [
     'Excellence Award',
@@ -372,10 +359,23 @@ const AppreciationModal = ({ onClose }) => {
     'Team Excellence'
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle appreciation submission
-    onClose();
+    try {
+      const fromUserId = localStorage.getItem('userID');
+      await sendAppreciation({
+        fromUserId,
+        toUserId: formData.to,
+        message: formData.message,
+        badge: formData.badge
+      });
+      onSuccess();
+      onClose();
+      toast.success("Appreciation sent successfully!");
+    } catch (error) {
+      console.error("Send Appreciation Error:", error);
+      toast.error(error.response?.data?.message || "Failed to send appreciation");
+    }
   };
 
   return (
@@ -414,8 +414,8 @@ const AppreciationModal = ({ onClose }) => {
               >
                 <option value="">Select recipient...</option>
                 {users.map(user => (
-                  <option key={user.id} value={user.name}>
-                    {user.name}
+                  <option key={user.userID} value={user.userID}>
+                    {user.name} ({user.role})
                   </option>
                 ))}
               </select>

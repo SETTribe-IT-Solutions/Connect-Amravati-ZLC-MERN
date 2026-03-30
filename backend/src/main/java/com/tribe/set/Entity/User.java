@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public class User {
 
     @Id
+    @Column(name = "userid")
     private Long userID;
 
     @NotBlank(message = "Name cannot be empty")
@@ -36,6 +37,8 @@ public class User {
     private String district;
     private String taluka;
     private String village;
+    private String phone;
+    private Double rating = 0.0;
 
     @Column(nullable = false)
     private Boolean active = true;
@@ -105,6 +108,22 @@ public class User {
 
 	public void setVillage(String village) {
 		this.village = village;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+	public Double getRating() {
+		return rating;
+	}
+
+	public void setRating(Double rating) {
+		this.rating = rating;
 	}
 
 	public Boolean getActive() {

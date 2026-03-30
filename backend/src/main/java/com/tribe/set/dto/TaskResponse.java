@@ -13,7 +13,12 @@ public class TaskResponse {
     private String description;
     private TaskPriority priority;
     private TaskStatus status;
-    private LocalDate dueDate;
+    private String dueDate;
+    private String department;
+    private int progress = 0;
+    private String target;
+    private String achievement;
+    private String location;
 
     private Long createdById;
     private String createdByName;
@@ -23,8 +28,8 @@ public class TaskResponse {
     private String assignedToName;
     private String assignedToRole;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String createdAt;
+    private String updatedAt;
 
     // ─── Static factory method ───
     public static TaskResponse from(Task task) {
@@ -35,9 +40,14 @@ public class TaskResponse {
         res.description = task.getDescription();
         res.priority    = task.getPriority();
         res.status      = task.getStatus();
-        res.dueDate     = task.getDueDate();
-        res.createdAt   = task.getCreatedAt();
-        res.updatedAt   = task.getUpdatedAt();
+        res.dueDate     = task.getDueDate() != null ? task.getDueDate().toString() : null;
+        res.department  = task.getDepartment();
+        res.progress    = task.getProgress();
+        res.target      = task.getTarget();
+        res.achievement = task.getAchievement();
+        res.location    = task.getLocation();
+        res.createdAt   = task.getCreatedAt() != null ? task.getCreatedAt().toString() : null;
+        res.updatedAt   = task.getUpdatedAt() != null ? task.getUpdatedAt().toString() : null;
 
         if (task.getCreatedBy() != null) {
             res.createdById   = task.getCreatedBy().getUserID();
@@ -61,13 +71,18 @@ public class TaskResponse {
     public String getDescription() { return description; }
     public TaskPriority getPriority() { return priority; }
     public TaskStatus getStatus() { return status; }
-    public LocalDate getDueDate() { return dueDate; }
+    public String getDueDate() { return dueDate; }
+    public String getDepartment() { return department; }
+    public int getProgress() { return progress; }
+    public String getTarget() { return target; }
+    public String getAchievement() { return achievement; }
+    public String getLocation() { return location; }
     public Long getCreatedById() { return createdById; }
     public String getCreatedByName() { return createdByName; }
     public String getCreatedByRole() { return createdByRole; }
     public Long getAssignedToId() { return assignedToId; }
     public String getAssignedToName() { return assignedToName; }
     public String getAssignedToRole() { return assignedToRole; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public String getCreatedAt() { return createdAt; }
+    public String getUpdatedAt() { return updatedAt; }
 }

@@ -24,6 +24,11 @@ public class TaskRequest {
     private Long assignedTo;      // userID of the person to assign to
 
     private LocalDate dueDate;    // optional
+    private String department;
+    private int progress = 0;
+    private String target;
+    private String achievement;
+    private String location;
 
 	public Long getRequesterId() {
 		return requesterId;
@@ -72,5 +77,19 @@ public class TaskRequest {
 	public void setDueDate(LocalDate dueDate) {
 		this.dueDate = dueDate;
 	}
-    
+
+    public String getDepartment() { return department; }
+    public void setDepartment(String department) { this.department = department; }
+
+    public int getProgress() { return progress; }
+    public void setProgress(int progress) { this.progress = progress; }
+
+    public String getTarget() { return target; }
+    public void setTarget(String target) { this.target = target; }
+
+    public String getAchievement() { return achievement; }
+    public void setAchievement(String achievement) { this.achievement = achievement; }
+
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 }

@@ -25,42 +25,42 @@ public class UserManagementController {
 
     @PutMapping("/update/{id}")
     public ResponseEntity<UserResponse> updateUser(
-            @PathVariable Long id,
+            @PathVariable(name = "id") Long id,
             @Valid @RequestBody UpdateUserRequest request) {
         return ResponseEntity.ok(userService.updateUser(id, request, request.getRequesterId()));
     }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteUser(
-            @PathVariable Long id,
+            @PathVariable(name = "id") Long id,
             @Valid @RequestBody DeleteUserRequest request) {
         userService.deleteUser(id, request.getRequesterId());
         return ResponseEntity.ok("User deleted successfully");
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<UserResponse>> getAllUsers(@RequestParam Long requesterId) {
+    public ResponseEntity<List<UserResponse>> getAllUsers(@RequestParam(required = false, name = "requesterId") Long requesterId) {
         return ResponseEntity.ok(userService.getAllUsers(requesterId));
     }
 
     @GetMapping("/profile/{id}")
     public ResponseEntity<UserResponse> getUserProfile(
-            @PathVariable Long id,
-            @RequestParam Long requesterId) {
+            @PathVariable(name = "id") Long id,
+            @RequestParam(name = "requesterId") Long requesterId) {
         return ResponseEntity.ok(userService.getUserProfile(id, requesterId));
     }
 
     @PostMapping("/toggle-status/{id}")
     public ResponseEntity<UserResponse> toggleUserStatus(
-            @PathVariable Long id,
+            @PathVariable(name = "id") Long id,
             @RequestBody DeleteUserRequest request) { // Reusing DeleteUserRequest for requesterId
         return ResponseEntity.ok(userService.toggleUserStatus(id, request.getRequesterId()));
     }
     
     @GetMapping("/role/{role}")
     public ResponseEntity<List<UserResponse>> getUsersByRole(
-            @PathVariable Role role,
-            @RequestParam Long requesterId) {
+            @PathVariable(name = "role") Role role,
+            @RequestParam(name = "requesterId") Long requesterId) {
         return ResponseEntity.ok(userService.getUsersByRole(role, requesterId));
     }
 }

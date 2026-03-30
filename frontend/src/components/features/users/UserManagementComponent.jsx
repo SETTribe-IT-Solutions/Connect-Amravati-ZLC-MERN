@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getAllUsers, addUser, updateUser, deleteUser, toggleUserStatus } from '../../../services/userService';
+import { toast } from 'react-hot-toast';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlusIcon,
@@ -28,99 +31,60 @@ const UserManagementComponent = () => {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
 
-  // Sample users data
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: 'Rajesh Kumar',
-      role: 'Collector',
-      email: 'rajesh.kumar@amravati.gov.in',
-      phone: '+91 98765 43210',
-      jurisdiction: 'Amravati District',
-      status: 'Active',
-      avatar: 'RK',
-      tasksCompleted: 145,
-      rating: 4.8,
-      joinDate: '2020-01-15',
-      achievements: 12,
-      pendingTasks: 3
-    },
-    {
-      id: 2,
-      name: 'Priya Patil',
-      role: 'Additional Collector',
-      email: 'priya.patil@amravati.gov.in',
-      phone: '+91 98765 43211',
-      jurisdiction: 'Amravati District',
-      status: 'Active',
-      avatar: 'PP',
-      tasksCompleted: 132,
-      rating: 4.9,
-      joinDate: '2021-03-20',
-      achievements: 15,
-      pendingTasks: 2
-    },
-    {
-      id: 3,
-      name: 'Suresh Deshmukh',
-      role: 'Tehsildar',
-      email: 'suresh.d@amravati.gov.in',
-      phone: '+91 98765 43212',
-      jurisdiction: 'Amravati Taluka',
-      status: 'Active',
-      avatar: 'SD',
-      tasksCompleted: 98,
-      rating: 4.6,
-      joinDate: '2019-11-10',
-      achievements: 8,
-      pendingTasks: 5
-    },
-    {
-      id: 4,
-      name: 'Anita Sharma',
-      role: 'BDO',
-      email: 'anita.sharma@amravati.gov.in',
-      phone: '+91 98765 43213',
-      jurisdiction: 'Block Development Office',
-      status: 'Active',
-      avatar: 'AS',
-      tasksCompleted: 87,
-      rating: 4.7,
-      joinDate: '2022-02-05',
-      achievements: 7,
-      pendingTasks: 4
-    },
-    {
-      id: 5,
-      name: 'Vikas Pawar',
-      role: 'Talathi',
-      email: 'vikas.p@amravati.gov.in',
-      phone: '+91 98765 43214',
-      jurisdiction: 'Circle 1 - Amravati',
-      status: 'Inactive',
-      avatar: 'VP',
-      tasksCompleted: 56,
-      rating: 4.2,
-      joinDate: '2023-06-12',
-      achievements: 4,
-      pendingTasks: 2
-    },
-    {
-      id: 6,
-      name: 'Sunita Gaikwad',
-      role: 'Gram Sevak',
-      email: 'sunita.g@amravati.gov.in',
-      phone: '+91 98765 43215',
-      jurisdiction: 'Village A, B, C',
-      status: 'Active',
-      avatar: 'SG',
-      tasksCompleted: 112,
-      rating: 4.9,
-      joinDate: '2021-08-30',
-      achievements: 10,
-      pendingTasks: 3
-    },
-  ]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const savedId = localStorage.getItem('userID');
+      const requesterId = (savedId && !isNaN(savedId)) ? Number(savedId) : null;
+      const data = await getAllUsers(requesterId);
+      
+      // Role mapping from backend to human-friendly
+      const revRoleMap = {
+        'COLLECTOR': 'Collector',
+        'ADDITIONAL_DEPUTY_COLLECTOR': 'Additional Collector',
+        'SDO': 'SDO',
+        'TEHSILDAR': 'Tehsildar',
+        'BDO': 'BDO',
+        'TALATHI': 'Talathi',
+        'GRAMSEVAK': 'Gram Sevak',
+        'SYSTEM_ADMINISTRATOR': 'System Administrator'
+      };
+
+      // Map backend User to frontend User
+      const mapped = (data || []).map(u => ({
+        id: u.userID,
+        name: u.name || 'Unknown',
+        role: (u.role && revRoleMap[u.role.toUpperCase()]) ? revRoleMap[u.role.toUpperCase()] : (u.role || 'User'),
+        email: u.email || 'N/A',
+        phone: u.phone || '+91 00000 00000',
+        village: u.village || '',
+        taluka: u.taluka || '',
+        jurisdiction: u.village ? `${u.village}, ${u.taluka}` : (u.taluka || u.district || 'Amravati'),
+        status: u.active ? 'Active' : 'Inactive',
+        avatar: (u.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2),
+        tasksCompleted: u.tasksCompleted || 0,
+        rating: u.rating || 0,
+        joinDate: u.createdAt ? u.createdAt.toString().split('T')[0] : 'N/A',
+        achievements: u.achievements || 0,
+        pendingTasks: u.pendingTasks || 0
+      }));
+      setUsers(mapped);
+    } catch (error) {
+       console.error("Fetch Users Error:", error);
+       const errorMessage = error.response?.data?.message || error.message || "Failed to load user list";
+       toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
 
   // Role options
   const roles = [
@@ -142,7 +106,7 @@ const UserManagementComponent = () => {
       icon: UserCircleIcon, 
       bgColor: 'bg-blue-50',
       textColor: 'text-blue-600',
-      change: '+12%'
+      change: ''
     },
     { 
       label: 'Active Users', 
@@ -150,23 +114,27 @@ const UserManagementComponent = () => {
       icon: ShieldCheckIcon, 
       bgColor: 'bg-green-50',
       textColor: 'text-green-600',
-      change: '+8%'
+      change: ''
     },
     { 
       label: 'New This Month', 
-      value: '5', 
+      value: users.filter(u => {
+        const jDate = new Date(u.joinDate);
+        const now = new Date();
+        return jDate.getMonth() === now.getMonth() && jDate.getFullYear() === now.getFullYear();
+      }).length, 
       icon: TrophyIcon, 
       bgColor: 'bg-purple-50',
       textColor: 'text-purple-600',
-      change: '+15%'
+      change: ''
     },
     { 
       label: 'Avg. Rating', 
-      value: '4.7', 
+      value: users.length > 0 ? (users.reduce((acc, u) => acc + u.rating, 0) / users.length).toFixed(1) : '0', 
       icon: StarIcon, 
       bgColor: 'bg-yellow-50',
       textColor: 'text-yellow-600',
-      change: '+0.3'
+      change: ''
     },
   ];
 
@@ -195,10 +163,17 @@ const UserManagementComponent = () => {
   });
 
   // Handle delete
-  const handleDelete = (userId) => {
-    setUsers(users.filter(user => user.id !== userId));
-    setShowDeletePopup(false);
-    setUserToDelete(null);
+  const handleDelete = async (userId) => {
+    try {
+      const requesterId = localStorage.getItem('userID');
+      await deleteUser(userId, requesterId);
+      setUsers(users.filter(user => user.id !== userId));
+      setShowDeletePopup(false);
+      setUserToDelete(null);
+    } catch (error) {
+      console.error("Delete user error:", error);
+      alert("Failed to delete user. Make sure you have administrator privileges.");
+    }
   };
 
   return (
@@ -322,7 +297,25 @@ const UserManagementComponent = () => {
       </motion.div>
 
       {/* Users Grid View - Updated to match Task Management card style */}
-      {viewMode === 'grid' ? (
+      {loading ? (
+        <div className="flex flex-col items-center justify-center p-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+           <p className="text-gray-500 font-medium">Loading user data...</p>
+        </div>
+      ) : filteredUsers.length === 0 ? (
+        <div className="bg-white rounded-2xl shadow-sm p-12 text-center border border-gray-100">
+           <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <UserCircleIcon className="h-10 w-10 text-blue-300" />
+           </div>
+           <h3 className="text-xl font-bold text-gray-900 mb-2">No Users Found</h3>
+           <p className="text-gray-500 max-w-sm mx-auto">
+              {searchTerm || roleFilter !== 'all' 
+                ? "We couldn't find any users matching your filters. Try clearing your search or using a different filter."
+                : "The user database appears to be empty. Use the 'Add User' button to create your first user account."
+              }
+           </p>
+        </div>
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredUsers.map((user, index) => (
             <motion.div
@@ -542,26 +535,40 @@ const UserManagementComponent = () => {
               setIsModalOpen(false);
               setSelectedUser(null);
             }}
-            onSave={(userData) => {
-              if (selectedUser) {
-                // Update existing user
-                setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...userData } : u));
-              } else {
-                // Create new user
-                const newUser = {
-                  ...userData,
-                  id: users.length + 1,
-                  avatar: userData.name.split(' ').map(n => n[0]).join('').substring(0, 2),
-                  tasksCompleted: 0,
-                  achievements: 0,
-                  pendingTasks: 0,
-                  rating: 0,
-                  joinDate: new Date().toISOString().split('T')[0]
+            onSave={async (userData) => {
+              try {
+                // Map roles to backend enum format
+                const roleMap = {
+                  'Collector': 'COLLECTOR',
+                  'Additional Collector': 'ADDITIONAL_DEPUTY_COLLECTOR',
+                  'SDO': 'SDO',
+                  'Tehsildar': 'TEHSILDAR',
+                  'BDO': 'BDO',
+                  'Talathi': 'TALATHI',
+                  'Gram Sevak': 'GRAMSEVAK',
+                  'System Administrator': 'SYSTEM_ADMINISTRATOR'
                 };
-                setUsers([...users, newUser]);
+
+                const payload = {
+                  ...userData,
+                  role: roleMap[userData.role] || userData.role,
+                  district: 'Amravati', // Default district
+                  requesterId: localStorage.getItem('userID')
+                };
+
+                if (selectedUser) {
+                  await updateUser(selectedUser.id, payload);
+                } else {
+                  await addUser(payload);
+                }
+                
+                fetchUsers();
+                setIsModalOpen(false);
+                setSelectedUser(null);
+              } catch (error) {
+                console.error("Save User Error:", error);
+                alert("Failed to save user. Please check if User ID is unique and fields are valid.");
               }
-              setIsModalOpen(false);
-              setSelectedUser(null);
             }}
           />
         )}
@@ -587,12 +594,15 @@ const UserManagementComponent = () => {
 // User Modal Component (Updated with better styling)
 const UserModal = ({ user, roles, onClose, onSave }) => {
   const [formData, setFormData] = useState({
+    userID: user?.id || '',
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
     role: user?.role || roles[0],
-    jurisdiction: user?.jurisdiction || '',
-    status: user?.status || 'Active'
+    taluka: user?.taluka || '',
+    village: user?.village || '',
+    status: user?.status || 'Active',
+    password: ''
   });
 
   const handleSubmit = (e) => {
@@ -631,19 +641,35 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
         {/* Form */}
         <div className="p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="Enter full name"
-              />
+            {/* User ID and Name */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  User ID (ID for Login) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  disabled={user}
+                  value={formData.userID}
+                  onChange={(e) => setFormData({...formData, userID: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                  placeholder="Enter unique User ID"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter full name"
+                />
+              </div>
             </div>
 
             {/* Email and Phone */}
@@ -708,35 +734,50 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
               </div>
             </div>
 
-            {/* Jurisdiction */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Jurisdiction <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.jurisdiction}
-                onChange={(e) => setFormData({...formData, jurisdiction: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., Amravati District, Taluka Office, etc."
-              />
-            </div>
-
-            {/* Password for new user */}
-            {!user && (
+            {/* Taluka and Village */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Temporary Password <span className="text-red-500">*</span>
+                  Taluka <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="password"
+                  type="text"
                   required
+                  value={formData.taluka}
+                  onChange={(e) => setFormData({...formData, taluka: e.target.value})}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter temporary password"
+                  placeholder="e.g., Amravati Taluka"
                 />
               </div>
-            )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Village
+                </label>
+                <input
+                  type="text"
+                  value={formData.village}
+                  onChange={(e) => setFormData({...formData, village: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Walgaon"
+                />
+              </div>
+            </div>
+
+            {/* Password for user */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {user ? 'New Password (leave blank to keep current)' : 'Password'} <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                required={!user}
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder={user ? "Enter new password if changing" : "Enter temporary password"}
+              />
+              <p className="text-[10px] text-gray-500 mt-1">Min 8 chars, 1 Uppercase, 1 Number, 1 Special Char</p>
+            </div>
 
             {/* Actions */}
             <div className="flex gap-3 pt-4">

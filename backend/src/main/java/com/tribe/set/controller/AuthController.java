@@ -30,4 +30,9 @@ public class AuthController {
     public String register(@Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
     }
+
+    @PostMapping("/change-password")
+    public String changePassword(@Valid @RequestBody com.tribe.set.dto.ChangePasswordRequest request) {
+        return authService.changePassword(request);
+    }
 }

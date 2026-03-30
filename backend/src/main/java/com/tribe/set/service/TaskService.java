@@ -62,6 +62,11 @@ public class TaskService {
         task.setDescription(request.getDescription());
         task.setPriority(request.getPriority());
         task.setDueDate(request.getDueDate());
+        task.setDepartment(request.getDepartment());
+        task.setProgress(request.getProgress());
+        task.setTarget(request.getTarget());
+        task.setAchievement(request.getAchievement());
+        task.setLocation(request.getLocation());
         task.setStatus(TaskStatus.PENDING);
         task.setCreatedBy(creator);       // ← pass User object directly
         task.setAssignedTo(assignee);     // ← pass User object directly

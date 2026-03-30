@@ -1,4 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { getTasks, createTask, updateTaskStatus, addTaskRemark } from '../../../services/taskService';
+import { getAllUsers } from '../../../services/userService';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PlusCircleIcon, 
@@ -31,7 +34,22 @@ import "react-datepicker/dist/react-datepicker.css";
 const TaskDashboard = ({ user }) => {
   const role = user?.role || localStorage.getItem('role') || 'user';
   const roleLower = role.toLowerCase();
-  const canCreateTask = ['collector', 'additional collector', 'sdo', 'tehsildar'].includes(roleLower);
+  const canCreateTask = [
+    'collector', 
+    'additional collector', 
+    'additional_deputy_collector', 
+    'additional deputy collector', 
+    'sdo', 
+    'tehsildar',
+    'system administrator',
+    'admin'
+  ].includes(roleLower.replace(/\s+/g, '_')) || [
+    'collector', 
+    'additional collector', 
+    'sdo', 
+    'tehsildar',
+    'admin'
+  ].includes(roleLower);
 
   const [activeTab, setActiveTab] = useState(canCreateTask ? 'create' : 'tracking');
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,113 +71,49 @@ const TaskDashboard = ({ user }) => {
     setTimeout(() => setShowPopup({ show: false, message: '', type: '' }), 2000);
   };
 
-  // Mock data for tasks
-  const [tasks, setTasks] = useState([
-    {
-      id: 1,
-      title: 'Land',
-      description: 'New Land Registrations - Complete registration of newly acquired government land parcels',
-      department: 'Revenue',
-      priority: 'High',
-      status: 'In Progress',
-      assignedTo: 'Tehsildar Office',
-      assignedType: 'role',
-      dueDate: '2024-03-20',
-      progress: 45,
-      attachments: [{ name: 'land_survey.pdf', url: '#', size: '245 KB' }],
-      remarks: ['Survey completed for 3 parcels', 'Need additional documents for 2 pending surveys'],
-      target: '5 Surveys',
-      achievement: '3 Completed',
-      location: 'Tehsildar Office',
-      timeline: [
-        { date: '2024-03-10', action: 'Task Created', by: 'Shri. Ashish Yerekar (I.A.S.)' },
-        { date: '2024-03-12', action: 'Assigned to Tehsildar', by: 'System' },
-        { date: '2024-03-15', action: 'Survey Started', by: 'Tehsildar Office' }
-      ]
-    },
-    {
-      id: 2,
-      title: 'Users',
-      description: 'Revenue Collection Report - Quarterly revenue collection report for Amravati district',
-      department: 'Finance',
-      priority: 'Medium',
-      status: 'In Progress',
-      assignedTo: 'SDO Office',
-      assignedType: 'role',
-      dueDate: '2024-03-25',
-      progress: 70,
-      attachments: [{ name: 'q1_report.pdf', url: '#', size: '1.2 MB' }],
-      remarks: ['Collection target 70% achieved'],
-      target: '£50L Collection',
-      achievement: '£35L Collected',
-      location: 'SDO Office',
-      timeline: [
-        { date: '2024-03-05', action: 'Task Created', by: 'Shri. Ashish Yerekar (I.A.S.)' },
-        { date: '2024-03-07', action: 'Assigned to SDO', by: 'System' }
-      ]
-    },
-    {
-      id: 3,
-      title: 'Appreciation',
-      description: 'Gram Sabha Meeting Minutes - Documentation of Gram Sabha meeting minutes',
-      department: 'Administration',
-      priority: 'Low',
-      status: 'Pending',
-      assignedTo: 'Gram Sevak',
-      assignedType: 'role',
-      dueDate: '2024-03-18',
-      progress: 30,
-      attachments: [],
-      remarks: ['Meeting scheduled for next week'],
-      target: 'Minutes Documented',
-      achievement: 'In Progress',
-      location: 'Gram Panchayat',
-      timeline: [
-        { date: '2024-03-08', action: 'Task Created', by: 'Shri. Ashish Yerekar (I.A.S.)' }
-      ]
-    },
-    {
-      id: 4,
-      title: 'Structure',
-      description: 'Infrastructure Development - Oversight of infrastructure projects',
-      department: 'Development',
-      priority: 'High',
-      status: 'Overdue',
-      assignedTo: 'BDO Office',
-      assignedType: 'role',
-      dueDate: '2024-03-15',
-      progress: 60,
-      attachments: [{ name: 'project_status.pdf', url: '#', size: '890 KB' }],
-      remarks: ['Delay due to material shortage'],
-      target: '10 Projects',
-      achievement: '6 Completed',
-      location: 'BDO Office',
-      timeline: [
-        { date: '2024-03-01', action: 'Task Created', by: 'Shri. Ashish Yerekar (I.A.S.)' },
-        { date: '2024-03-03', action: 'Assigned to BDO', by: 'System' }
-      ]
-    },
-    {
-      id: 5,
-      title: 'Supply',
-      description: 'Water Supply Scheme - Implementation of water supply in 5 villages',
-      department: 'Infrastructure',
-      priority: 'High',
-      status: 'Overdue',
-      assignedTo: 'Executive Engineer',
-      assignedType: 'role',
-      dueDate: '2024-03-01',
-      progress: 40,
-      attachments: [{ name: 'scheme_details.pdf', url: '#', size: '567 KB' }],
-      remarks: ['Delay in material supply'],
-      target: '2 Villages Connected',
-      achievement: '1 Connected',
-      location: 'Executive Engineer Office',
-      timeline: [
-        { date: '2024-02-20', action: 'Task Created', by: 'Shri. Ashish Yerekar (I.A.S.)' }
-      ]
+  const [tasks, setTasks] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTasks = async () => {
+    try {
+      const userID = user?.userID || localStorage.getItem('userID');
+      if (userID) {
+        setLoading(true);
+        const data = await getTasks(userID);
+        const mapped = (data || []).map(t => ({
+          ...t,
+          assignedTo: t.assignedToName || 'N/A', // Frontend expects assignedTo for display/filtering
+          status: t.status ? t.status.toString().toUpperCase() : 'PENDING',
+          priority: t.priority ? t.priority.toString().toUpperCase() : 'MEDIUM',
+          attachments: [] // Initialize attachments array if backend doesn't provide it yet
+        }));
+        setTasks(mapped);
+      }
+    } catch (error) {
+      console.error("Fetch Tasks Error:", error);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  const fetchStaff = async () => {
+    try {
+      const requesterId = localStorage.getItem('userID');
+      const data = await getAllUsers(requesterId);
+      setStaff(data || []);
+    } catch (error) {
+      console.error("Fetch Staff Error:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks();
+    if (canCreateTask) {
+      fetchStaff();
+    }
+  }, [user]);
+
 
   // Form state for creating new task
   const [newTask, setNewTask] = useState({
@@ -173,7 +127,9 @@ const TaskDashboard = ({ user }) => {
     targetType: 'target',
     targetValue: '',
     location: '',
-    attachments: []
+    attachments: [],
+    selectedVillage: '', // New state for village filtering
+    otherAssignedTo: '' // New state for manual 'Other' input
   });
 
   const [selectedTaskForTracking, setSelectedTaskForTracking] = useState(null);
@@ -192,36 +148,38 @@ const TaskDashboard = ({ user }) => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          task.assignedTo.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || task.status === selectedStatus;
+    const matchesStatus = selectedStatus === 'all' || task.status === selectedStatus.replace(/\s+/g, '_').toUpperCase();
     const matchesDept = selectedDepartment === 'all' || task.department === selectedDepartment;
     return matchesSearch && matchesStatus && matchesDept;
   });
 
   // Get pending/overdue tasks with filters
   const filteredPendingTasks = tasks.filter(t => {
-    const isPending = t.status === 'Pending' || t.status === 'Overdue';
+    const isPending = t.status === 'PENDING' || t.status === 'OVERDUE';
     const matchesSearch = t.title.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
                          t.description.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
                          t.assignedTo.toLowerCase().includes(pendingSearchTerm.toLowerCase());
-    const matchesStatus = pendingStatusFilter === 'all' || t.status === pendingStatusFilter;
+    const matchesStatus = pendingStatusFilter === 'all' || t.status === pendingStatusFilter.toUpperCase();
     return isPending && matchesSearch && matchesStatus;
   });
 
   const getStatusColor = (status) => {
-    switch(status) {
-      case 'Completed': return 'bg-green-100 text-green-700';
-      case 'In Progress': return 'bg-blue-100 text-blue-700';
-      case 'Pending': return 'bg-amber-100 text-amber-700';
-      case 'Overdue': return 'bg-red-100 text-red-700';
+    const s = status?.toUpperCase() || '';
+    switch(s) {
+      case 'COMPLETED': return 'bg-green-100 text-green-700';
+      case 'IN_PROGRESS': return 'bg-blue-100 text-blue-700';
+      case 'PENDING': return 'bg-amber-100 text-amber-700';
+      case 'OVERDUE': return 'bg-red-100 text-red-700';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
 
   const getPriorityColor = (priority) => {
-    switch(priority) {
-      case 'High': return 'bg-red-100 text-red-700';
-      case 'Medium': return 'bg-amber-100 text-amber-700';
-      case 'Low': return 'bg-green-100 text-green-700';
+    const p = priority?.toUpperCase() || '';
+    switch(p) {
+      case 'HIGH': return 'bg-red-100 text-red-700';
+      case 'MEDIUM': return 'bg-amber-100 text-amber-700';
+      case 'LOW': return 'bg-green-100 text-green-700';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
@@ -234,42 +192,47 @@ const TaskDashboard = ({ user }) => {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  const handleCreateTask = (e) => {
+  const handleCreateTask = async (e) => {
     e.preventDefault();
-    const taskToAdd = {
-      id: tasks.length + 1,
-      title: newTask.title,
-      description: newTask.description,
-      department: newTask.department,
-      priority: newTask.priority,
-      status: 'Pending',
-      assignedTo: newTask.assignedTo,
-      assignedType: newTask.assignedType,
-      dueDate: newTask.dueDate ? newTask.dueDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-      progress: 0,
-      attachments: newTask.attachments,
-      remarks: ['Task created'],
-      target: newTask.targetType === 'target' ? newTask.targetValue : 'NA',
-      achievement: 'Not Started',
-      location: newTask.location,
-      timeline: [{ date: new Date().toISOString().split('T')[0], action: 'Task Created', by: 'Current User' }]
-    };
-    setTasks([...tasks, taskToAdd]);
-    setNewTask({
-      title: '',
-      description: '',
-      department: 'Revenue',
-      priority: 'Medium',
-      assignedType: 'role',
-      assignedTo: '',
-      dueDate: null,
-      targetType: 'target',
-      targetValue: '',
-      location: '',
-      attachments: []
-    });
-    setShowCreateForm(false);
-    showInfoPopup('Task created successfully!', 'success');
+    try {
+      const userID = user?.userID || localStorage.getItem('userID');
+      const taskData = {
+        title: newTask.title,
+        description: newTask.description,
+        department: newTask.department,
+        priority: newTask.priority.toUpperCase(),
+        assignedTo: parseInt(newTask.assignedTo), // Should be the userID
+        requesterId: userID,
+        dueDate: newTask.dueDate ? newTask.dueDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        target: newTask.targetType === 'target' ? newTask.targetValue : 'NA',
+        location: newTask.location,
+        progress: 0
+      };
+      
+      await createTask(taskData);
+      fetchTasks();
+      
+      setNewTask({
+        title: '',
+        description: '',
+        department: 'Revenue',
+        priority: 'Medium',
+        assignedType: 'role',
+        assignedTo: '',
+        dueDate: null,
+        targetType: 'target',
+        targetValue: '',
+        location: '',
+        attachments: [],
+        selectedVillage: '',
+        otherAssignedTo: ''
+      });
+      setShowCreateForm(false);
+      showInfoPopup('Task created successfully!', 'success');
+    } catch (error) {
+       console.error("Create Task Error:", error);
+       showInfoPopup('Failed to create task', 'error');
+    }
   };
 
   const handleFileUpload = (e) => {
@@ -302,18 +265,19 @@ const TaskDashboard = ({ user }) => {
     showInfoPopup('Filters reset', 'info');
   };
 
-  const handleAddRemark = (taskId, remarkText) => {
+  const handleAddRemark = async (taskId, remarkText) => {
     if (!remarkText?.trim()) {
       showInfoPopup('Please enter a remark', 'error');
       return;
     }
-    setTasks(tasks.map(task => 
-      task.id === taskId 
-        ? { ...task, remarks: [...task.remarks, remarkText] }
-        : task
-    ));
-    setRemarksInput({ ...remarksInput, [taskId]: '' });
-    showInfoPopup('Remark added successfully!', 'success');
+    try {
+      const userID = user?.userID || localStorage.getItem('userID');
+      await addTaskRemark(taskId, remarkText, userID);
+      setRemarksInput({ ...remarksInput, [taskId]: '' });
+      showInfoPopup('Remark added successfully!', 'success');
+    } catch (error) {
+      showInfoPopup('Failed to add remark', 'error');
+    }
   };
 
   const handleForwardTask = (taskId, forwardTo) => {
@@ -338,14 +302,25 @@ const TaskDashboard = ({ user }) => {
     showInfoPopup(`Task forwarded to ${forwardTo} successfully!`, 'success');
   };
 
-  const handleUpdateProgress = (taskId, newProgress) => {
+  const handleUpdateProgress = async (taskId, newProgress) => {
     const progress = Math.min(100, Math.max(0, parseInt(newProgress) || 0));
-    setTasks(tasks.map(task => 
-      task.id === taskId 
-        ? { ...task, progress: progress }
-        : task
-    ));
-    showInfoPopup(`Progress updated to ${progress}%`, 'success');
+    try {
+      const userID = user?.userID || localStorage.getItem('userID');
+      // For now, progress is just a field in Task entity
+      // We can update it via a general update if we had one, but let's assume we just update it locally for now 
+      // or implement a PATCH if needed. Since we added the field to the backend, let's use it.
+      // Assuming we have a general update or a progress-specific update.
+      // If no specific endpoint, we'll just update the status to IN_PROGRESS if progress > 0.
+      if (progress > 0 && progress < 100) {
+        await updateTaskStatus(taskId, 'IN_PROGRESS', userID);
+      } else if (progress === 100) {
+        await updateTaskStatus(taskId, 'COMPLETED', userID);
+      }
+      fetchTasks();
+      showInfoPopup(`Progress updated to ${progress}%`, 'success');
+    } catch (error) {
+      showInfoPopup('Failed to update progress', 'error');
+    }
   };
 
   const handleViewTaskDetails = (task) => {
@@ -357,7 +332,7 @@ const TaskDashboard = ({ user }) => {
     let details = '';
     switch(statName) {
       case 'Total':
-        details = `Total tasks: ${value}\nBreakdown:\n- Completed: ${tasks.filter(t => t.status === 'Completed').length}\n- In Progress: ${tasks.filter(t => t.status === 'In Progress').length}\n- Pending: ${tasks.filter(t => t.status === 'Pending').length}\n- Overdue: ${tasks.filter(t => t.status === 'Overdue').length}`;
+        details = `Total tasks: ${value}\nBreakdown:\n- Completed: ${tasks.filter(t => t.status === 'COMPLETED').length}\n- In Progress: ${tasks.filter(t => t.status === 'IN_PROGRESS').length}\n- Pending: ${tasks.filter(t => t.status === 'PENDING').length}\n- Overdue: ${tasks.filter(t => t.status === 'OVERDUE').length}`;
         break;
       case 'Completed':
         details = `Completed tasks: ${value}\nAchievement rate: ${((value/156)*100).toFixed(1)}%`;
@@ -366,17 +341,19 @@ const TaskDashboard = ({ user }) => {
         details = `In Progress tasks: ${value}\nTasks currently being worked on`;
         break;
       case 'Overdue':
-        const overdueTasks = tasks.filter(t => t.status === 'Overdue');
+        const overdueTasks = tasks.filter(t => t.status === 'OVERDUE');
         details = `Overdue tasks: ${value}\n\nDetails:\n${overdueTasks.map(t => `- ${t.title} (Due: ${t.dueDate})`).join('\n')}`;
         break;
       case 'Achievement':
-        details = `Achievement: ${value}\nTarget: ₹75L\nAchievement Rate: 60.3%`;
+        details = `Achievement: ${value}`;
         break;
       case 'Target':
-        details = `Target: ${value}\nCurrent Achievement: ₹45.2L\nRemaining: ₹29.8L`;
+        details = `Target: ${value}`;
         break;
       case 'Pending':
-        details = `Pending tasks: ${value}\n- Overdue: ${tasks.filter(t => t.status === 'Overdue').length}\n- Pending: ${tasks.filter(t => t.status === 'Pending').length}`;
+        const pendingCount = tasks.filter(t => t.status === 'PENDING').length;
+        const overdueCount = tasks.filter(t => t.status === 'OVERDUE').length;
+        details = `Pending tasks: ${value}\n- Overdue: ${overdueCount}\n- Pending: ${pendingCount}`;
         break;
       default:
         details = `${statName}: ${value}`;
@@ -394,13 +371,11 @@ const TaskDashboard = ({ user }) => {
   };
 
   const stats = [
-    { name: 'Total', value: '156', change: '+12%', color: 'blue', icon: DocumentTextIcon },
-    { name: 'Completed', value: '98', change: '+8%', color: 'green', icon: CheckCircleIcon },
-    { name: 'In Progress', value: '42', change: '-3%', color: 'amber', icon: ArrowPathIcon },
-    { name: 'Overdue', value: '16', change: '+5%', color: 'red', icon: ClockIcon },
-    { name: 'Achievement', value: '₹45.2L', change: '+15%', color: 'purple', icon: FlagIcon },
-    { name: 'Target', value: '₹75L', change: '+15%', color: 'indigo', icon: ChartBarIcon },
-    { name: 'Pending', value: '8', change: '+15%', color: 'orange', icon: ClockIcon },
+    { name: 'Total', value: tasks.length.toString(), change: '0%', color: 'blue', icon: DocumentTextIcon },
+    { name: 'Completed', value: tasks.filter(t => t.status === 'COMPLETED').length.toString(), change: '0%', color: 'green', icon: CheckCircleIcon },
+    { name: 'In Progress', value: tasks.filter(t => t.status === 'IN_PROGRESS').length.toString(), change: '0%', color: 'amber', icon: ArrowPathIcon },
+    { name: 'Overdue', value: tasks.filter(t => t.status === 'OVERDUE').length.toString(), change: '0%', color: 'red', icon: ClockIcon },
+    { name: 'Pending', value: tasks.filter(t => t.status === 'PENDING').length.toString(), change: '0%', color: 'orange', icon: ClockIcon },
   ];
 
   return (
@@ -591,35 +566,90 @@ const TaskDashboard = ({ user }) => {
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                             required
                           >
-                            <option value="">Select Role</option>
-                            <option value="Gram Talathi">Gram Talathi</option>
-                            <option value="Grampanchayat Adhikari">Grampanchayat Adhikari</option>
-                            <option value="SUB-DIVISIONAL OFFICERS">SUB-DIVISIONAL OFFICERS</option>
-                            <option value="TAHSILDAR">TAHSILDAR</option>
-                            <option value="TAHSILDAR- REVENUE">TAHSILDAR- REVENUE</option>
+                            <option value="">Select Staff Member</option>
+                            {staff
+                              .filter(u => u.role !== 'SYSTEM_ADMINISTRATOR')
+                              .map(u => (
+                                <option key={u.userID} value={u.userID}>
+                                  {u.name} ({u.role.replace(/_/g, ' ')})
+                                </option>
+                              ))
+                            }
                           </select>
                         )}
                         
-                        {(newTask.assignedType === 'employee' || newTask.assignedType === 'other') && (
-                          <input
-                            type="text"
+                        {newTask.assignedType === 'employee' && (
+                          <select
                             value={newTask.assignedTo}
                             onChange={(e) => setNewTask({...newTask, assignedTo: e.target.value})}
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
-                            placeholder={`Enter ${newTask.assignedType} name`}
                             required
-                          />
+                          >
+                            <option value="">Select Specific Officer</option>
+                            {staff.map(u => (
+                              <option key={u.userID} value={u.userID}>{u.name} - {u.role}</option>
+                            ))}
+                          </select>
                         )}
-                        
+
                         {newTask.assignedType === 'village' && (
-                          <input
-                            type="text"
-                            value={newTask.assignedTo}
-                            onChange={(e) => setNewTask({...newTask, assignedTo: e.target.value})}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter village name"
-                            required
-                          />
+                          <div className="space-y-3">
+                            <select
+                              value={newTask.selectedVillage}
+                              onChange={(e) => setNewTask({...newTask, selectedVillage: e.target.value, assignedTo: ''})}
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                              required
+                            >
+                              <option value="">Select Village</option>
+                              {[...new Set(staff.map(u => u.village).filter(Boolean))].map(v => (
+                                <option key={v} value={v}>{v}</option>
+                              ))}
+                            </select>
+                            
+                            {newTask.selectedVillage && (
+                              <select
+                                value={newTask.assignedTo}
+                                onChange={(e) => setNewTask({...newTask, assignedTo: e.target.value})}
+                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                                required
+                              >
+                                <option value="">Select Officer in {newTask.selectedVillage}</option>
+                                {staff
+                                  .filter(u => u.village === newTask.selectedVillage)
+                                  .map(u => (
+                                    <option key={u.userID} value={u.userID}>{u.name} - {u.role}</option>
+                                  ))}
+                              </select>
+                            )}
+                          </div>
+                        )}
+
+                        {newTask.assignedType === 'other' && (
+                          <div className="space-y-3">
+                            <input
+                              type="text"
+                              value={newTask.otherAssignedTo}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                // Try to find someone matching by name if they type a name precisely
+                                const found = staff.find(u => u.name.toLowerCase() === val.toLowerCase());
+                                setNewTask({
+                                  ...newTask, 
+                                  otherAssignedTo: val, 
+                                  assignedTo: found ? found.userID : val 
+                                });
+                              }}
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                              placeholder="Enter name or ID manually..."
+                              required
+                            />
+                            {newTask.assignedTo && isNaN(newTask.assignedTo) && (
+                               <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                                 <InformationCircleIcon className="h-3 w-3" />
+                                 Note: Manual entry might need to match an existing ID for the backend.
+                               </p>
+                            )}
+                          </div>
                         )}
                       </div>
                       
@@ -784,10 +814,10 @@ const TaskDashboard = ({ user }) => {
                     onChange={(e) => setSelectedStatus(e.target.value)}
                   >
                     <option value="all">All Status</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Overdue">Overdue</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="OVERDUE">Overdue</option>
                   </select>
                   <div className="flex gap-2">
                     <motion.button
@@ -938,7 +968,7 @@ const TaskDashboard = ({ user }) => {
                 >
                   <p className="text-sm font-medium">All Pending</p>
                   <p className={`text-2xl font-bold ${pendingStatusFilter === 'all' ? 'text-white' : 'text-gray-700'}`}>
-                    {tasks.filter(t => t.status === 'Pending' || t.status === 'Overdue').length}
+                    {tasks.filter(t => t.status === 'PENDING' || t.status === 'OVERDUE').length}
                   </p>
                 </motion.div>
                 <motion.div 
@@ -948,7 +978,7 @@ const TaskDashboard = ({ user }) => {
                 >
                   <p className="text-sm font-medium">Pending Tasks</p>
                   <p className={`text-2xl font-bold ${pendingStatusFilter === 'Pending' ? 'text-white' : 'text-orange-700'}`}>
-                    {tasks.filter(t => t.status === 'Pending').length}
+                    {tasks.filter(t => t.status === 'PENDING').length}
                   </p>
                 </motion.div>
                 <motion.div 
@@ -958,7 +988,7 @@ const TaskDashboard = ({ user }) => {
                 >
                   <p className="text-sm font-medium">Overdue Tasks</p>
                   <p className={`text-2xl font-bold ${pendingStatusFilter === 'Overdue' ? 'text-white' : 'text-red-700'}`}>
-                    {tasks.filter(t => t.status === 'Overdue').length}
+                    {tasks.filter(t => t.status === 'OVERDUE').length}
                   </p>
                 </motion.div>
               </div>
@@ -995,7 +1025,7 @@ const TaskDashboard = ({ user }) => {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {filteredPendingTasks.map((task) => {
-                        const daysOverdue = task.status === 'Overdue' ? getDaysOverdue(task.dueDate) : 0;
+                        const daysOverdue = task.status === 'OVERDUE' ? getDaysOverdue(task.dueDate) : 0;
                         return (
                           <tr key={task.id} className="hover:bg-gray-50 transition-colors">
                             <td className="px-4 py-3">
@@ -1010,7 +1040,7 @@ const TaskDashboard = ({ user }) => {
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-600">
                               {new Date(task.dueDate).toLocaleDateString()}
-                              {task.status === 'Overdue' && (
+                              {task.status === 'OVERDUE' && (
                                 <p className="text-xs text-red-500 mt-1">({daysOverdue} days overdue)</p>
                               )}
                             </td>
@@ -1086,7 +1116,7 @@ const TaskDashboard = ({ user }) => {
                 <div className="bg-blue-50 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <UserIcon className="h-5 w-5 text-blue-600" />
-                    <span className="font-semibold text-gray-900">Created By: Shri. Ashish Yerekar (I.A.S.)</span>
+                    <span className="font-semibold text-gray-900">Created By: {selectedTaskForTracking.createdByName || 'N/A'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CalendarIcon className="h-4 w-4 text-gray-500" />

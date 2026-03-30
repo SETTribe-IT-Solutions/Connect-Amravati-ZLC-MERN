@@ -42,14 +42,14 @@ public class TaskController {
 
     // GET has no body — requesterId stays as @RequestParam
     @GetMapping
-    public ResponseEntity<List<TaskResponse>> getTasks(@RequestParam Long requesterId) {
+    public ResponseEntity<List<TaskResponse>> getTasks(@RequestParam(name = "requesterId") Long requesterId) {
         return ResponseEntity.ok(taskService.getTasks(requesterId));
     }
 
     // requesterId comes from JSON body (inside TaskStatusRequest)
     @PutMapping("/{id}/status")
     public ResponseEntity<TaskResponse> updateStatus(
-            @PathVariable Long id,
+            @PathVariable(name = "id") Long id,
             @Valid @RequestBody TaskStatusRequest request) {
 
         return ResponseEntity.ok(taskService.updateTaskStatus(id, request.getStatus(), request.getRequesterId()));
@@ -58,7 +58,7 @@ public class TaskController {
     // requesterId comes from JSON body (inside RemarkRequest)
     @PostMapping("/{id}/remark")
     public ResponseEntity<TaskRemark> addRemark(
-            @PathVariable Long id,
+            @PathVariable(name = "id") Long id,
             @Valid @RequestBody RemarkRequest request) {
 
         return ResponseEntity.ok(taskService.addRemark(id, request.getRemark(), request.getRequesterId()));
@@ -66,7 +66,7 @@ public class TaskController {
 
     // GET has no body — requesterId stays as @RequestParam
     @GetMapping("/dashboard")
-    public ResponseEntity<DashboardResponse> getDashboard(@RequestParam Long requesterId) {
+    public ResponseEntity<DashboardResponse> getDashboard(@RequestParam(name = "requesterId") Long requesterId) {
         return ResponseEntity.ok(taskService.getDashboard(requesterId));
     }
 }

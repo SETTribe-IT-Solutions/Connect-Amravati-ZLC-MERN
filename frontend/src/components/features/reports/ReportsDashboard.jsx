@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   ChartBarIcon,
@@ -30,78 +30,92 @@ import {
   Line
 } from 'recharts';
 
+import { getPerformanceReport, getGlobalStats } from '../../../services/reportService';
+import { toast } from 'react-hot-toast';
+
 const ReportsDashboard = () => {
   const [dateRange, setDateRange] = useState('month');
   const [reportType, setReportType] = useState('overview');
+  const [performanceData, setPerformanceData] = useState([]);
+  const [globalStats, setGlobalStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Sample data
-  const monthlyData = [
-    { month: 'Jan', tasks: 65, completed: 45, pending: 12, overdue: 8 },
-    { month: 'Feb', tasks: 78, completed: 58, pending: 8, overdue: 12 },
-    { month: 'Mar', tasks: 92, completed: 72, pending: 5, overdue: 15 },
-    { month: 'Apr', tasks: 88, completed: 68, pending: 10, overdue: 10 },
-    { month: 'May', tasks: 102, completed: 82, pending: 6, overdue: 14 },
-    { month: 'Jun', tasks: 120, completed: 98, pending: 6, overdue: 16 },
-  ];
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const requesterId = localStorage.getItem('userID');
+        if (requesterId) {
+          const [perf, global] = await Promise.all([
+            getPerformanceReport(requesterId),
+            getGlobalStats(requesterId)
+          ]);
+          setPerformanceData(perf || []);
+          setGlobalStats(global);
+        }
+      } catch (error) {
+        console.error("Fetch Reports Error:", error);
+        toast.error("Failed to load report data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReports();
+  }, []);
 
-  const departmentData = [
-    { name: 'Collector Office', completed: 95, pending: 15, overdue: 8, total: 118 },
-    { name: 'Tehsildar', completed: 82, pending: 12, overdue: 10, total: 104 },
-    { name: 'SDO', completed: 68, pending: 8, overdue: 6, total: 82 },
-    { name: 'BDO', completed: 45, pending: 5, overdue: 4, total: 54 },
-    { name: 'Talathi', completed: 120, pending: 18, overdue: 12, total: 150 },
-    { name: 'Gram Sevak', completed: 156, pending: 22, overdue: 15, total: 193 },
-  ];
+  // Use performance data for department-level information or fallback to empty
+  const departmentData = performanceData.length > 0 
+    ? performanceData.map(p => ({
+        name: p.userName,
+        completed: p.completedTasks,
+        pending: p.totalTasks - p.completedTasks,
+        overdue: p.overdueTasks,
+        total: p.totalTasks
+      }))
+    : [];
 
-  const taskDistribution = [
-    { name: 'Completed', value: 423, color: '#10B981' },
-    { name: 'In Progress', value: 156, color: '#F59E0B' },
-    { name: 'Pending', value: 89, color: '#6B7280' },
-    { name: 'Overdue', value: 67, color: '#EF4444' },
-  ];
+  const taskDistribution = globalStats ? [
+    { name: 'Completed', value: globalStats.completed || 0, color: '#10B981' },
+    { name: 'In Progress', value: globalStats.inProgress || 0, color: '#F59E0B' },
+    { name: 'Pending', value: globalStats.pending || 0, color: '#6B7280' },
+    { name: 'Overdue', value: globalStats.overdue || 0, color: '#EF4444' },
+  ] : [];
 
-  const weeklyData = [
-    { day: 'Mon', tasks: 24, completed: 18 },
-    { day: 'Tue', tasks: 28, completed: 22 },
-    { day: 'Wed', tasks: 32, completed: 26 },
-    { day: 'Thu', tasks: 26, completed: 20 },
-    { day: 'Fri', tasks: 35, completed: 28 },
-    { day: 'Sat', tasks: 18, completed: 14 },
-    { day: 'Sun', tasks: 8, completed: 6 },
-  ];
+  // Currently trends data is not fetched separately, we can derive a mock-free structure
+  const monthlyData = []; 
+  const weeklyData = [];
 
   const stats = [
     { 
       title: 'Total Tasks', 
-      value: '735', 
-      change: '+12.5%', 
+      value: globalStats?.total?.toString() || '0', 
+      change: '', 
       icon: DocumentTextIcon, 
       bgColor: 'bg-blue-50', 
       textColor: 'text-blue-600' 
     },
     { 
       title: 'Completion Rate', 
-      value: '87.2%', 
-      change: '+5.2%', 
+      value: globalStats ? `${globalStats.completionRate}%` : '0%', 
+      change: '', 
       icon: CheckCircleIcon, 
       bgColor: 'bg-green-50', 
       textColor: 'text-green-600' 
     },
     { 
-      title: 'Active Users', 
-      value: '142', 
-      change: '+8', 
-      icon: UserGroupIcon, 
-      bgColor: 'bg-purple-50', 
-      textColor: 'text-purple-600' 
-    },
-    { 
-      title: 'Avg. Response', 
-      value: '2.4d', 
-      change: '-0.3d', 
+      title: 'Pending Tasks', 
+      value: globalStats?.pending?.toString() || '0', 
+      change: '', 
       icon: ClockIcon, 
       bgColor: 'bg-yellow-50', 
       textColor: 'text-yellow-600' 
+    },
+    { 
+      title: 'Overdue', 
+      value: globalStats?.overdue?.toString() || '0', 
+      change: '', 
+      icon: ExclamationTriangleIcon, 
+      bgColor: 'bg-red-50', 
+      textColor: 'text-red-600' 
     },
   ];
 
@@ -175,9 +189,11 @@ const ReportsDashboard = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                <p className={`text-xs mt-2 flex items-center gap-1 ${stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                  <span>{stat.change.startsWith('+') ? '↑' : '↓'}</span> {stat.change}
-                </p>
+                {stat.change && (
+                  <p className={`text-xs mt-2 flex items-center gap-1 ${stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                    <span>{stat.change.startsWith('+') ? '↑' : '↓'}</span> {stat.change}
+                  </p>
+                )}
               </div>
               <div className={`${stat.bgColor} p-4 rounded-2xl`}>
                 <stat.icon className={`h-8 w-8 ${stat.textColor}`} />
@@ -286,7 +302,16 @@ const ReportsDashboard = () => {
           </div>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={departmentData} layout="vertical" margin={{ left: 100 }}>
+              <BarChart 
+                data={performanceData.length > 0 ? performanceData.map(p => ({
+                  name: p.userName,
+                  completed: p.completedTasks,
+                  pending: p.totalTasks - p.completedTasks,
+                  overdue: p.overdueTasks
+                })) : departmentData} 
+                layout="vertical" 
+                margin={{ left: 100 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis type="number" stroke="#6B7280" />
                 <YAxis type="category" dataKey="name" stroke="#6B7280" width={100} />
@@ -348,20 +373,37 @@ const ReportsDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {departmentData.map((dept, index) => (
-                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm text-gray-900">{dept.name}</td>
-                    <td className="py-3 px-4 text-sm text-gray-600">{dept.total}</td>
-                    <td className="py-3 px-4 text-sm text-green-600">{dept.completed}</td>
-                    <td className="py-3 px-4 text-sm text-yellow-600">{dept.pending}</td>
-                    <td className="py-3 px-4 text-sm text-red-600">{dept.overdue}</td>
-                    <td className="py-3 px-4 text-sm font-medium">
-                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full">
-                        {Math.round((dept.completed / dept.total) * 100)}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {performanceData.length > 0 ? (
+                  performanceData.map((item, index) => (
+                    <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm text-gray-900">{item.userName} ({item.role})</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{item.totalTasks}</td>
+                      <td className="py-3 px-4 text-sm text-green-600">{item.completedTasks}</td>
+                      <td className="py-3 px-4 text-sm text-yellow-600">{item.totalTasks - item.completedTasks}</td>
+                      <td className="py-3 px-4 text-sm text-red-600">{item.overdueTasks}</td>
+                      <td className="py-3 px-4 text-sm font-medium">
+                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                          {item.efficiency}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  departmentData.map((dept, index) => (
+                    <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm text-gray-900">{dept.name}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{dept.total}</td>
+                      <td className="py-3 px-4 text-sm text-green-600">{dept.completed}</td>
+                      <td className="py-3 px-4 text-sm text-yellow-600">{dept.pending}</td>
+                      <td className="py-3 px-4 text-sm text-red-600">{dept.overdue}</td>
+                      <td className="py-3 px-4 text-sm font-medium">
+                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                          {Math.round((dept.completed / dept.total) * 100)}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

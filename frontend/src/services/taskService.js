@@ -1,0 +1,36 @@
+import axiosInstance from "../config/axiosConfig";
+
+export const getDashboardStats = async (requesterId) => {
+  const response = await axiosInstance.get("/tasks/dashboard", {
+    params: { requesterId }
+  });
+  return response.data; // { total, pending, inProgress, completed, overdue }
+};
+
+export const getTasks = async (requesterId) => {
+  const response = await axiosInstance.get("/tasks", {
+    params: { requesterId }
+  });
+  return response.data; // List<TaskResponse>
+};
+
+export const createTask = async (taskData) => {
+  const response = await axiosInstance.post("/tasks", taskData);
+  return response.data;
+};
+
+export const updateTaskStatus = async (taskId, status, requesterId) => {
+  const response = await axiosInstance.put(`/tasks/${taskId}/status`, {
+    status,
+    requesterId
+  });
+  return response.data;
+};
+
+export const addTaskRemark = async (taskId, remark, requesterId) => {
+  const response = await axiosInstance.post(`/tasks/${taskId}/remark`, {
+    remark,
+    requesterId
+  });
+  return response.data;
+};

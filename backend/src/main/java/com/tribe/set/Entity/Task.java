@@ -27,13 +27,18 @@ public class Task {
     private TaskStatus status = TaskStatus.PENDING;
 
     private LocalDate dueDate;
+    private String department;
+    private int progress = 0;
+    private String target;
+    private String achievement;
+    private String location;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", referencedColumnName = "userID", nullable = false)
+    @JoinColumn(name = "created_by", referencedColumnName = "userid", nullable = false)
     private User createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_to", referencedColumnName = "userID", nullable = false)
+    @JoinColumn(name = "assigned_to", referencedColumnName = "userid", nullable = false)
     private User assignedTo;
 
     @Column(nullable = false, updatable = false)
@@ -76,4 +81,20 @@ public class Task {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getDepartment() { return department; }
+    public void setDepartment(String department) { this.department = department; }
+
+    public int getProgress() { return progress; }
+    public void setProgress(int progress) { this.progress = progress; }
+
+    public String getTarget() { return target; }
+    public void setTarget(String target) { this.target = target; }
+
+    public String getAchievement() { return achievement; }
+    public void setAchievement(String achievement) { this.achievement = achievement; }
+
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 }
+
