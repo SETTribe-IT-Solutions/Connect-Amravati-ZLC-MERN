@@ -16,9 +16,18 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 
 @Service
 public class TaskService {
+
+    // Store uploaded files in 'uploads' directory
+    private final String uploadDir = "uploads/";
 
     @Autowired private TaskRepository       taskRepository;
     @Autowired private TaskRemarkRepository remarkRepository;
@@ -29,7 +38,7 @@ public class TaskService {
     // CREATE TASK
     // ═══════════════════════════════════════════════════
 
-    public TaskResponse createTask(TaskRequest request, Long creatorId) {
+    public TaskResponse createTask(TaskRequest request, Long creatorId, MultipartFile file) {
 
         User creator  = findUser(creatorId);
         User assignee = findUser(request.getAssignedTo());
@@ -70,6 +79,30 @@ public class TaskService {
         task.setStatus(TaskStatus.PENDING);
         task.setCreatedBy(creator);       // ← pass User object directly
         task.setAssignedTo(assignee);     // ← pass User object directly
+
+        // Handle file upload
+        if (file != null && !file.isEmpty()) {
+            try {
+                Path uploadPath = Paths.get(uploadDir);
+                if (!Files.exists(uploadPath)) {
+                    Files.createDirectories(uploadPath);
+                }
+                
+                String originalFileName = file.getOriginalFilename();
+                String extension = "";
+                if (originalFileName != null && originalFileName.contains(".")) {
+                    extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+                }
+                
+                String uniqueFileName = UUID.randomUUID().toString() + extension;
+                Path filePath = uploadPath.resolve(uniqueFileName).toAbsolutePath();
+                Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                
+                task.setAttachment(uniqueFileName);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to store file: " + e.getMessage());
+            }
+        }
 
         Task saved = taskRepository.save(task);
 
