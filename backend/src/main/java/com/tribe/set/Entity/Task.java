@@ -3,6 +3,8 @@ package com.tribe.set.Entity;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "tasks")
@@ -37,6 +39,10 @@ public class Task {
     @JoinColumn(name = "created_by", referencedColumnName = "userid", nullable = false)
     private User createdBy;
 
+    // Stores the file name or path relative to the uploads directory
+    @Column(name = "attachment")
+    private String attachment;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_to", referencedColumnName = "userid", nullable = false)
     private User assignedTo;
@@ -45,6 +51,9 @@ public class Task {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaskRemark> remarks = new ArrayList<>();
 
     @PreUpdate
     public void onUpdate() {
@@ -96,5 +105,11 @@ public class Task {
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
+
+    public String getAttachment() { return attachment; }
+    public void setAttachment(String attachment) { this.attachment = attachment; }
+
+    public List<TaskRemark> getRemarks() { return remarks; }
+    public void setRemarks(List<TaskRemark> remarks) { this.remarks = remarks; }
 }
 

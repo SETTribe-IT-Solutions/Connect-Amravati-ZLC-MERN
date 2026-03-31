@@ -14,8 +14,13 @@ export const getTasks = async (requesterId) => {
   return response.data; // List<TaskResponse>
 };
 
-export const createTask = async (taskData) => {
-  const response = await axiosInstance.post("/tasks", taskData);
+export const createTask = async (formData) => {
+  const response = await axiosInstance.post("/tasks", formData, {
+    headers: {
+      // Removing 'Content-Type': 'multipart/form-data' so the browser automatically appends the correct boundary!
+      'Content-Type': undefined
+    }
+  });
   return response.data;
 };
 

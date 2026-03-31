@@ -19,6 +19,7 @@ public class TaskResponse {
     private String target;
     private String achievement;
     private String location;
+    private String attachment;
 
     private Long createdById;
     private String createdByName;
@@ -46,6 +47,7 @@ public class TaskResponse {
         res.target      = task.getTarget();
         res.achievement = task.getAchievement();
         res.location    = task.getLocation();
+        res.attachment  = task.getAttachment();
         res.createdAt   = task.getCreatedAt() != null ? task.getCreatedAt().toString() : null;
         res.updatedAt   = task.getUpdatedAt() != null ? task.getUpdatedAt().toString() : null;
 
@@ -77,6 +79,7 @@ public class TaskResponse {
     public String getTarget() { return target; }
     public String getAchievement() { return achievement; }
     public String getLocation() { return location; }
+    public String getAttachment() { return attachment; }
     public Long getCreatedById() { return createdById; }
     public String getCreatedByName() { return createdByName; }
     public String getCreatedByRole() { return createdByRole; }

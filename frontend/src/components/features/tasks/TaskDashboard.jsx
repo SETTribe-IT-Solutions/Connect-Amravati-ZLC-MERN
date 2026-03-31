@@ -81,12 +81,21 @@ const TaskDashboard = ({ user }) => {
       if (userID) {
         setLoading(true);
         const data = await getTasks(userID);
+        const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+        const serverURL = baseURL.replace('/api', '');
+        
+        console.log("Fetched raw task data:", data); // DEBUG
+
         const mapped = (data || []).map(t => ({
           ...t,
-          assignedTo: t.assignedToName || 'N/A', // Frontend expects assignedTo for display/filtering
+          description: t.description || '', // Null safety
+          assignedTo: t.assignedToName || 'N/A',
           status: t.status ? t.status.toString().toUpperCase() : 'PENDING',
           priority: t.priority ? t.priority.toString().toUpperCase() : 'MEDIUM',
-          attachments: [] // Initialize attachments array if backend doesn't provide it yet
+          attachments: t.attachment ? [{
+             name: t.attachment,
+             url: `${serverURL}/uploads/${t.attachment}`
+          }] : [] 
         }));
         setTasks(mapped);
       }
@@ -209,7 +218,17 @@ const TaskDashboard = ({ user }) => {
         progress: 0
       };
       
-      await createTask(taskData);
+      const formData = new FormData();
+      formData.append('task', new Blob([JSON.stringify(taskData)], {
+        type: 'application/json'
+      }));
+      
+      // Append the first file if it exists
+      if (newTask.attachments && newTask.attachments.length > 0 && newTask.attachments[0].file) {
+        formData.append('file', newTask.attachments[0].file);
+      }
+      
+      await createTask(formData);
       fetchTasks();
       
       setNewTask({
@@ -240,7 +259,8 @@ const TaskDashboard = ({ user }) => {
     const newAttachments = files.map(file => ({
       name: file.name,
       url: URL.createObjectURL(file),
-      size: (file.size / 1024).toFixed(1) + ' KB'
+      size: (file.size / 1024).toFixed(1) + ' KB',
+      file: file
     }));
     setNewTask({ ...newTask, attachments: [...newTask.attachments, ...newAttachments] });
     showInfoPopup(`${files.length} file(s) uploaded successfully!`, 'success');
@@ -863,7 +883,7 @@ const TaskDashboard = ({ user }) => {
                           <td className="px-4 py-3">
                             <div>
                               <p className="font-semibold text-gray-900">{task.title}</p>
-                              <p className="text-xs text-gray-500 mt-1">{task.description.substring(0, 50)}...</p>
+                              <p className="text-xs text-gray-500 mt-1">{(task.description || '').substring(0, 50)}...</p>
                             </div>
                           </td>
                           <td className="px-4 py-3">
@@ -889,12 +909,15 @@ const TaskDashboard = ({ user }) => {
                           <td className="px-4 py-3 text-sm text-gray-600">{task.achievement || 'Not Started'}</td>
                           <td className="px-4 py-3">
                             {task.attachments.length > 0 ? (
-                              <button
-                                onClick={() => showInfoPopup(`${task.attachments.length} attachment(s)`, 'info')}
-                                className="text-blue-600 hover:text-blue-800"
+                              <a
+                                href={task.attachments[0].url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-blue-600 hover:text-blue-800 focus:outline-none"
+                                title="Download Attachment"
                               >
                                 <PaperClipIcon className="h-5 w-5" />
-                              </button>
+                              </a>
                             ) : (
                               <span className="text-gray-400">-</span>
                             )}

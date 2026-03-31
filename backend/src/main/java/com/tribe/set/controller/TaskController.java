@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.Valid;
 
 import com.tribe.set.Entity.TaskRemark;
 import com.tribe.set.dto.DashboardResponse;
@@ -32,12 +35,11 @@ public class TaskController {
     @Autowired
     private TaskService taskService;
 
-    // requesterId comes from JSON body (inside TaskRequest)
-    @PostMapping
+    @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<TaskResponse> createTask(
-            @Valid @RequestBody TaskRequest request) {
-
-        return ResponseEntity.ok(taskService.createTask(request, request.getRequesterId()));
+            @RequestPart("task") @Valid TaskRequest request,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+        return ResponseEntity.ok(taskService.createTask(request, request.getRequesterId(), file));
     }
 
     // GET has no body — requesterId stays as @RequestParam

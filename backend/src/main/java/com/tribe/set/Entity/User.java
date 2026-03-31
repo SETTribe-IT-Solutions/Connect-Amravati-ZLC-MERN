@@ -3,6 +3,8 @@ package com.tribe.set.Entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "users")
@@ -45,6 +47,28 @@ public class User {
 
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    // Relationships with Cascade Delete
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "fromUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Appreciation> sentAppreciations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "toUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Appreciation> receivedAppreciations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> createdTasks = new ArrayList<>();
+
+    @OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> assignedTasks = new ArrayList<>();
+
+    @OneToMany(mappedBy = "addedBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaskRemark> addedRemarks = new ArrayList<>();
+
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Announcement> createdAnnouncements = new ArrayList<>();
 
 	public Long getUserID() {
 		return userID;
@@ -141,6 +165,27 @@ public class User {
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
+
+    public List<Notification> getNotifications() { return notifications; }
+    public void setNotifications(List<Notification> notifications) { this.notifications = notifications; }
+
+    public List<Appreciation> getSentAppreciations() { return sentAppreciations; }
+    public void setSentAppreciations(List<Appreciation> sentAppreciations) { this.sentAppreciations = sentAppreciations; }
+
+    public List<Appreciation> getReceivedAppreciations() { return receivedAppreciations; }
+    public void setReceivedAppreciations(List<Appreciation> receivedAppreciations) { this.receivedAppreciations = receivedAppreciations; }
+
+    public List<Task> getCreatedTasks() { return createdTasks; }
+    public void setCreatedTasks(List<Task> createdTasks) { this.createdTasks = createdTasks; }
+
+    public List<Task> getAssignedTasks() { return assignedTasks; }
+    public void setAssignedTasks(List<Task> assignedTasks) { this.assignedTasks = assignedTasks; }
+
+    public List<TaskRemark> getAddedRemarks() { return addedRemarks; }
+    public void setAddedRemarks(List<TaskRemark> addedRemarks) { this.addedRemarks = addedRemarks; }
+
+    public List<Announcement> getCreatedAnnouncements() { return createdAnnouncements; }
+    public void setCreatedAnnouncements(List<Announcement> createdAnnouncements) { this.createdAnnouncements = createdAnnouncements; }
 
     
 }
