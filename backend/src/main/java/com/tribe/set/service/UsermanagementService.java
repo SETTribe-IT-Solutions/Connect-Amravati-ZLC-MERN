@@ -240,7 +240,10 @@ public class UsermanagementService {
         User user = userRepository.findByUserID(res.getUserID()).orElse(null);
         if (user != null) {
             res.setTasksCompleted(taskRepository.countByAssignedToAndStatus(user, com.tribe.set.Entity.TaskStatus.COMPLETED));
+<<<<<<< HEAD
+=======
             res.setAchievements(appreciationRepository.countByToUser(user));
+>>>>>>> upstream/main
             
             // Pending tasks = Total tasks - Completed tasks
             long totalTasks = taskRepository.countByAssignedTo(user);

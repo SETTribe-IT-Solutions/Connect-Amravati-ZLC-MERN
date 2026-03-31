@@ -194,7 +194,11 @@ const Tasks = () => {
       </div>
 
       {/* Stats Cards */}
+<<<<<<< HEAD
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+=======
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+>>>>>>> upstream/main
         <div className="bg-white rounded-xl shadow-sm p-3 border-l-4 border-blue-500">
           <p className="text-xs text-gray-500">Total</p>
           <p className="text-lg font-bold text-gray-900">156</p>
@@ -215,11 +219,14 @@ const Tasks = () => {
           <p className="text-lg font-bold text-red-600">16</p>
           <p className="text-xs text-red-600">↑ +5%</p>
         </div>
+<<<<<<< HEAD
+=======
         <div className="bg-white rounded-xl shadow-sm p-3 border-l-4 border-purple-500">
           <p className="text-xs text-gray-500">Achievement</p>
           <p className="text-lg font-bold text-purple-600">₹45.2L</p>
           <p className="text-xs text-purple-600">↑ +15%</p>
         </div>
+>>>>>>> upstream/main
         <div className="bg-white rounded-xl shadow-sm p-3 border-l-4 border-indigo-500">
           <p className="text-xs text-gray-500">Target</p>
           <p className="text-lg font-bold text-indigo-600">₹75L</p>

@@ -29,6 +29,10 @@ public class User {
         regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@#$%^&+=!]).{8,}$",
         message = "Password must contain uppercase, lowercase, number and special character"
     )
+<<<<<<< HEAD
+    @com.fasterxml.jackson.annotation.JsonIgnore
+=======
+>>>>>>> upstream/main
     @Column(nullable = false)
     private String password;
 
@@ -39,6 +43,10 @@ public class User {
     private String district;
     private String taluka;
     private String village;
+<<<<<<< HEAD
+    @Pattern(regexp = "^\\d{10}$", message = "Phone number must be exactly 10 digits")
+=======
+>>>>>>> upstream/main
     private String phone;
     private Double rating = 0.0;
 
@@ -49,6 +57,33 @@ public class User {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // Relationships with Cascade Delete
+<<<<<<< HEAD
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications = new ArrayList<>();
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "fromUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Appreciation> sentAppreciations = new ArrayList<>();
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "toUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Appreciation> receivedAppreciations = new ArrayList<>();
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> createdTasks = new ArrayList<>();
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> assignedTasks = new ArrayList<>();
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "addedBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaskRemark> addedRemarks = new ArrayList<>();
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+=======
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications = new ArrayList<>();
 
@@ -67,6 +102,7 @@ public class User {
     @OneToMany(mappedBy = "addedBy", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TaskRemark> addedRemarks = new ArrayList<>();
 
+>>>>>>> upstream/main
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Announcement> createdAnnouncements = new ArrayList<>();
 

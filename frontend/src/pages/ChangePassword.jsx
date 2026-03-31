@@ -15,7 +15,11 @@ import {
 } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 
+<<<<<<< HEAD
+const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
+=======
 const ChangePassword = ({ onPasswordChange, onClose }) => {
+>>>>>>> upstream/main
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('change'); // 'change' or 'forgot'
   const [step, setStep] = useState(1); // 1: verify, 2: new password, 3: success
@@ -127,16 +131,39 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
   };
 
   // Handle next step
+<<<<<<< HEAD
+  const handleNext = async () => {
+=======
   const handleNext = () => {
+>>>>>>> upstream/main
     const newErrors = validateForm();
     if (Object.keys(newErrors).length === 0) {
       if (step === 1) {
         if (activeTab === 'change') {
+<<<<<<< HEAD
+          // Verify current password on the backend
+          if (onVerifyPassword) {
+            setIsLoading(true);
+            try {
+              const isValid = await onVerifyPassword(formData.currentPassword);
+              if (isValid) {
+                setStep(2);
+              } else {
+                setErrors({ currentPassword: 'Current password is incorrect' });
+              }
+            } finally {
+              setIsLoading(false);
+            }
+          } else {
+            // Fallback if prop not provided
+            setStep(2);
+=======
           // Verify current password (demo)
           if (formData.currentPassword === 'admin123') {
             setStep(2);
           } else {
             setErrors({ currentPassword: 'Current password is incorrect' });
+>>>>>>> upstream/main
           }
         } else {
           // Verify OTP (demo)
@@ -147,6 +174,25 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
           }
         }
       } else if (step === 2) {
+<<<<<<< HEAD
+        // Process password change via actual backend
+        setIsLoading(true);
+        try {
+          if (onPasswordChange) {
+            const success = await onPasswordChange(formData.currentPassword, formData.newPassword);
+            if (success) {
+              setStep(3);
+            } else {
+              // Error is handled by a toast in App.jsx, but we could also set step back or just let user retry.
+              // To retry, we reset the current password step or just keep them here.
+            }
+          } else {
+            setStep(3); // Fallback if no handler provided
+          }
+        } finally {
+          setIsLoading(false);
+        }
+=======
         // Process password change
         setIsLoading(true);
         setTimeout(() => {
@@ -156,6 +202,7 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
             onPasswordChange(formData.currentPassword, formData.newPassword);
           }
         }, 2000);
+>>>>>>> upstream/main
       }
     } else {
       setErrors(newErrors);
@@ -329,6 +376,19 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                         <div className="relative">
                           <PhoneIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                           <input
+<<<<<<< HEAD
+                            type="text"
+                            value={formData.phone}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                              setFormData({ ...formData, phone: value });
+                            }}
+                            className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
+                              errors.phone ? 'border-red-500' : 'border-gray-200'
+                            }`}
+                            placeholder="9876543210"
+                            maxLength={10}
+=======
                             type="tel"
                             value={formData.phone}
                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -336,6 +396,7 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                               errors.phone ? 'border-red-500' : 'border-gray-200'
                             }`}
                             placeholder="Enter your registered phone number"
+>>>>>>> upstream/main
                           />
                         </div>
                         {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}

@@ -118,6 +118,29 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
   };
 
   // Handle next step
+<<<<<<< HEAD
+  const handleNext = async () => {
+    const newErrors = validateForm();
+    if (Object.keys(newErrors).length === 0) {
+      if (step === 1) {
+        // Proceed to next step. Real validation happens on backend in step 2.
+        setStep(2);
+      } else if (step === 2) {
+        // Process password change via actual backend
+        setIsLoading(true);
+        try {
+          if (onPasswordChange) {
+            const success = await onPasswordChange(formData.currentPassword, formData.newPassword);
+            if (success) {
+              setStep(3);
+            }
+          } else {
+            setStep(3); // Fallback
+          }
+        } finally {
+          setIsLoading(false);
+        }
+=======
   const handleNext = () => {
     const newErrors = validateForm();
     if (Object.keys(newErrors).length === 0) {
@@ -138,6 +161,7 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
             onPasswordChange(formData.currentPassword, formData.newPassword);
           }
         }, 2000);
+>>>>>>> upstream/main
       }
     } else {
       setErrors(newErrors);

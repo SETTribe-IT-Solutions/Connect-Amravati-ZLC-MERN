@@ -32,7 +32,11 @@ public class Task {
     private String department;
     private int progress = 0;
     private String target;
+<<<<<<< HEAD
+   
+=======
     private String achievement;
+>>>>>>> upstream/main
     private String location;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -100,8 +104,11 @@ public class Task {
     public String getTarget() { return target; }
     public void setTarget(String target) { this.target = target; }
 
+<<<<<<< HEAD
+=======
     public String getAchievement() { return achievement; }
     public void setAchievement(String achievement) { this.achievement = achievement; }
+>>>>>>> upstream/main
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }

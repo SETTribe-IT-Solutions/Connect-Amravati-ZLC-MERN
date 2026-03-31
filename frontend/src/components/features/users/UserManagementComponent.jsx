@@ -68,7 +68,10 @@ const UserManagementComponent = () => {
         tasksCompleted: u.tasksCompleted || 0,
         rating: u.rating || 0,
         joinDate: u.createdAt ? u.createdAt.toString().split('T')[0] : 'N/A',
+<<<<<<< HEAD
+=======
         achievements: u.achievements || 0,
+>>>>>>> upstream/main
         pendingTasks: u.pendingTasks || 0
       }));
       setUsers(mapped);
@@ -367,10 +370,13 @@ const UserManagementComponent = () => {
                     <p className="text-xs text-blue-600">Tasks</p>
                     <p className="text-sm font-semibold text-blue-700">{user.tasksCompleted}</p>
                   </div>
+<<<<<<< HEAD
+=======
                   <div className="bg-green-50 rounded-lg p-2 text-center">
                     <p className="text-xs text-green-600">Achievements</p>
                     <p className="text-sm font-semibold text-green-700">{user.achievements}</p>
                   </div>
+>>>>>>> upstream/main
                   <div className="bg-yellow-50 rounded-lg p-2 text-center">
                     <p className="text-xs text-yellow-600">Pending</p>
                     <p className="text-sm font-semibold text-yellow-700">{user.pendingTasks}</p>
@@ -477,9 +483,12 @@ const UserManagementComponent = () => {
                         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
                           {user.tasksCompleted} tasks
                         </span>
+<<<<<<< HEAD
+=======
                         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                           {user.achievements} achv
                         </span>
+>>>>>>> upstream/main
                       </div>
                     </td>
                     <td className="py-4 px-6">
@@ -556,6 +565,14 @@ const UserManagementComponent = () => {
                   requesterId: localStorage.getItem('userID')
                 };
 
+<<<<<<< HEAD
+                // Remove empty password for existing users to keep original password
+                if (selectedUser && !payload.password) {
+                  delete payload.password;
+                }
+
+=======
+>>>>>>> upstream/main
                 if (selectedUser) {
                   await updateUser(selectedUser.id, payload);
                 } else {
@@ -567,7 +584,26 @@ const UserManagementComponent = () => {
                 setSelectedUser(null);
               } catch (error) {
                 console.error("Save User Error:", error);
+<<<<<<< HEAD
+                
+                let errorMessage = "Failed to save user. Please check if User ID is unique and fields are valid.";
+                
+                // Try to extract specific backend validation error
+                if (error.response && error.response.data) {
+                  const data = error.response.data;
+                  if (typeof data === 'string') {
+                    errorMessage = data;
+                  } else if (data.message) {
+                    errorMessage = data.message;
+                  } else if (data.errors && Array.isArray(data.errors)) {
+                    errorMessage = data.errors.map(err => err.defaultMessage || err).join(', ');
+                  }
+                }
+                
+                alert(errorMessage);
+=======
                 alert("Failed to save user. Please check if User ID is unique and fields are valid.");
+>>>>>>> upstream/main
               }
             }}
           />
@@ -597,7 +633,11 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
     userID: user?.id || '',
     name: user?.name || '',
     email: user?.email || '',
+<<<<<<< HEAD
+    phone: (user?.phone || '').replace(/\D/g, '').slice(0, 10),
+=======
     phone: user?.phone || '',
+>>>>>>> upstream/main
     role: user?.role || roles[0],
     taluka: user?.taluka || '',
     village: user?.village || '',
@@ -605,8 +645,20 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
     password: ''
   });
 
+<<<<<<< HEAD
+  const [phoneError, setPhoneError] = React.useState('');
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (formData.phone.length !== 10) {
+      setPhoneError('Phone number must be exactly 10 digits');
+      return;
+    }
+    setPhoneError('');
+=======
+  const handleSubmit = (e) => {
+    e.preventDefault();
+>>>>>>> upstream/main
     onSave(formData);
   };
 
@@ -692,6 +744,27 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
                   Phone <span className="text-red-500">*</span>
                 </label>
                 <input
+<<<<<<< HEAD
+                  type="text"
+                  required
+                  value={formData.phone}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setFormData({...formData, phone: value});
+                    if (value.length === 10) setPhoneError('');
+                  }}
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    phoneError ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                  }`}
+                  placeholder="9876543210"
+                  maxLength={10}
+                />
+                {phoneError && (
+                  <p className="mt-1 text-xs text-red-500 font-medium">
+                    {phoneError}
+                  </p>
+                )}
+=======
                   type="tel"
                   required
                   value={formData.phone}
@@ -699,6 +772,7 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="+91 98765 43210"
                 />
+>>>>>>> upstream/main
               </div>
             </div>
 

@@ -27,6 +27,12 @@ public class RegisterRequest {
     private String district;
     private String taluka;
     private String village;
+<<<<<<< HEAD
+    
+    @Pattern(regexp = "^\\d{10}$", message = "Phone number must be exactly 10 digits")
+    private String phone;
+=======
+>>>>>>> upstream/main
 	public Long getUserID() {
 		return userID;
 	}
@@ -75,6 +81,15 @@ public class RegisterRequest {
 	public void setVillage(String village) {
 		this.village = village;
 	}
+<<<<<<< HEAD
+	public String getPhone() {
+		return phone;
+	}
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+=======
+>>>>>>> upstream/main
 
     
 }
