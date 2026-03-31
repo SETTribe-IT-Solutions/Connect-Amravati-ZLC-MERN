@@ -9,6 +9,10 @@ import {
   ClockIcon,
   ExclamationTriangleIcon,
   ArrowPathIcon,
+<<<<<<< HEAD
+=======
+  TrophyIcon,
+>>>>>>> upstream/main
   FlagIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -69,6 +73,18 @@ const Dashboard = () => {
       textColor: 'text-red-600'
     },
     {
+<<<<<<< HEAD
+=======
+      name: 'Total Achievement',
+      value: '₹ 45.2L',
+      icon: TrophyIcon,
+      change: '+15%',
+      color: 'bg-purple-500',
+      bgColor: 'bg-purple-50',
+      textColor: 'text-purple-600'
+    },
+    {
+>>>>>>> upstream/main
       name: 'Total Target',
       value: '₹ 75L',
       icon: FlagIcon,
@@ -162,6 +178,17 @@ const Dashboard = () => {
               </div>
             )}
 
+<<<<<<< HEAD
+=======
+            {/* Achievement badge */}
+            {stat.name === 'Total Achievement' && (
+              <div className="mt-3 flex items-center gap-1">
+                <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+                  Above target
+                </span>
+              </div>
+            )}
+>>>>>>> upstream/main
           </motion.div>
         ))}
       </div>

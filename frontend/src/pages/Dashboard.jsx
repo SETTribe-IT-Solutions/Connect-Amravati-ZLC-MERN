@@ -10,6 +10,10 @@ import {
   ClockIcon,
   ExclamationTriangleIcon,
   ArrowPathIcon,
+<<<<<<< HEAD
+=======
+  TrophyIcon,
+>>>>>>> upstream/main
   FlagIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -163,6 +167,17 @@ const Dashboard = ({ user }) => {
               </div>
             )}
             
+<<<<<<< HEAD
+=======
+            {/* Achievement badge */}
+            {stat.name === 'Total Achievement' && (
+              <div className="mt-3 flex items-center gap-1">
+                <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+                  Real-time
+                </span>
+              </div>
+            )}
+>>>>>>> upstream/main
           </motion.div>
         ))}
       </div>

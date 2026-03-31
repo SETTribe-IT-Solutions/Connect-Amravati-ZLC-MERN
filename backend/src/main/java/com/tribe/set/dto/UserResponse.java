@@ -20,6 +20,10 @@ public class UserResponse {
 
     // Real-time calculated stats
     private Long tasksCompleted = 0L;
+<<<<<<< HEAD
+=======
+    private Long achievements = 0L;
+>>>>>>> upstream/main
     private Long pendingTasks = 0L;
 
     public static UserResponse from(User user) {
@@ -51,6 +55,10 @@ public class UserResponse {
     public Boolean getActive() { return active; }
     public String getCreatedAt() { return createdAt; }
     public Long getTasksCompleted() { return tasksCompleted; }
+<<<<<<< HEAD
+=======
+    public Long getAchievements() { return achievements; }
+>>>>>>> upstream/main
     public Long getPendingTasks() { return pendingTasks; }
 
     // Setters
@@ -66,5 +74,9 @@ public class UserResponse {
     public void setActive(Boolean active) { this.active = active; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
     public void setTasksCompleted(Long tasksCompleted) { this.tasksCompleted = tasksCompleted; }
+<<<<<<< HEAD
+=======
+    public void setAchievements(Long achievements) { this.achievements = achievements; }
+>>>>>>> upstream/main
     public void setPendingTasks(Long pendingTasks) { this.pendingTasks = pendingTasks; }
 }

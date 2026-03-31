@@ -74,6 +74,10 @@ public class TaskService {
         task.setDepartment(request.getDepartment());
         task.setProgress(request.getProgress());
         task.setTarget(request.getTarget());
+<<<<<<< HEAD
+=======
+        task.setAchievement(request.getAchievement());
+>>>>>>> upstream/main
         task.setLocation(request.getLocation());
         task.setStatus(TaskStatus.PENDING);
         task.setCreatedBy(creator);       // ← pass User object directly

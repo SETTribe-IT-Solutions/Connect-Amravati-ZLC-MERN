@@ -118,6 +118,7 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
   };
 
   // Handle next step
+<<<<<<< HEAD
   const handleNext = async () => {
     const newErrors = validateForm();
     if (Object.keys(newErrors).length === 0) {
@@ -139,6 +140,28 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
         } finally {
           setIsLoading(false);
         }
+=======
+  const handleNext = () => {
+    const newErrors = validateForm();
+    if (Object.keys(newErrors).length === 0) {
+      if (step === 1) {
+        // Verify current password (demo)
+        if (formData.currentPassword === 'admin123') {
+          setStep(2);
+        } else {
+          setErrors({ currentPassword: 'Current password is incorrect' });
+        }
+      } else if (step === 2) {
+        // Process password change
+        setIsLoading(true);
+        setTimeout(() => {
+          setStep(3);
+          setIsLoading(false);
+          if (onPasswordChange) {
+            onPasswordChange(formData.currentPassword, formData.newPassword);
+          }
+        }, 2000);
+>>>>>>> upstream/main
       }
     } else {
       setErrors(newErrors);
