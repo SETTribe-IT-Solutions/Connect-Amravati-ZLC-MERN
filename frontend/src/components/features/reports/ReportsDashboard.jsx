@@ -32,6 +32,8 @@ import {
 
 import { getPerformanceReport, getGlobalStats } from '../../../services/reportService';
 import { toast } from 'react-hot-toast';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const ReportsDashboard = () => {
   const [dateRange, setDateRange] = useState('month');
@@ -135,6 +137,46 @@ const ReportsDashboard = () => {
     return null;
   };
 
+  const handleExport = () => {
+    try {
+      if (!performanceData || performanceData.length === 0) {
+        toast.error("No data available to export");
+        return;
+      }
+
+      // Format data for Excel
+      const exportData = performanceData.map(item => ({
+        'User Name': item.userName,
+        'Role': item.role?.replace(/_/g, ' ') || 'N/A',
+        'Total Tasks': item.totalTasks,
+        'Completed Tasks': item.completedTasks,
+        'Pending Tasks': item.totalTasks - item.completedTasks,
+        'Overdue Tasks': item.overdueTasks,
+        'Efficiency (%)': item.efficiency,
+        'In-Time (%)': item.inTimeCompletion,
+        'Delayed (%)': item.delayedCompletion
+      }));
+
+      // Create worksheet
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      
+      // Add styling/headers if needed (basic)
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Performance Report");
+
+      // Generate Excel file and trigger download
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+      
+      const fileName = `Performance_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+      saveAs(data, fileName);
+      toast.success("Excel report downloaded successfully");
+    } catch (error) {
+      console.error("Export Error:", error);
+      toast.error("Failed to export report");
+    }
+  };
+
   return (
     <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
       <motion.div
@@ -166,6 +208,7 @@ const ReportsDashboard = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={handleExport}
               className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
             >
               <ArrowDownTrayIcon className="h-5 w-5" />

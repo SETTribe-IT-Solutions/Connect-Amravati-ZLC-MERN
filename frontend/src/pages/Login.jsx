@@ -104,7 +104,7 @@ const LoginPage = ({ onLogin }) => {
                         placeholder=" "
                       />
                       <label className={`floating-label ${focusedField === 'username' || formData.username ? 'active' : ''}`}>
-                        {t('Username') || 'Username'}
+                        {t('UserID') || 'UserID'}
                       </label>
                     </div>
 
@@ -127,9 +127,13 @@ const LoginPage = ({ onLogin }) => {
 
                     {/* Forgot Password */}
                     <div className="text-right">
-                      <a href="#" className="text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center justify-end">
+                      <button 
+                        type="button"
+                        onClick={() => navigate('/forgot-password')}
+                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center justify-end w-full"
+                      >
                         {t('Forgot Password') || 'Forgot Password?'} <FaArrowRight className="ml-1 text-xs" />
-                      </a>
+                      </button>
                     </div>
 
                     {/* Login Button */}

@@ -3,8 +3,6 @@ package com.tribe.set.dto;
 import com.tribe.set.Entity.Task;
 import com.tribe.set.Entity.TaskPriority;
 import com.tribe.set.Entity.TaskStatus;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public class TaskResponse {
 
@@ -17,10 +15,7 @@ public class TaskResponse {
     private String department;
     private int progress = 0;
     private String target;
-<<<<<<< HEAD
-=======
     private String achievement;
->>>>>>> upstream/main
     private String location;
     private String attachment;
 
@@ -48,10 +43,7 @@ public class TaskResponse {
         res.department  = task.getDepartment();
         res.progress    = task.getProgress();
         res.target      = task.getTarget();
-<<<<<<< HEAD
-=======
         res.achievement = task.getAchievement();
->>>>>>> upstream/main
         res.location    = task.getLocation();
         res.attachment  = task.getAttachment();
         res.createdAt   = task.getCreatedAt() != null ? task.getCreatedAt().toString() : null;
@@ -83,10 +75,7 @@ public class TaskResponse {
     public String getDepartment() { return department; }
     public int getProgress() { return progress; }
     public String getTarget() { return target; }
-<<<<<<< HEAD
-=======
     public String getAchievement() { return achievement; }
->>>>>>> upstream/main
     public String getLocation() { return location; }
     public String getAttachment() { return attachment; }
     public Long getCreatedById() { return createdById; }

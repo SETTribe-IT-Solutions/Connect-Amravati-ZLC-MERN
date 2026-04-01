@@ -84,7 +84,7 @@ const TaskDashboard = ({ user }) => {
         const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
         const serverURL = baseURL.replace('/api', '');
         
-        console.log("Fetched raw task data:", data); // DEBUG
+
 
         const mapped = (data || []).map(t => ({
           ...t,
@@ -355,11 +355,7 @@ const TaskDashboard = ({ user }) => {
         details = `Total tasks: ${value}\nBreakdown:\n- Completed: ${tasks.filter(t => t.status === 'COMPLETED').length}\n- In Progress: ${tasks.filter(t => t.status === 'IN_PROGRESS').length}\n- Pending: ${tasks.filter(t => t.status === 'PENDING').length}\n- Overdue: ${tasks.filter(t => t.status === 'OVERDUE').length}`;
         break;
       case 'Completed':
-<<<<<<< HEAD
-        details = `Completed tasks: ${value}`;
-=======
         details = `Completed tasks: ${value}\nAchievement rate: ${((value/156)*100).toFixed(1)}%`;
->>>>>>> upstream/main
         break;
       case 'In Progress':
         details = `In Progress tasks: ${value}\nTasks currently being worked on`;
@@ -368,13 +364,9 @@ const TaskDashboard = ({ user }) => {
         const overdueTasks = tasks.filter(t => t.status === 'OVERDUE');
         details = `Overdue tasks: ${value}\n\nDetails:\n${overdueTasks.map(t => `- ${t.title} (Due: ${t.dueDate})`).join('\n')}`;
         break;
-<<<<<<< HEAD
-
-=======
       case 'Achievement':
         details = `Achievement: ${value}`;
         break;
->>>>>>> upstream/main
       case 'Target':
         details = `Target: ${value}`;
         break;
@@ -879,10 +871,7 @@ const TaskDashboard = ({ user }) => {
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ASSIGNED TO</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">DUE DATE</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">TARGET</th>
-<<<<<<< HEAD
-=======
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ACHIEVEMENT</th>
->>>>>>> upstream/main
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ATTACHMENTS</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">REMARK</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ACTIONS</th>
@@ -917,10 +906,7 @@ const TaskDashboard = ({ user }) => {
                             {new Date(task.dueDate).toLocaleDateString()}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600">{task.target || 'NA'}</td>
-<<<<<<< HEAD
-=======
                           <td className="px-4 py-3 text-sm text-gray-600">{task.achievement || 'Not Started'}</td>
->>>>>>> upstream/main
                           <td className="px-4 py-3">
                             {task.attachments.length > 0 ? (
                               <a
@@ -1205,11 +1191,7 @@ const TaskDashboard = ({ user }) => {
                   <p className="text-gray-700">{selectedTaskForTracking.description}</p>
                 </div>
                 
-<<<<<<< HEAD
-                <div className="grid grid-cols-1 gap-4">
-=======
                 <div className="grid grid-cols-2 gap-4">
->>>>>>> upstream/main
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-xs text-gray-500 font-medium mb-1">Target</p>
                     <p className="font-semibold text-gray-900 flex items-center gap-1">
@@ -1217,8 +1199,6 @@ const TaskDashboard = ({ user }) => {
                       {selectedTaskForTracking.target || 'NA'}
                     </p>
                   </div>
-<<<<<<< HEAD
-=======
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-xs text-gray-500 font-medium mb-1">Achievement</p>
                     <p className="font-semibold text-gray-900 flex items-center gap-1">
@@ -1226,7 +1206,6 @@ const TaskDashboard = ({ user }) => {
                       {selectedTaskForTracking.achievement || 'Not Started'}
                     </p>
                   </div>
->>>>>>> upstream/main
                 </div>
                 
                 <div>
