@@ -125,16 +125,6 @@ const LoginPage = ({ onLogin }) => {
                       </label>
                     </div>
 
-                    {/* Forgot Password */}
-                    <div className="text-right">
-                      <button 
-                        type="button"
-                        onClick={() => navigate('/forgot-password')}
-                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center justify-end w-full"
-                      >
-                        {t('Forgot Password') || 'Forgot Password?'} <FaArrowRight className="ml-1 text-xs" />
-                      </button>
-                    </div>
 
                     {/* Login Button */}
                     <button

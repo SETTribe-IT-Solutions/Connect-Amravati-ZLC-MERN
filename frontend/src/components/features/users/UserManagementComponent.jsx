@@ -62,6 +62,7 @@ const UserManagementComponent = () => {
         phone: u.phone || '+91 00000 00000',
         village: u.village || '',
         taluka: u.taluka || '',
+        district: u.district || '',
         jurisdiction: u.village ? `${u.village}, ${u.taluka}` : (u.taluka || u.district || 'Amravati'),
         status: u.active ? 'Active' : 'Inactive',
         avatar: (u.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2),
@@ -552,7 +553,6 @@ const UserManagementComponent = () => {
                 const payload = {
                   ...userData,
                   role: roleMap[userData.role] || userData.role,
-                  district: 'Amravati', // Default district
                   requesterId: localStorage.getItem('userID')
                 };
 
@@ -617,6 +617,7 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
     email: user?.email || '',
     phone: (user?.phone || '').replace(/\D/g, '').slice(0, 10),
     role: user?.role || roles[0],
+    district: user?.district || 'Amravati',
     taluka: user?.taluka || '',
     village: user?.village || '',
     status: user?.status || 'Active',
@@ -771,32 +772,47 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
               </div>
             </div>
 
-            {/* Taluka and Village */}
+            {/* District and Taluka/Village Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Taluka <span className="text-red-500">*</span>
+                  District <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  value={formData.taluka}
-                  onChange={(e) => setFormData({...formData, taluka: e.target.value})}
+                  value={formData.district}
+                  onChange={(e) => setFormData({...formData, district: e.target.value})}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., Amravati Taluka"
+                  placeholder="e.g., Amravati"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Village
-                </label>
-                <input
-                  type="text"
-                  value={formData.village}
-                  onChange={(e) => setFormData({...formData, village: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., Walgaon"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Taluka <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.taluka}
+                    onChange={(e) => setFormData({...formData, taluka: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Taluka"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Village
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.village}
+                    onChange={(e) => setFormData({...formData, village: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Village"
+                  />
+                </div>
               </div>
             </div>
 

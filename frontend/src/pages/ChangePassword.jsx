@@ -15,9 +15,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 
-const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose, initialTab = 'change', hideTabs = false }) => {
+const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(initialTab); // 'change' or 'forgot'
   const [step, setStep] = useState(1); // 1: verify, 2: new password, 3: success
   const [formData, setFormData] = useState({
     currentPassword: '',
@@ -37,9 +36,6 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose, initialTa
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const [verificationMethod, setVerificationMethod] = useState('email'); // 'email' or 'phone'
 
   // Password strength checker
   const checkPasswordStrength = (password) => {
@@ -60,50 +56,14 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose, initialTa
     return { text: 'Very Strong', color: 'text-emerald-500', bg: 'bg-emerald-500', width: '100%' };
   };
 
-  // Handle OTP send
-  const handleSendOTP = () => {
-    const identifier = verificationMethod === 'email' ? formData.email : formData.phone;
-    if (!identifier) {
-      setErrors({ [verificationMethod]: `${verificationMethod === 'email' ? 'Email' : 'Phone number'} is required` });
-      return;
-    }
-    
-    setIsLoading(true);
-    setTimeout(() => {
-      setOtpSent(true);
-      setCountdown(60);
-      setIsLoading(false);
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            setOtpSent(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }, 1500);
-  };
 
   // Validate form
   const validateForm = () => {
     const newErrors = {};
 
     if (step === 1) {
-      if (activeTab === 'change') {
-        if (!formData.currentPassword) {
-          newErrors.currentPassword = 'Current password is required';
-        }
-      } else {
-        if (verificationMethod === 'email' && !formData.email) {
-          newErrors.email = 'Email is required';
-        } else if (verificationMethod === 'phone' && !formData.phone) {
-          newErrors.phone = 'Phone number is required';
-        }
-        if (!formData.otp && otpSent) {
-          newErrors.otp = 'OTP is required';
-        }
+      if (!formData.currentPassword) {
+        newErrors.currentPassword = 'Current password is required';
       }
     }
 
@@ -131,31 +91,22 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose, initialTa
     const newErrors = validateForm();
     if (Object.keys(newErrors).length === 0) {
       if (step === 1) {
-        if (activeTab === 'change') {
-          // Verify current password on the backend
-          if (onVerifyPassword) {
-            setIsLoading(true);
-            try {
-              const isValid = await onVerifyPassword(formData.currentPassword);
-              if (isValid) {
-                setStep(2);
-              } else {
-                setErrors({ currentPassword: 'Current password is incorrect' });
-              }
-            } finally {
-              setIsLoading(false);
+        // Verify current password on the backend
+        if (onVerifyPassword) {
+          setIsLoading(true);
+          try {
+            const isValid = await onVerifyPassword(formData.currentPassword);
+            if (isValid) {
+              setStep(2);
+            } else {
+              setErrors({ currentPassword: 'Current password is incorrect' });
             }
-          } else {
-            // Fallback if prop not provided
-            setStep(2);
+          } finally {
+            setIsLoading(false);
           }
         } else {
-          // Verify OTP
-          if (formData.otp) {
-            setStep(2);
-          } else {
-            setErrors({ otp: 'OTP is required' });
-          }
+          // Fallback if prop not provided
+          setStep(2);
         }
       } else if (step === 2) {
         // Process password change via actual backend
@@ -191,21 +142,6 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose, initialTa
 
   const strength = getStrengthText();
 
-  // Reset form when switching tabs
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    setStep(1);
-    setOtpSent(false);
-    setErrors({});
-    setFormData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-      otp: '',
-      email: '',
-      phone: ''
-    });
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
@@ -260,161 +196,41 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose, initialTa
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900">Verify Your Identity</h2>
                     <p className="text-sm text-gray-500">
-                      {activeTab === 'change' 
-                        ? 'Enter your current password' 
-                        : 'Enter the verification code sent to your registered email/phone'}
+                      Enter your current password to continue
                     </p>
                   </div>
                 </div>
 
-                {activeTab === 'change' ? (
-                  // Change Password Option - Current Password Only
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Current Password
-                      </label>
-                      <div className="relative">
-                        <LockClosedIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                        <input
-                          type={showPasswords.current ? 'text' : 'password'}
-                          value={formData.currentPassword}
-                          onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                          className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 transition-all ${
-                            errors.currentPassword ? 'border-red-500' : 'border-gray-200'
-                          }`}
-                          placeholder="Enter current password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        >
-                          {showPasswords.current ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                        </button>
-                      </div>
-                      {errors.currentPassword && (
-                        <p className="mt-1 text-xs text-red-600">{errors.currentPassword}</p>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  // Forgot Password Option - Email/Phone + OTP
-                  <div className="space-y-6">
-                    {/* Method Selection */}
-                    <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-                      <button
-                        onClick={() => setVerificationMethod('email')}
-                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                          verificationMethod === 'email'
-                            ? 'bg-white text-blue-600 shadow-md'
-                            : 'text-gray-600'
+                {/* Current Password Field */}
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Current Password
+                    </label>
+                    <div className="relative">
+                      <LockClosedIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                      <input
+                        type={showPasswords.current ? 'text' : 'password'}
+                        value={formData.currentPassword}
+                        onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 transition-all ${
+                          errors.currentPassword ? 'border-red-500' : 'border-gray-200'
                         }`}
-                      >
-                        <EnvelopeIcon className="h-4 w-4 inline mr-1" />
-                        Email
-                      </button>
+                        placeholder="Enter current password"
+                      />
                       <button
-                        onClick={() => setVerificationMethod('phone')}
-                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                          verificationMethod === 'phone'
-                            ? 'bg-white text-blue-600 shadow-md'
-                            : 'text-gray-600'
-                        }`}
+                        type="button"
+                        onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
-                        <PhoneIcon className="h-4 w-4 inline mr-1" />
-                        Phone
+                        {showPasswords.current ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                       </button>
                     </div>
-
-                    {/* Email or Phone Input */}
-                    {verificationMethod === 'email' ? (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Email Address
-                        </label>
-                        <div className="relative">
-                          <EnvelopeIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                          <input
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
-                              errors.email ? 'border-red-500' : 'border-gray-200'
-                            }`}
-                            placeholder="Enter your registered email"
-                          />
-                        </div>
-                        {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
-                      </div>
-                    ) : (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Phone Number
-                        </label>
-                        <div className="relative">
-                          <PhoneIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                          <input
-                            type="text"
-                            value={formData.phone}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                              setFormData({ ...formData, phone: value });
-                            }}
-                            className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
-                              errors.phone ? 'border-red-500' : 'border-gray-200'
-                            }`}
-                            placeholder="9876543210"
-                            maxLength={10}
-                          />
-                        </div>
-                        {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
-                      </div>
-                    )}
-
-                    {/* Send OTP Button */}
-                    <button
-                      onClick={handleSendOTP}
-                      disabled={isLoading || otpSent}
-                      className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-medium disabled:opacity-50"
-                    >
-                      {isLoading ? (
-                        <ArrowPathIcon className="h-5 w-5 animate-spin mx-auto" />
-                      ) : otpSent ? (
-                        `Resend OTP in ${countdown}s`
-                      ) : (
-                        'Send Verification Code'
-                      )}
-                    </button>
-
-                    {/* OTP Input */}
-                    {otpSent && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="space-y-2"
-                      >
-                        <label className="block text-sm font-medium text-gray-700">
-                          Verification Code
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.otp}
-                          onChange={(e) => setFormData({ ...formData, otp: e.target.value })}
-                          className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 text-center text-2xl tracking-widest ${
-                            errors.otp ? 'border-red-500' : 'border-gray-200'
-                          }`}
-                          placeholder="000000"
-                          maxLength="6"
-                        />
-                        <p className="text-xs text-gray-500 text-center">
-                          Please enter the 6-digit verification code sent to your {verificationMethod === 'email' ? 'email inbox' : 'mobile number'}
-                        </p>
-                        {errors.otp && <p className="mt-1 text-xs text-red-600 text-center">{errors.otp}</p>}
-                      </motion.div>
+                    {errors.currentPassword && (
+                      <p className="mt-1 text-xs text-red-600">{errors.currentPassword}</p>
                     )}
                   </div>
-                )}
+                </div>
 
                 <div className="flex justify-end mt-8">
                   <button
@@ -592,43 +408,16 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose, initialTa
                 <p className="text-gray-600 mb-6">Your password has been updated successfully</p>
 
                 <button
-                  onClick={() => onClose ? onClose() : navigate('/login')}
+                  onClick={() => onClose ? onClose() : navigate('/dashboard')}
                   className="w-full px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl font-medium"
                 >
-                  {activeTab === 'forgot' ? 'Back to Login' : 'Go to Dashboard'}
+                  Go to Dashboard
                 </button>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
 
-        {/* Tab Switcher - Now at bottom */}
-        {!hideTabs && (
-          <div className="bg-white/80 backdrop-blur rounded-2xl p-1 mt-6 shadow-lg">
-            <div className="flex gap-1">
-              <button
-                onClick={() => handleTabChange('change')}
-                className={`flex-1 py-3 rounded-xl font-medium transition-all ${
-                  activeTab === 'change'
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                Change Password
-              </button>
-              <button
-                onClick={() => handleTabChange('forgot')}
-                className={`flex-1 py-3 rounded-xl font-medium transition-all ${
-                  activeTab === 'forgot'
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                Forgot Password
-              </button>
-            </div>
-          </div>
-        )}
       </motion.div>
     </div>
   );

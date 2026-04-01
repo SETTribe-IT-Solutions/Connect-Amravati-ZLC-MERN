@@ -62,6 +62,7 @@ public class AuthService {
         user.setDistrict(request.getDistrict());
         user.setTaluka(request.getTaluka());
         user.setVillage(request.getVillage());
+        user.setPhone(request.getPhone());
         user.setRole(request.getRole());
         user.setActive(true);
 
