@@ -25,7 +25,7 @@ import com.tribe.set.dto.TaskResponse;
 import com.tribe.set.dto.TaskStatusRequest;
 import com.tribe.set.service.TaskService;
 
-import jakarta.validation.Valid;
+
 
 @RestController
 @RequestMapping("/api/tasks")

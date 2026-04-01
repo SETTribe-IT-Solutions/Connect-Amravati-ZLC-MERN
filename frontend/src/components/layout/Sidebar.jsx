@@ -77,11 +77,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) =
                   <span className={`transition-opacity duration-300 ${isCollapsed ? 'lg:hidden opacity-0' : 'opacity-100'}`}>
                     {item.name}
                   </span>
-                  {!isCollapsed && item.href === '/tasks' && (
-                    <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap">
-                      0
-                    </span>
-                  )}
+
                 </NavLink>
               </li>
             ))}

@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-<<<<<<< HEAD
 import toast, { Toaster } from 'react-hot-toast';
-=======
-import { Toaster } from 'react-hot-toast';
->>>>>>> upstream/main
 import { Provider } from 'react-redux';
 import { store } from './store';
 import { AnimatePresence } from 'framer-motion';
@@ -14,7 +10,6 @@ import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 // Pages
-//pages2 
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
@@ -23,11 +18,7 @@ import Reports from './pages/Reports';
 import UserManagement from './pages/UserManagement';
 import Appreciation from './pages/Appreciation';
 import ChangePassword from './pages/ChangePassword';
-<<<<<<< HEAD
 import { changePassword, loginUser } from './services/authService';
-=======
-import { changePassword } from './services/authService';
->>>>>>> upstream/main
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -103,7 +94,6 @@ function App() {
     window.location.href = '/login';
   };
 
-<<<<<<< HEAD
   // Handle password verification (for step 1)
   const handleVerifyPassword = async (currentPassword) => {
     try {
@@ -121,18 +111,10 @@ function App() {
         toast.error('User session is invalid. Please log in again.');
         return false;
       }
-=======
-  // Handle password change
-  const handlePasswordChange = async (oldPassword, newPassword) => {
-    try {
-      if (!user?.userID) return false;
->>>>>>> upstream/main
       await changePassword(user.userID, oldPassword, newPassword);
       toast.success('Password changed successfully');
       return true;
     } catch (error) {
-<<<<<<< HEAD
-      console.error('Password change error:', error);
       let msg = 'Failed to change password';
       if (error.response?.data) {
         if (typeof error.response.data === 'string') {
@@ -144,9 +126,6 @@ function App() {
           msg = Object.values(error.response.data.errors).join(', ');
         }
       }
-=======
-      const msg = error.response?.data?.message || 'Failed to change password';
->>>>>>> upstream/main
       toast.error(msg);
       return false;
     }
@@ -262,10 +241,7 @@ function App() {
                   element={
                     <ChangePassword 
                       onPasswordChange={handlePasswordChange}
-<<<<<<< HEAD
                       onVerifyPassword={handleVerifyPassword}
-=======
->>>>>>> upstream/main
                       onClose={() => window.history.back()}
                     />
                   } 
@@ -277,8 +253,16 @@ function App() {
 
               {/* Redirect root to appropriate page */}
               <Route 
-                path="*" 
-                element={<Navigate to={isAuthenticated ? (user?.role === 'SYSTEM_ADMINISTRATOR' ? "/users" : "/dashboard") : "/login"} replace />} 
+                path="/forgot-password" 
+                element={
+                  <ChangePassword 
+                    onPasswordChange={handlePasswordChange}
+                    onVerifyPassword={handleVerifyPassword}
+                    onClose={() => window.location.href = '/login'}
+                    initialTab="forgot"
+                    hideTabs={true}
+                  />
+                } 
               />
             </Routes>
           </AnimatePresence>

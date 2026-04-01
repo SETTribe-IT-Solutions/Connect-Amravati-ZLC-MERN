@@ -20,10 +20,7 @@ public class TaskRemark {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
-<<<<<<< HEAD
     @com.fasterxml.jackson.annotation.JsonIgnore
-=======
->>>>>>> upstream/main
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;

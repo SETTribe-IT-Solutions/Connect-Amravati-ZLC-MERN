@@ -15,13 +15,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 
-<<<<<<< HEAD
-const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
-=======
-const ChangePassword = ({ onPasswordChange, onClose }) => {
->>>>>>> upstream/main
+const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose, initialTab = 'change', hideTabs = false }) => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('change'); // 'change' or 'forgot'
+  const [activeTab, setActiveTab] = useState(initialTab); // 'change' or 'forgot'
   const [step, setStep] = useState(1); // 1: verify, 2: new password, 3: success
   const [formData, setFormData] = useState({
     currentPassword: '',
@@ -131,16 +127,11 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
   };
 
   // Handle next step
-<<<<<<< HEAD
   const handleNext = async () => {
-=======
-  const handleNext = () => {
->>>>>>> upstream/main
     const newErrors = validateForm();
     if (Object.keys(newErrors).length === 0) {
       if (step === 1) {
         if (activeTab === 'change') {
-<<<<<<< HEAD
           // Verify current password on the backend
           if (onVerifyPassword) {
             setIsLoading(true);
@@ -157,24 +148,16 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
           } else {
             // Fallback if prop not provided
             setStep(2);
-=======
-          // Verify current password (demo)
-          if (formData.currentPassword === 'admin123') {
-            setStep(2);
-          } else {
-            setErrors({ currentPassword: 'Current password is incorrect' });
->>>>>>> upstream/main
           }
         } else {
-          // Verify OTP (demo)
-          if (formData.otp === '123456') {
+          // Verify OTP
+          if (formData.otp) {
             setStep(2);
           } else {
-            setErrors({ otp: 'Invalid OTP' });
+            setErrors({ otp: 'OTP is required' });
           }
         }
       } else if (step === 2) {
-<<<<<<< HEAD
         // Process password change via actual backend
         setIsLoading(true);
         try {
@@ -183,8 +166,7 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
             if (success) {
               setStep(3);
             } else {
-              // Error is handled by a toast in App.jsx, but we could also set step back or just let user retry.
-              // To retry, we reset the current password step or just keep them here.
+              // Error is handled by a toast in App.jsx
             }
           } else {
             setStep(3); // Fallback if no handler provided
@@ -192,17 +174,6 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
         } finally {
           setIsLoading(false);
         }
-=======
-        // Process password change
-        setIsLoading(true);
-        setTimeout(() => {
-          setStep(3);
-          setIsLoading(false);
-          if (onPasswordChange) {
-            onPasswordChange(formData.currentPassword, formData.newPassword);
-          }
-        }, 2000);
->>>>>>> upstream/main
       }
     } else {
       setErrors(newErrors);
@@ -241,8 +212,16 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative"
       >
+        {/* Back Button */}
+        <button
+          onClick={() => onClose ? onClose() : navigate(-1)}
+          className="absolute -top-12 left-0 flex items-center text-gray-600 hover:text-blue-600 transition-colors font-medium group"
+        >
+          <ArrowLeftIcon className="h-5 w-5 mr-2 transition-transform group-hover:-translate-x-1" />
+          Back
+        </button>
         {/* Header */}
         <div className="mb-8 text-center">
           <motion.div
@@ -376,7 +355,6 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                         <div className="relative">
                           <PhoneIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                           <input
-<<<<<<< HEAD
                             type="text"
                             value={formData.phone}
                             onChange={(e) => {
@@ -388,15 +366,6 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                             }`}
                             placeholder="9876543210"
                             maxLength={10}
-=======
-                            type="tel"
-                            value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
-                              errors.phone ? 'border-red-500' : 'border-gray-200'
-                            }`}
-                            placeholder="Enter your registered phone number"
->>>>>>> upstream/main
                           />
                         </div>
                         {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
@@ -623,10 +592,10 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
                 <p className="text-gray-600 mb-6">Your password has been updated successfully</p>
 
                 <button
-                  onClick={handleDone}
+                  onClick={() => onClose ? onClose() : navigate('/login')}
                   className="w-full px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl font-medium"
                 >
-                  Go to Dashboard
+                  {activeTab === 'forgot' ? 'Back to Login' : 'Go to Dashboard'}
                 </button>
               </motion.div>
             )}
@@ -634,30 +603,32 @@ const ChangePassword = ({ onPasswordChange, onClose }) => {
         </motion.div>
 
         {/* Tab Switcher - Now at bottom */}
-        <div className="bg-white/80 backdrop-blur rounded-2xl p-1 mt-6 shadow-lg">
-          <div className="flex gap-1">
-            <button
-              onClick={() => handleTabChange('change')}
-              className={`flex-1 py-3 rounded-xl font-medium transition-all ${
-                activeTab === 'change'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              Change Password
-            </button>
-            <button
-              onClick={() => handleTabChange('forgot')}
-              className={`flex-1 py-3 rounded-xl font-medium transition-all ${
-                activeTab === 'forgot'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              Forgot Password
-            </button>
+        {!hideTabs && (
+          <div className="bg-white/80 backdrop-blur rounded-2xl p-1 mt-6 shadow-lg">
+            <div className="flex gap-1">
+              <button
+                onClick={() => handleTabChange('change')}
+                className={`flex-1 py-3 rounded-xl font-medium transition-all ${
+                  activeTab === 'change'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                Change Password
+              </button>
+              <button
+                onClick={() => handleTabChange('forgot')}
+                className={`flex-1 py-3 rounded-xl font-medium transition-all ${
+                  activeTab === 'forgot'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                Forgot Password
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </motion.div>
     </div>
   );

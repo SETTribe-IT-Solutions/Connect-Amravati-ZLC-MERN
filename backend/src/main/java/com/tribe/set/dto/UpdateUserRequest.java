@@ -14,10 +14,7 @@ public class UpdateUserRequest {
     private String district;
     private String taluka;
     private String village;
-<<<<<<< HEAD
-    @Pattern(regexp = "^\\d{10}$", message = "Phone number must be exactly 10 digits")
-=======
->>>>>>> upstream/main
+    @Pattern(regexp = "^$|^\\d{10}$", message = "Phone number must be exactly 10 digits")
     private String phone;
     
     @Size(min = 8, message = "Password must be at least 8 characters")
