@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAllAppreciations, sendAppreciation } from '../../../services/appreciationService';
-import { getAllUsers } from '../../../services/userService';
+import { getAllAppreciations, sendAppreciation } from '../../services/appreciationService';
+import { getAllUsers } from '../../services/userService';
 import { toast } from 'react-hot-toast';
 import {
   HeartIcon,

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { getTasks, createTask, updateTaskStatus, addTaskRemark } from '../../../services/taskService';
-import { getAllUsers } from '../../../services/userService';
+import { getTasks, createTask, updateTaskStatus, addTaskRemark } from '../../services/taskService';
+import { getAllUsers } from '../../services/userService';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { 

@@ -1,5 +1,5 @@
 import React from 'react';
-import CommunicationsDashboard from '../components/features/communication/CommunicationsDashboard';
+import CommunicationsDashboard from '../components/features/CommunicationsDashboard';
 
 const Communications = () => {
   return <CommunicationsDashboard />;
