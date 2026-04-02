@@ -30,7 +30,7 @@ import {
   Line
 } from 'recharts';
 
-import { getPerformanceReport, getGlobalStats } from '../../../services/reportService';
+import { getPerformanceReport, getGlobalStats } from '../../services/reportService';
 import { toast } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';

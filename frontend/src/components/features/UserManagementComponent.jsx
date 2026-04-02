@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllUsers, addUser, updateUser, deleteUser, toggleUserStatus } from '../../../services/userService';
+import { getAllUsers, addUser, updateUser, deleteUser, toggleUserStatus } from '../../services/userService';
 import { toast } from 'react-hot-toast';
 
 import { motion, AnimatePresence } from 'framer-motion';

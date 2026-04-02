@@ -1,5 +1,5 @@
 import React from 'react';
-import AppreciationComponent from '../components/features/appreciation/AppreciationComponent';
+import AppreciationComponent from '../components/features/AppreciationComponent';
 
 const Appreciation = () => {
   return <AppreciationComponent />;
