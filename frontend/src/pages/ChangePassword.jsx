@@ -98,8 +98,14 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose, initialTa
       } else {
         if (verificationMethod === 'email' && !formData.email) {
           newErrors.email = 'Email is required';
-        } else if (verificationMethod === 'phone' && !formData.phone) {
-          newErrors.phone = 'Phone number is required';
+        } else if (verificationMethod === 'phone') {
+          if (!formData.phone) {
+            newErrors.phone = 'Phone number is required';
+          } else if (formData.phone.length !== 10) {
+            newErrors.phone = 'Phone number must be exactly 10 digits';
+          } else if (!/^[6-9]/.test(formData.phone)) {
+            newErrors.phone = 'Indian mobile numbers must start with 6, 7, 8, or 9';
+          }
         }
         if (!formData.otp && otpSent) {
           newErrors.otp = 'OTP is required';
@@ -338,8 +344,8 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose, initialTa
                           <input
                             type="email"
                             value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
+                            className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 lowercase ${
                               errors.email ? 'border-red-500' : 'border-gray-200'
                             }`}
                             placeholder="Enter your registered email"

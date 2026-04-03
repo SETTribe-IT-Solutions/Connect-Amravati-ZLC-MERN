@@ -6,7 +6,20 @@ export const loginUser = async (userID, password) => {
     password
   });
 
-  return response.data; // Backend returns LoginResponse object
+  console.log("Login Response Data:", response.data);
+
+  const token = response.data?.accessToken || response.data?.token;
+
+  if (token) {
+    localStorage.setItem("sessionToken", token);
+    localStorage.setItem("user", JSON.stringify(response.data));
+    localStorage.setItem("role", response.data.role);
+    localStorage.setItem("isAuthenticated", "true");
+  } else {
+    console.error("No token found in login response!");
+  }
+
+  return response.data; // Backend returns JwtResponse object
 };
 
 export const registerUser = async (userData) => {

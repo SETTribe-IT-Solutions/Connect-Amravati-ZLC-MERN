@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { getTasks, createTask, updateTaskStatus, addTaskRemark } from '../../../services/taskService';
+import { getTasks, createTask, updateTaskStatus, addTaskRemark, forwardTask, updateTaskProgress } from '../../../services/taskService';
 import { getAllUsers } from '../../../services/userService';
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -63,6 +63,8 @@ const TaskDashboard = ({ user }) => {
   const [expandedTasks, setExpandedTasks] = useState({});
   const [remarksInput, setRemarksInput] = useState({});
   const [forwardInput, setForwardInput] = useState({});
+  const [showForwardModal, setShowForwardModal] = useState(false);
+  const [selectedTaskForForward, setSelectedTaskForForward] = useState(null);
   const fileInputRef = useRef(null);
   
   // Popup helper function
@@ -118,9 +120,7 @@ const TaskDashboard = ({ user }) => {
 
   useEffect(() => {
     fetchTasks();
-    if (canCreateTask) {
-      fetchStaff();
-    }
+    fetchStaff(); // Everyone might need to forward tasks
   }, [user]);
 
 
@@ -300,46 +300,38 @@ const TaskDashboard = ({ user }) => {
     }
   };
 
-  const handleForwardTask = (taskId, forwardTo) => {
-    if (!forwardTo?.trim()) {
-      showInfoPopup('Please enter who to forward to', 'error');
+  const handleForwardTask = async (taskId, forwardToId) => {
+    if (!forwardToId) {
+      showInfoPopup('Please select who to forward to', 'error');
       return;
     }
-    setTasks(tasks.map(task => 
-      task.id === taskId 
-        ? { 
-            ...task, 
-            assignedTo: forwardTo,
-            timeline: [...task.timeline, { 
-              date: new Date().toISOString().split('T')[0], 
-              action: `Forwarded to ${forwardTo}`, 
-              by: 'Current User' 
-            }]
-          }
-        : task
-    ));
-    setForwardInput({ ...forwardInput, [taskId]: '' });
-    showInfoPopup(`Task forwarded to ${forwardTo} successfully!`, 'success');
-  };
-
-  const handleUpdateProgress = async (taskId, newProgress) => {
-    const progress = Math.min(100, Math.max(0, parseInt(newProgress) || 0));
     try {
       const userID = user?.userID || localStorage.getItem('userID');
-      // For now, progress is just a field in Task entity
-      // We can update it via a general update if we had one, but let's assume we just update it locally for now 
-      // or implement a PATCH if needed. Since we added the field to the backend, let's use it.
-      // Assuming we have a general update or a progress-specific update.
-      // If no specific endpoint, we'll just update the status to IN_PROGRESS if progress > 0.
-      if (progress > 0 && progress < 100) {
-        await updateTaskStatus(taskId, 'IN_PROGRESS', userID);
-      } else if (progress === 100) {
-        await updateTaskStatus(taskId, 'COMPLETED', userID);
-      }
+      await forwardTask(taskId, forwardToId, userID);
       fetchTasks();
-      showInfoPopup(`Progress updated to ${progress}%`, 'success');
+      setForwardInput({ ...forwardInput, [taskId]: '' });
+      showInfoPopup(`Task forwarded successfully!`, 'success');
     } catch (error) {
-      showInfoPopup('Failed to update progress', 'error');
+      console.error("Forward Task Error:", error);
+      showInfoPopup('Failed to forward task', 'error');
+    }
+  };
+
+  const handleUpdateProgress = async (taskId, achievedUnits) => {
+    const units = parseInt(achievedUnits);
+    if (isNaN(units)) {
+      showInfoPopup('Please enter a valid number', 'error');
+      return;
+    }
+    try {
+      const userID = user?.userID || localStorage.getItem('userID');
+      await updateTaskProgress(taskId, units, userID);
+      fetchTasks();
+      showInfoPopup(`Achieved units updated to ${units}`, 'success');
+    } catch (error) {
+      console.error("Update Achievement Error:", error);
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to update achievement';
+      showInfoPopup(errorMsg, 'error');
     }
   };
 
@@ -905,9 +897,25 @@ const TaskDashboard = ({ user }) => {
                           <td className="px-4 py-3 text-sm text-gray-600">
                             {new Date(task.dueDate).toLocaleDateString()}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{task.target || 'NA'}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{task.achievement || 'Not Started'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600 font-medium whitespace-nowrap">
+                            {task.target || 'NA'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            <div className="flex flex-col gap-1 min-w-[100px]">
+                              <span className="font-semibold text-blue-600">{task.achievement || 0}</span>
+                              {task.target && !isNaN(task.target) && (
+                                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-blue-500 transition-all duration-500" 
+                                    style={{ width: `${task.progress}%` }}
+                                  ></div>
+                                </div>
+                              )}
+                              <span className="text-[10px] text-gray-400">{task.progress}% Complete</span>
+                            </div>
+                          </td>
                           <td className="px-4 py-3">
+
                             {task.attachments.length > 0 ? (
                               <a
                                 href={task.attachments[0].url}
@@ -945,24 +953,26 @@ const TaskDashboard = ({ user }) => {
                               </button>
                               <button
                                 onClick={() => {
-                                  const forwardTo = prompt('Forward to (name/role):', '');
-                                  if (forwardTo) handleForwardTask(task.id, forwardTo);
+                                  setSelectedTaskForForward(task);
+                                  setShowForwardModal(true);
                                 }}
                                 className="p-1 text-emerald-600 hover:bg-emerald-50 rounded"
                                 title="Forward"
                               >
                                 <PaperAirplaneIcon className="h-4 w-4" />
                               </button>
-                              <button
-                                onClick={() => {
-                                  const progress = prompt('Update progress (0-100):', task.progress);
-                                  if (progress) handleUpdateProgress(task.id, progress);
-                                }}
-                                className="p-1 text-purple-600 hover:bg-purple-50 rounded"
-                                title="Update Progress"
-                              >
-                                <ArrowPathIcon className="h-4 w-4" />
-                              </button>
+                              {(user?.userID || JSON.parse(localStorage.getItem('userID'))) === task.assignedToId && (
+                                <button
+                                  onClick={() => {
+                                    const units = prompt('Enter Achieved Units:', task.achievement || 0);
+                                    if (units !== null) handleUpdateProgress(task.id, units);
+                                  }}
+                                  className="p-1 text-purple-600 hover:bg-purple-50 rounded"
+                                  title="Update Achievement"
+                                >
+                                  <ArrowPathIcon className="h-4 w-4" />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -1241,6 +1251,95 @@ const TaskDashboard = ({ user }) => {
                     </div>
                   </div>
                 )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Forward Task Modal */}
+      <AnimatePresence>
+        {showForwardModal && selectedTaskForForward && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden"
+            >
+              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-4 flex justify-between items-center text-white">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <PaperAirplaneIcon className="h-6 w-6" />
+                  Forward Task
+                </h3>
+                <button onClick={() => setShowForwardModal(false)} className="hover:bg-white/20 p-1 rounded-full transition-colors">
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                <div className="mb-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 uppercase">
+                  <p className="text-xs font-bold text-emerald-700 mb-1">Task Title</p>
+                  <p className="text-lg font-semibold text-emerald-900 line-clamp-1">{selectedTaskForForward.title}</p>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Select Officer to Forward To</label>
+                  <div className="max-h-64 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                    {(() => {
+                      const currentUserID = user?.userID || (localStorage.getItem('userID') ? parseInt(localStorage.getItem('userID')) : null);
+                      const currentUserLevel = staff.find(u => u.userID === currentUserID)?.level || 99;
+                      
+                      return staff.filter(u => 
+                        u.userID !== currentUserID && 
+                        u.role !== 'SYSTEM_ADMINISTRATOR' && 
+                        u.level > currentUserLevel
+                      ).map(officer => (
+                        <div
+                          key={officer.userID}
+                          onClick={() => {
+                            handleForwardTask(selectedTaskForForward.id, officer.userID);
+                            setShowForwardModal(false);
+                          }}
+                          className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:border-emerald-500 hover:bg-emerald-50 cursor-pointer transition-all group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold">
+                              {officer.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-800">{officer.name}</p>
+                              <p className="text-xs text-gray-500 font-medium capitalize">{officer.role.replace(/_/g, ' ')}</p>
+                            </div>
+                          </div>
+                          <PaperAirplaneIcon className="h-5 w-5 text-gray-300 group-hover:text-emerald-500 transition-colors" />
+                        </div>
+                      ));
+                    })()}
+                    {staff.filter(u => {
+                      const currentUserID = user?.userID || (localStorage.getItem('userID') ? parseInt(localStorage.getItem('userID')) : null);
+                      const currentUserLevel = staff.find(u => u.userID === currentUserID)?.level || 99;
+                      return u.userID !== currentUserID && u.role !== 'SYSTEM_ADMINISTRATOR' && u.level > currentUserLevel;
+                    }).length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        No lower-ranking officers found to forward to.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4">
+                  <button
+                    onClick={() => setShowForwardModal(false)}
+                    className="px-6 py-2 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>

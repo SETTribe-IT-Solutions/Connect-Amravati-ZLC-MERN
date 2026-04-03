@@ -39,3 +39,19 @@ export const addTaskRemark = async (taskId, remark, requesterId) => {
   });
   return response.data;
 };
+
+export const forwardTask = async (taskId, forwardToId, requesterId) => {
+  const response = await axiosInstance.put(`/tasks/${taskId}/forward`, {
+    forwardToId,
+    requesterId
+  });
+  return response.data;
+};
+
+export const updateTaskProgress = async (taskId, achieved, requesterId) => {
+  const response = await axiosInstance.put(`/tasks/${taskId}/progress`, {
+    achieved,
+    requesterId
+  });
+  return response.data;
+};

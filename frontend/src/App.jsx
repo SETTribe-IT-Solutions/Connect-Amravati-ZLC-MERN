@@ -37,7 +37,10 @@ function App() {
         setIsAuthenticated(true);
         // Restore all essential bits to localStorage
         localStorage.setItem('role', userData.role);
-        localStorage.setItem('userID', userData.userID);
+        // Migrate/Update userID if it's currently broken or missing
+        if (userData.userID && userData.userID !== 'undefined') {
+          localStorage.setItem('userID', userData.userID);
+        }
       }
       setLoading(false);
     };
@@ -53,7 +56,7 @@ function App() {
       const normalizedRole = userData.role;
       
       const userToStore = {
-        userID: userData.userID,
+        userID: userData.id || userData.userID,
         name: userData.name,
         role: normalizedRole,
         email: userData.email,
@@ -71,8 +74,12 @@ function App() {
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('user', JSON.stringify(userToStore));
       localStorage.setItem('role', normalizedRole);
-      localStorage.setItem('userID', userData.userID);
-      localStorage.setItem('sessionToken', 'sess_' + Math.random().toString(36).substr(2, 9));
+      localStorage.setItem('userID', userToStore.userID);
+
+      // If userData contains an accessToken, ensure it's saved (safety fallback)
+      if (userData.accessToken) {
+        localStorage.setItem('sessionToken', userData.accessToken);
+      }
       
       return true;
     }
@@ -87,6 +94,8 @@ function App() {
     // Clear all storage
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('user');
+    localStorage.removeItem('role');
+    localStorage.removeItem('userID');
     localStorage.removeItem('sessionToken');
     sessionStorage.clear();
     

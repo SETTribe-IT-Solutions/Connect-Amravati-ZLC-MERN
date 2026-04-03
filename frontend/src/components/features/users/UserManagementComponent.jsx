@@ -22,7 +22,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 
-const UserManagementComponent = () => {
+const UserManagementComponent = ({ currentUser }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -38,7 +38,7 @@ const UserManagementComponent = () => {
     try {
       setLoading(true);
       const savedId = localStorage.getItem('userID');
-      const requesterId = (savedId && !isNaN(savedId)) ? Number(savedId) : null;
+      const requesterId = (savedId && savedId !== "undefined") ? Number(savedId) : (currentUser?.userID || null);
       const data = await getAllUsers(requesterId);
       
       // Role mapping from backend to human-friendly
@@ -549,11 +549,19 @@ const UserManagementComponent = () => {
                   'System Administrator': 'SYSTEM_ADMINISTRATOR'
                 };
 
+                const savedId = localStorage.getItem('userID');
+                const requesterId = (savedId && savedId !== "undefined") ? Number(savedId) : (currentUser?.userID || null);
+                
+                if (!requesterId) {
+                  toast.error("Your user session ID is missing. Please log out and log back in.");
+                  return;
+                }
+                
                 const payload = {
                   ...userData,
                   role: roleMap[userData.role] || userData.role,
                   district: 'Amravati', // Default district
-                  requesterId: localStorage.getItem('userID')
+                  requesterId: requesterId
                 };
 
                 // Remove empty password for existing users to keep original password
@@ -629,6 +637,10 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
     e.preventDefault();
     if (formData.phone.length !== 10) {
       setPhoneError('Phone number must be exactly 10 digits');
+      return;
+    }
+    if (!/^[6-9]/.test(formData.phone)) {
+      setPhoneError('Indian mobile numbers must start with 6, 7, 8, or 9');
       return;
     }
     setPhoneError('');
@@ -707,8 +719,8 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
                   type="email"
                   required
                   value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => setFormData({...formData, email: e.target.value.toLowerCase()})}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 lowercase"
                   placeholder="email@amravati.gov.in"
                 />
               </div>
@@ -740,7 +752,7 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
             </div>
 
             {/* Role and Status */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`grid grid-cols-1 ${user ? 'md:grid-cols-2' : ''} gap-4`}>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Role <span className="text-red-500">*</span>
@@ -756,19 +768,21 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({...formData, status: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
+              {user && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Taluka and Village */}
