@@ -166,6 +166,69 @@ public class TaskService {
     }
 
     // ═══════════════════════════════════════════════════
+    // FORWARD TASK
+    // ═══════════════════════════════════════════════════
+
+    public TaskResponse forwardTask(Long taskId, Long newAssigneeId, Long requesterId) {
+
+        User requester  = findUser(requesterId);
+        Task task       = findTask(taskId);
+        User newAssignee= findUser(newAssigneeId);
+
+        // Verify that the task is assigned to the requester, or they are a senior officer
+        boolean isAssignee = task.getAssignedTo().getUserID().equals(requesterId);
+        boolean isCreator  = task.getCreatedBy().getUserID().equals(requesterId);
+        boolean isSenior   = requester.getRole().canAllocateTask() &&
+                             requester.getRole().canAssignTo(task.getAssignedTo().getRole());
+
+        if (!isAssignee && !isCreator && !isSenior) {
+            throw new RuntimeException("Access Denied: You cannot forward this task");
+        }
+
+        // CHECK 2: Hierarchy rule — requester must be HIGHER than assignee
+        if (!requester.getRole().canAssignTo(newAssignee.getRole())) {
+            throw new RuntimeException(
+                "Access Denied: " + requester.getRole() +
+                " cannot forward tasks to " + newAssignee.getRole()
+            );
+        }
+
+        // Check if user is active
+        if (!newAssignee.getActive()) {
+            throw new RuntimeException("Cannot forward task to an inactive user");
+        }
+
+        User oldAssignee = task.getAssignedTo();
+        task.setAssignedTo(newAssignee);
+        Task saved = taskRepository.save(task);
+
+        // Add a remark that it was forwarded
+        TaskRemark remark = new TaskRemark();
+        remark.setTask(saved);
+        remark.setAddedBy(requester);
+        remark.setRemark(requester.getName() + " (" + requester.getRole() + ") forwarded this task to " + newAssignee.getName());
+        remarkRepository.save(remark);
+
+        // Notify old assignee (if not the requester)
+        if (!oldAssignee.getUserID().equals(requesterId)) {
+            notificationService.send(
+                oldAssignee,
+                "Your task was forwarded to someone else: " + task.getTitle(),
+                NotificationType.TASK_REASSIGNED
+            );
+        }
+
+        // Notify new assignee
+        notificationService.send(
+            newAssignee,
+            requester.getRole() + " " + requester.getName() + " forwarded a task to you: " + task.getTitle(),
+            NotificationType.TASK_ASSIGNED
+        );
+
+        return TaskResponse.from(saved);
+    }
+
+    // ═══════════════════════════════════════════════════
     // GET TASKS
     // ═══════════════════════════════════════════════════
 
@@ -179,8 +242,8 @@ public class TaskService {
             // Senior officers and admin see ALL tasks
             tasks = taskRepository.findAll();
         } else {
-            // Field officers see only THEIR assigned tasks
-            tasks = taskRepository.findByAssignedToOrderByCreatedAtDesc(requester);
+            // Field officers see tasks assigned to them OR created by them (forwarded tasks)
+            tasks = taskRepository.findByAssignedToOrCreatedByOrderByCreatedAtDesc(requester, requester);
         }
 
         return tasks.stream()
@@ -250,6 +313,75 @@ public class TaskService {
     }
 
     // ═══════════════════════════════════════════════════
+    // UPDATE TASK PROGRESS
+    // ═══════════════════════════════════════════════════
+
+    public TaskResponse updateTaskProgress(Long taskId, int achievedWork, Long requesterId) {
+        User requester = findUser(requesterId);
+        Task task      = findTask(taskId);
+
+        // ONLY the assigned user can update their OWN task progress
+        if (!task.getAssignedTo().getUserID().equals(requesterId)) {
+            throw new RuntimeException("Access Denied: Only the assigned user (" + 
+                                       task.getAssignedTo().getName() + ") can update their own progress.");
+        }
+
+        if (task.getTarget() == null || task.getTarget() <= 0) {
+            throw new RuntimeException("Cannot update progress: Task target is not set or invalid.");
+        }
+
+        if (achievedWork < 0) {
+            throw new RuntimeException("Achievement cannot be negative.");
+        }
+
+        // Progress can only increase — cannot decrease achievement once recorded
+        if (task.getAchievement() != null && achievedWork < task.getAchievement()) {
+            throw new RuntimeException("Validation Error: Achievement (" + achievedWork + 
+                                       ") cannot be less than the previously recorded value (" + 
+                                       task.getAchievement() + ").");
+        }
+
+        if (achievedWork > task.getTarget()) {
+            throw new RuntimeException("Achievement (" + achievedWork + ") cannot exceed the target (" + task.getTarget() + ").");
+        }
+
+        task.setAchievement(achievedWork);
+        
+        // Calculate progress percentage with safety check
+        if (task.getTarget() == null || task.getTarget() <= 0) {
+            task.setProgress(achievedWork > 0 ? 100 : 0);
+        } else {
+            double percentage = ((double) achievedWork / task.getTarget()) * 100;
+            task.setProgress((int) Math.min(100, Math.max(0, percentage)));
+        }
+
+        // Auto-update status based on progress
+        if (task.getProgress() >= 100) {
+            task.setStatus(TaskStatus.COMPLETED);
+        } else if (task.getProgress() > 0) {
+            task.setStatus(TaskStatus.IN_PROGRESS);
+        }
+
+        Task saved = taskRepository.save(task);
+
+        // Notify the person who assigned the task (creator)
+        try {
+            notificationService.send(
+                task.getCreatedBy(),
+                "Progress update by " + requester.getName() + " on task '" + task.getTitle() + 
+                "': " + achievedWork + "/" + (task.getTarget() != null ? task.getTarget() : "NA") + 
+                " (" + task.getProgress() + "%)",
+                NotificationType.TASK_COMPLETED // Using existing type until DB is updated to TASK_UPDATE
+            );
+        } catch (Exception e) {
+            // Silently log and allow transaction to complete if DB schema is outdated
+            System.err.println("Notification failed (DB Schema mismatch): " + e.getMessage());
+        }
+
+        return TaskResponse.from(saved);
+    }
+
+    // ═══════════════════════════════════════════════════
     // ADD REMARK
     // ═══════════════════════════════════════════════════
 
@@ -303,12 +435,12 @@ public class TaskService {
 
         } else {
 
-            // Field officer sees stats of only THEIR tasks
-            total      = taskRepository.countByAssignedTo(requester);
-            pending    = taskRepository.countByAssignedToAndStatus(requester, TaskStatus.PENDING);
-            inProgress = taskRepository.countByAssignedToAndStatus(requester, TaskStatus.IN_PROGRESS);
-            completed  = taskRepository.countByAssignedToAndStatus(requester, TaskStatus.COMPLETED);
-            overdue    = taskRepository.countByAssignedToAndStatus(requester, TaskStatus.OVERDUE);
+            // Field officer sees stats for tasks assigned to them OR created by them
+            total      = taskRepository.countAssociatedTasks(requester);
+            pending    = taskRepository.countAssociatedTasksByStatus(requester, TaskStatus.PENDING);
+            inProgress = taskRepository.countAssociatedTasksByStatus(requester, TaskStatus.IN_PROGRESS);
+            completed  = taskRepository.countAssociatedTasksByStatus(requester, TaskStatus.COMPLETED);
+            overdue    = taskRepository.countAssociatedTasksByStatus(requester, TaskStatus.OVERDUE);
         }
 
         return new DashboardResponse(total, pending, inProgress, completed, overdue);

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
 
 import com.tribe.set.Entity.TaskRemark;
@@ -23,8 +24,9 @@ import com.tribe.set.dto.RemarkRequest;
 import com.tribe.set.dto.TaskRequest;
 import com.tribe.set.dto.TaskResponse;
 import com.tribe.set.dto.TaskStatusRequest;
+import com.tribe.set.dto.ForwardRequest;
+import com.tribe.set.dto.TaskProgressUpdateRequest;
 import com.tribe.set.service.TaskService;
-
 
 
 @RestController
@@ -36,6 +38,7 @@ public class TaskController {
     private TaskService taskService;
 
     @PostMapping(consumes = {"multipart/form-data"})
+    @PreAuthorize("hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR')")
     public ResponseEntity<TaskResponse> createTask(
             @RequestPart("task") @Valid TaskRequest request,
             @RequestPart(value = "file", required = false) MultipartFile file) {
@@ -44,12 +47,14 @@ public class TaskController {
 
     // GET has no body — requesterId stays as @RequestParam
     @GetMapping
+    @PreAuthorize("#requesterId == authentication.principal.id or hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<List<TaskResponse>> getTasks(@RequestParam(name = "requesterId") Long requesterId) {
         return ResponseEntity.ok(taskService.getTasks(requesterId));
     }
 
     // requesterId comes from JSON body (inside TaskStatusRequest)
     @PutMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('BDO', 'TALATHI', 'GRAMSEVAK', 'COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<TaskResponse> updateStatus(
             @PathVariable(name = "id") Long id,
             @Valid @RequestBody TaskStatusRequest request) {
@@ -57,8 +62,18 @@ public class TaskController {
         return ResponseEntity.ok(taskService.updateTaskStatus(id, request.getStatus(), request.getRequesterId()));
     }
 
+    @PutMapping("/{id}/progress")
+    @PreAuthorize("hasAnyRole('BDO', 'TALATHI', 'GRAMSEVAK', 'COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
+    public ResponseEntity<TaskResponse> updateProgress(
+            @PathVariable(name = "id") Long id,
+            @Valid @RequestBody TaskProgressUpdateRequest request) {
+
+        return ResponseEntity.ok(taskService.updateTaskProgress(id, request.getAchieved(), request.getRequesterId()));
+    }
+
     // requesterId comes from JSON body (inside RemarkRequest)
     @PostMapping("/{id}/remark")
+    @PreAuthorize("hasAnyRole('BDO', 'TALATHI', 'GRAMSEVAK', 'COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<TaskRemark> addRemark(
             @PathVariable(name = "id") Long id,
             @Valid @RequestBody RemarkRequest request) {
@@ -68,7 +83,18 @@ public class TaskController {
 
     // GET has no body — requesterId stays as @RequestParam
     @GetMapping("/dashboard")
+    @PreAuthorize("#requesterId == authentication.principal.id or hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<DashboardResponse> getDashboard(@RequestParam(name = "requesterId") Long requesterId) {
         return ResponseEntity.ok(taskService.getDashboard(requesterId));
+    }
+
+    // requesterId comes from JSON body (inside ForwardRequest)
+    @PutMapping("/{id}/forward")
+    @PreAuthorize("hasAnyRole('BDO', 'TALATHI', 'GRAMSEVAK', 'COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
+    public ResponseEntity<TaskResponse> forwardTask(
+            @PathVariable(name = "id") Long id,
+            @Valid @RequestBody ForwardRequest request) {
+
+        return ResponseEntity.ok(taskService.forwardTask(id, request.getForwardToId(), request.getRequesterId()));
     }
 }

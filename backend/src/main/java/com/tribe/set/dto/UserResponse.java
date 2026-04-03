@@ -14,6 +14,7 @@ public class UserResponse {
     private String phone;
     private Double rating;
     private Boolean active;
+    private int level;
     private String createdAt;
 
     // Real-time calculated stats
@@ -33,6 +34,7 @@ public class UserResponse {
         res.phone = user.getPhone();
         res.rating = user.getRating();
         res.active = user.getActive();
+        res.level = user.getRole().getLevel();
         res.createdAt = user.getCreatedAt() != null ? user.getCreatedAt().toString() : null;
         return res;
     }
@@ -48,6 +50,7 @@ public class UserResponse {
     public String getPhone() { return phone; }
     public Double getRating() { return rating; }
     public Boolean getActive() { return active; }
+    public int getLevel() { return level; }
     public String getCreatedAt() { return createdAt; }
     public Long getTasksCompleted() { return tasksCompleted; }
     public Long getAchievements() { return achievements; }
@@ -64,6 +67,7 @@ public class UserResponse {
     public void setPhone(String phone) { this.phone = phone; }
     public void setRating(Double rating) { this.rating = rating; }
     public void setActive(Boolean active) { this.active = active; }
+    public void setLevel(int level) { this.level = level; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
     public void setTasksCompleted(Long tasksCompleted) { this.tasksCompleted = tasksCompleted; }
     public void setAchievements(Long achievements) { this.achievements = achievements; }

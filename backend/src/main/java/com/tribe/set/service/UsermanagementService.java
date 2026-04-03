@@ -81,13 +81,19 @@ public class UsermanagementService {
     // ═══════════════════════════════════════════════════
 
     public List<UserResponse> getAllUsers(Long requesterId) {
-        if (requesterId != null) {
-            findUser(requesterId);
-        }
+        User requester = (requesterId != null) ? findUser(requesterId) : null;
 
         // Allow any active user to see the list for assignment/appreciation purposes
+        // But exclude senior roles (Collector/Admin) for regular users to follow hierarchy
         return userRepository.findAll()
                 .stream()
+                .filter(u -> {
+                    if (requester != null && requester.getRole() == Role.SYSTEM_ADMINISTRATOR) {
+                        return true; // Admin sees everyone for management
+                    }
+                    // Filter out top-level roles for others
+                    return u.getRole() != Role.SYSTEM_ADMINISTRATOR && u.getRole() != Role.COLLECTOR;
+                })
                 .map(u -> enrichWithStats(UserResponse.from(u)))
                 .collect(Collectors.toList());
     }

@@ -35,6 +35,8 @@ public class User {
     private String district;
     private String taluka;
     private String village;
+    @Size(min = 10, max = 10, message = "Phone number must be 10 digits")
+    @Pattern(regexp = "^[6-9][0-9]{9}$", message = "Indian mobile numbers must be 10 digits and start with 6, 7, 8, or 9")
     private String phone;
     private Double rating = 0.0;
 
@@ -94,7 +96,7 @@ public class User {
 	}
 
 	public void setEmail(String email) {
-		this.email = email;
+		this.email = (email != null) ? email.toLowerCase() : null;
 	}
 
 	public String getPassword() {

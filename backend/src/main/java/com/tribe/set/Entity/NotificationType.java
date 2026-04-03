@@ -9,5 +9,6 @@ public enum NotificationType {
     TASK_COMPLETED,
     TASK_REASSIGNED,
     ANNOUNCEMENT,
-    APPRECIATION
+    APPRECIATION,
+    TASK_UPDATE
 }

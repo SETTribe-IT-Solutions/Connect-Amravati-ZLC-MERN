@@ -31,8 +31,11 @@ public class Task {
     private LocalDate dueDate;
     private String department;
     private int progress = 0;
-    private String target;
-    private String achievement;
+    @Column(name = "target")
+    private Integer target;
+
+    @Column(name = "achievement")
+    private Integer achievement;
     private String location;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -97,11 +100,11 @@ public class Task {
     public int getProgress() { return progress; }
     public void setProgress(int progress) { this.progress = progress; }
 
-    public String getTarget() { return target; }
-    public void setTarget(String target) { this.target = target; }
+    public Integer getTarget() { return target; }
+    public void setTarget(Integer target) { this.target = target; }
 
-    public String getAchievement() { return achievement; }
-    public void setAchievement(String achievement) { this.achievement = achievement; }
+    public Integer getAchievement() { return achievement; }
+    public void setAchievement(Integer achievement) { this.achievement = achievement; }
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }

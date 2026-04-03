@@ -3,12 +3,18 @@ package com.tribe.set.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.tribe.set.dto.LoginResponse;
-import com.tribe.set.dto.RegisterRequest;
-import com.tribe.set.dto.UserRequest;
 import com.tribe.set.Entity.User;
 import com.tribe.set.repository.UserRepository;
+import com.tribe.set.security.JwtUtils;
+import com.tribe.set.security.UserDetailsImpl;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.tribe.set.dto.JwtResponse;
+import com.tribe.set.dto.RegisterRequest;
+import com.tribe.set.dto.UserRequest;
 
 @Service
 public class AuthService {
@@ -19,32 +25,42 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public LoginResponse login(UserRequest request) {
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
-        // find user by ID
+    @Autowired
+    private JwtUtils jwtUtils;
+
+    public JwtResponse login(UserRequest request) {
+
+        // find user by ID first to get their email (username)
         User user = userRepository.findByUserID(request.getUserID())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // check password
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
-        }
-
-        // check active status
         if (!user.getActive()) {
             throw new RuntimeException("User account is inactive");
         }
 
-        // return login response
-        return new LoginResponse(
+        // Authenticate using AuthenticationManager
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getEmail(), request.getPassword()));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwtToken(authentication);
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        // return JWT response
+        return new JwtResponse(
+                jwt,
                 user.getUserID(),
-                user.getRole().name(),
-                "Login successful",
                 user.getName(),
                 user.getEmail(),
+                user.getRole().name(),
                 user.getDistrict(),
                 user.getTaluka(),
-                user.getVillage()
+                user.getVillage(),
+                "Login successful"
         );
     }
 

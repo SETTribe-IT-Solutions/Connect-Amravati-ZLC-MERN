@@ -14,8 +14,8 @@ public class TaskResponse {
     private String dueDate;
     private String department;
     private int progress = 0;
-    private String target;
-    private String achievement;
+    private Integer target;
+    private Integer achievement;
     private String location;
     private String attachment;
 
@@ -74,8 +74,8 @@ public class TaskResponse {
     public String getDueDate() { return dueDate; }
     public String getDepartment() { return department; }
     public int getProgress() { return progress; }
-    public String getTarget() { return target; }
-    public String getAchievement() { return achievement; }
+    public Integer getTarget() { return target; }
+    public Integer getAchievement() { return achievement; }
     public String getLocation() { return location; }
     public String getAttachment() { return attachment; }
     public Long getCreatedById() { return createdById; }

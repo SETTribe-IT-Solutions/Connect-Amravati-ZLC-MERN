@@ -26,8 +26,8 @@ public class TaskRequest {
     private LocalDate dueDate;    // optional
     private String department;
     private int progress = 0;
-    private String target;
-    private String achievement;
+    private Integer target;
+    private Integer achievement;
     private String location;
 
 	public Long getRequesterId() {
@@ -84,11 +84,11 @@ public class TaskRequest {
     public int getProgress() { return progress; }
     public void setProgress(int progress) { this.progress = progress; }
 
-    public String getTarget() { return target; }
-    public void setTarget(String target) { this.target = target; }
+    public Integer getTarget() { return target; }
+    public void setTarget(Integer target) { this.target = target; }
 
-    public String getAchievement() { return achievement; }
-    public void setAchievement(String achievement) { this.achievement = achievement; }
+    public Integer getAchievement() { return achievement; }
+    public void setAchievement(Integer achievement) { this.achievement = achievement; }
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
