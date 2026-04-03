@@ -31,8 +31,11 @@ public class Task {
     private LocalDate dueDate;
     private String department;
     private int progress = 0;
-    private String target;
-    private String achievement;
+    @Column(name = "target")
+    private Integer target;
+
+    @Column(name = "achievement")
+    private Integer achievement;
     private String location;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -61,54 +64,139 @@ public class Task {
     }
 
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getTitle() {
+        return title;
+    }
 
-    public TaskPriority getPriority() { return priority; }
-    public void setPriority(TaskPriority priority) { this.priority = priority; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public TaskStatus getStatus() { return status; }
-    public void setStatus(TaskStatus status) { this.status = status; }
+    public String getDescription() {
+        return description;
+    }
 
-    public LocalDate getDueDate() { return dueDate; }
-    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public User getCreatedBy() { return createdBy; }
-    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
+    public TaskPriority getPriority() {
+        return priority;
+    }
 
-    public User getAssignedTo() { return assignedTo; }
-    public void setAssignedTo(User assignedTo) { this.assignedTo = assignedTo; }
+    public void setPriority(TaskPriority priority) {
+        this.priority = priority;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public TaskStatus getStatus() {
+        return status;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public void setStatus(TaskStatus status) {
+        this.status = status;
+    }
 
-    public String getDepartment() { return department; }
-    public void setDepartment(String department) { this.department = department; }
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
 
-    public int getProgress() { return progress; }
-    public void setProgress(int progress) { this.progress = progress; }
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    }
 
-    public String getTarget() { return target; }
-    public void setTarget(String target) { this.target = target; }
+    public User getCreatedBy() {
+        return createdBy;
+    }
 
-    public String getAchievement() { return achievement; }
-    public void setAchievement(String achievement) { this.achievement = achievement; }
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
+    }
 
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
+    public User getAssignedTo() {
+        return assignedTo;
+    }
 
-    public String getAttachment() { return attachment; }
-    public void setAttachment(String attachment) { this.attachment = attachment; }
+    public void setAssignedTo(User assignedTo) {
+        this.assignedTo = assignedTo;
+    }
 
-    public List<TaskRemark> getRemarks() { return remarks; }
-    public void setRemarks(List<TaskRemark> remarks) { this.remarks = remarks; }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public int getProgress() {
+        return progress;
+    }
+
+    public void setProgress(int progress) {
+        this.progress = progress;
+    }
+
+    public Integer getTarget() {
+        return target;
+    }
+
+    public void setTarget(Integer target) {
+        this.target = target;
+    }
+
+    public Integer getAchievement() {
+        return achievement;
+    }
+
+    public void setAchievement(Integer achievement) {
+        this.achievement = achievement;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getAttachment() {
+        return attachment;
+    }
+
+    public void setAttachment(String attachment) {
+        this.attachment = attachment;
+    }
+
+    public List<TaskRemark> getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(List<TaskRemark> remarks) {
+        this.remarks = remarks;
+    }
 }

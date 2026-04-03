@@ -57,7 +57,8 @@ public class NotificationServices {
         User user = findUser(userId);
         notificationRepository.markAllAsReadForUser(user);
     }
- // ─── Helper method ───
+
+    // ─── Helper method ───
     private User findUser(Long userId) {
         return userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));

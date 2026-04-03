@@ -1,16 +1,14 @@
-
 package com.tribe.set.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public class RemarkRequest {
+public class TaskProgressUpdateRequest {
 
     @NotNull(message = "RequesterId is required")
     private Long requesterId;
 
-    @NotBlank(message = "Remark cannot be empty")
-    private String remark;
+    @NotNull(message = "Achieved units are required")
+    private Integer achieved;
 
     public Long getRequesterId() {
         return requesterId;
@@ -20,11 +18,11 @@ public class RemarkRequest {
         this.requesterId = requesterId;
     }
 
-    public String getRemark() {
-        return remark;
+    public Integer getAchieved() {
+        return achieved;
     }
 
-    public void setRemark(String remark) {
-        this.remark = remark;
+    public void setAchieved(Integer achieved) {
+        this.achieved = achieved;
     }
 }

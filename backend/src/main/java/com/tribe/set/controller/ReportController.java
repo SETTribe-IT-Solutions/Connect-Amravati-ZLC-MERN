@@ -22,7 +22,8 @@ public class ReportController {
     private ReportService reportService;
 
     @GetMapping("/performance")
-    public ResponseEntity<List<Map<String, Object>>> getPerformanceReport(@RequestParam(name = "requesterId") Long requesterId) {
+    public ResponseEntity<List<Map<String, Object>>> getPerformanceReport(
+            @RequestParam(name = "requesterId") Long requesterId) {
         return ResponseEntity.ok(reportService.getPerformanceReport(requesterId));
     }
 
