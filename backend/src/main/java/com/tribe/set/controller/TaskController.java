@@ -18,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
 
-import com.tribe.set.Entity.TaskRemark;
+import com.tribe.set.entity.TaskRemark;
 import com.tribe.set.dto.DashboardResponse;
 import com.tribe.set.dto.RemarkRequest;
 import com.tribe.set.dto.TaskRequest;

@@ -1,4 +1,4 @@
-package com.tribe.set.Entity;
+package com.tribe.set.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;

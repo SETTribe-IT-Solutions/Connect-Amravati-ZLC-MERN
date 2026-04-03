@@ -1,6 +1,6 @@
 package com.tribe.set.dto;
 
-import com.tribe.set.Entity.User;
+import com.tribe.set.entity.User;
 
 public class UserResponse {
 

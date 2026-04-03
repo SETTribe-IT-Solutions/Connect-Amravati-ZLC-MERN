@@ -8,9 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.tribe.set.Entity.Task;
-import com.tribe.set.Entity.TaskStatus;
-import com.tribe.set.Entity.User;
+import com.tribe.set.entity.Task;
+import com.tribe.set.entity.TaskStatus;
+import com.tribe.set.entity.User;
 
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {

@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.tribe.set.Entity.Announcement;
-import com.tribe.set.Entity.Role;
+import com.tribe.set.entity.Announcement;
+import com.tribe.set.entity.Role;
 
 @Repository
 public interface AnnouncementRepository extends JpaRepository<Announcement, Long> {

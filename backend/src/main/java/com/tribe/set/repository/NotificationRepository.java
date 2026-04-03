@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.tribe.set.Entity.Notification;
-import com.tribe.set.Entity.User;
+import com.tribe.set.entity.Notification;
+import com.tribe.set.entity.User;
 
 import jakarta.transaction.Transactional;
 

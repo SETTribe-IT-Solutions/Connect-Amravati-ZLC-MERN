@@ -1,4 +1,4 @@
-package com.tribe.set.Entity;
+package com.tribe.set.entity;
 
 public enum TaskStatus {
 	  PENDING,      // Task just created, not started

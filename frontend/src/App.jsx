@@ -30,7 +30,14 @@ function App() {
     const checkAuth = () => {
       const savedUser = localStorage.getItem('user');
       const savedAuth = localStorage.getItem('isAuthenticated');
+      const token = localStorage.getItem('sessionToken');
       
+      // Safeguard: Clear old dummy tokens
+      if (token && token.startsWith('sess_')) {
+        handleLogout();
+        return;
+      }
+
       if (savedUser && savedAuth === 'true') {
         const userData = JSON.parse(savedUser);
         setUser(userData);
@@ -38,6 +45,10 @@ function App() {
         // Restore all essential bits to localStorage
         localStorage.setItem('role', userData.role);
         localStorage.setItem('userID', userData.userID);
+        // Restore sessionToken if it exists
+        if (token) {
+          localStorage.setItem('sessionToken', token);
+        }
       }
       setLoading(false);
     };
@@ -53,7 +64,7 @@ function App() {
       const normalizedRole = userData.role;
       
       const userToStore = {
-        userID: userData.userID,
+        userID: userData.id, // backend JwtResponse has 'id'
         name: userData.name,
         role: normalizedRole,
         email: userData.email,
@@ -61,7 +72,7 @@ function App() {
         taluka: userData.taluka,
         village: userData.village,
         loginTime: new Date().toISOString(),
-        permissions: normalizedRole === 'ADMIN' ? ['all'] : ['view_tasks']
+        permissions: normalizedRole === 'SYSTEM_ADMINISTRATOR' ? ['all'] : ['view_tasks']
       };
 
       setIsAuthenticated(true);
@@ -71,8 +82,8 @@ function App() {
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('user', JSON.stringify(userToStore));
       localStorage.setItem('role', normalizedRole);
-      localStorage.setItem('userID', userData.userID);
-      localStorage.setItem('sessionToken', 'sess_' + Math.random().toString(36).substr(2, 9));
+      localStorage.setItem('userID', userData.id); // mapping from backend 'id'
+      localStorage.setItem('sessionToken', userData.accessToken); // mapping from backend 'accessToken'
       
       return true;
     }

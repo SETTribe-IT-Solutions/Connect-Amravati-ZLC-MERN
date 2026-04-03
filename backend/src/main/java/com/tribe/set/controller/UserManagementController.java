@@ -1,6 +1,6 @@
 package com.tribe.set.controller;
 
-import com.tribe.set.Entity.Role;
+import com.tribe.set.entity.Role;
 import com.tribe.set.dto.*;
 import com.tribe.set.service.UsermanagementService;
 import jakarta.validation.Valid;

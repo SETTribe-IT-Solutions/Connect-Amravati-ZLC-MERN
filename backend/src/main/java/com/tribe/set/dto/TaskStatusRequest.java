@@ -1,7 +1,7 @@
 
 package com.tribe.set.dto;
 
-import com.tribe.set.Entity.TaskStatus;
+import com.tribe.set.entity.TaskStatus;
 import jakarta.validation.constraints.NotNull;
 
 public class TaskStatusRequest {

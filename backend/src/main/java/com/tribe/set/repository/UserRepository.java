@@ -1,7 +1,7 @@
 package com.tribe.set.repository;
 
-import com.tribe.set.Entity.Role;
-import com.tribe.set.Entity.User;
+import com.tribe.set.entity.Role;
+import com.tribe.set.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
