@@ -23,9 +23,9 @@ public class Announcement {
 
     private String title;
     private String message;
-    //ganesh
+    // ganesh
     @Enumerated(EnumType.STRING)
-    private Role targetRole;   // NULL = broadcast to ALL
+    private Role targetRole; // NULL = broadcast to ALL
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", referencedColumnName = "userID")

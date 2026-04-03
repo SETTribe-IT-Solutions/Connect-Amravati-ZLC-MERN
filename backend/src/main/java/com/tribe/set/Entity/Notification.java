@@ -18,23 +18,23 @@ import jakarta.persistence.Table;
 @Table(name = "notifications")
 public class Notification {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "userID", nullable = false)
-    private User user;       // who receives this notification
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id", referencedColumnName = "userID", nullable = false)
+	private User user; // who receives this notification
 
-    @Column(nullable = false)
-    private String message;  // "New task assigned to you: Clean River Bank"
+	@Column(nullable = false)
+	private String message; // "New task assigned to you: Clean River Bank"
 
-    @Enumerated(EnumType.STRING)
-    private NotificationType type;  // TASK_ASSIGNED, TASK_OVERDUE, etc.
+	@Enumerated(EnumType.STRING)
+	private NotificationType type; // TASK_ASSIGNED, TASK_OVERDUE, etc.
 
-    private Boolean isRead = false; // unread by default
+	private Boolean isRead = false; // unread by default
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+	private LocalDateTime createdAt = LocalDateTime.now();
 
 	public Long getId() {
 		return id;
@@ -83,6 +83,5 @@ public class Notification {
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
-    
-    
+
 }

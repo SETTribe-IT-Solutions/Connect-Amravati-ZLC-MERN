@@ -15,7 +15,8 @@ public class AppreciationResponse {
     private String badge;
     private LocalDateTime createdAt;
 
-    public AppreciationResponse() {}
+    public AppreciationResponse() {
+    }
 
     public static AppreciationResponse from(Appreciation app) {
         AppreciationResponse res = new AppreciationResponse();
@@ -30,27 +31,67 @@ public class AppreciationResponse {
         return res;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getFromUserName() { return fromUserName; }
-    public void setFromUserName(String fromUserName) { this.fromUserName = fromUserName; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getToUserName() { return toUserName; }
-    public void setToUserName(String toUserName) { this.toUserName = toUserName; }
+    public String getFromUserName() {
+        return fromUserName;
+    }
 
-    public String getFromRole() { return fromRole; }
-    public void setFromRole(String fromRole) { this.fromRole = fromRole; }
+    public void setFromUserName(String fromUserName) {
+        this.fromUserName = fromUserName;
+    }
 
-    public String getToRole() { return toRole; }
-    public void setToRole(String toRole) { this.toRole = toRole; }
+    public String getToUserName() {
+        return toUserName;
+    }
 
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
+    public void setToUserName(String toUserName) {
+        this.toUserName = toUserName;
+    }
 
-    public String getBadge() { return badge; }
-    public void setBadge(String badge) { this.badge = badge; }
+    public String getFromRole() {
+        return fromRole;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setFromRole(String fromRole) {
+        this.fromRole = fromRole;
+    }
+
+    public String getToRole() {
+        return toRole;
+    }
+
+    public void setToRole(String toRole) {
+        this.toRole = toRole;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getBadge() {
+        return badge;
+    }
+
+    public void setBadge(String badge) {
+        this.badge = badge;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }

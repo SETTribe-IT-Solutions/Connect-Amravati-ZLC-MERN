@@ -37,7 +37,8 @@ public class AppreciationController {
     }
 
     @GetMapping("/received/{userId}")
-    public ResponseEntity<List<AppreciationResponse>> getReceivedAppreciations(@PathVariable(name = "userId") Long userId) {
+    public ResponseEntity<List<AppreciationResponse>> getReceivedAppreciations(
+            @PathVariable(name = "userId") Long userId) {
         return ResponseEntity.ok(appreciationService.getReceivedAppreciations(userId));
     }
 

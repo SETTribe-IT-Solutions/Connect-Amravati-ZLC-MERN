@@ -1,3 +1,4 @@
+
 package com.tribe.set.dto;
 
 import java.time.LocalDate;
@@ -9,26 +10,26 @@ import jakarta.validation.constraints.NotNull;
 
 public class TaskRequest {
 
-    @NotBlank(message = "Title is required")
-    private String title;
+	@NotBlank(message = "Title is required")
+	private String title;
 
-    private String description;   // optional
+	private String description; // optional
 
-    @NotNull(message = "RequesterId is required")
-    private Long requesterId;
+	@NotNull(message = "RequesterId is required")
+	private Long requesterId;
 
-    @NotNull(message = "Priority is required")
-    private TaskPriority priority;
+	@NotNull(message = "Priority is required")
+	private TaskPriority priority;
 
-    @NotNull(message = "AssignedTo userId is required")
-    private Long assignedTo;      // userID of the person to assign to
+	@NotNull(message = "AssignedTo userId is required")
+	private Long assignedTo; // userID of the person to assign to
 
-    private LocalDate dueDate;    // optional
-    private String department;
-    private int progress = 0;
-    private String target;
-    private String achievement;
-    private String location;
+	private LocalDate dueDate; // optional
+	private String department;
+	private int progress = 0;
+	private Integer target;
+	private Integer achievement;
+	private String location;
 
 	public Long getRequesterId() {
 		return requesterId;
@@ -78,18 +79,43 @@ public class TaskRequest {
 		this.dueDate = dueDate;
 	}
 
-    public String getDepartment() { return department; }
-    public void setDepartment(String department) { this.department = department; }
+	public String getDepartment() {
+		return department;
+	}
 
-    public int getProgress() { return progress; }
-    public void setProgress(int progress) { this.progress = progress; }
+	public void setDepartment(String department) {
+		this.department = department;
+	}
 
-    public String getTarget() { return target; }
-    public void setTarget(String target) { this.target = target; }
+	public int getProgress() {
+		return progress;
+	}
 
-    public String getAchievement() { return achievement; }
-    public void setAchievement(String achievement) { this.achievement = achievement; }
+	public void setProgress(int progress) {
+		this.progress = progress;
+	}
 
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
+	public Integer getTarget() {
+		return target;
+	}
+
+	public void setTarget(Integer target) {
+		this.target = target;
+	}
+
+	public Integer getAchievement() {
+		return achievement;
+	}
+
+	public void setAchievement(Integer achievement) {
+		this.achievement = achievement;
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
+	}
 }
