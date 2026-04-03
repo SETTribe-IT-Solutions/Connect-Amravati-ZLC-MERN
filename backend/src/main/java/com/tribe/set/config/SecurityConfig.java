@@ -71,6 +71,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/talukas", "/api/villages/**").permitAll()
                         .requestMatchers("/api/tasks/**")
                         .hasAnyRole("BDO", "TALATHI", "GRAMSEVAK", "COLLECTOR", "SDO", "TEHSILDAR",
                                 "ADDITIONAL_DEPUTY_COLLECTOR", "SYSTEM_ADMINISTRATOR")

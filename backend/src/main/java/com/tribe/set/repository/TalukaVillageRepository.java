@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.tribe.set.Entity.TalukaVillage;
+import com.tribe.set.entity.TalukaVillage;
 
 public interface TalukaVillageRepository extends JpaRepository<TalukaVillage, Long> {
 
