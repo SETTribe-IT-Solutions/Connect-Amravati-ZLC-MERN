@@ -12,6 +12,8 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('sessionToken');
+    //const token = sessionStorage.getItem('sessionToken'); //.Aditya p
+
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }

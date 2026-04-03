@@ -636,31 +636,50 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
  const [talukas, setTalukas] = useState([]);
   const [villages, setVillages] = useState([]);
 
-  // ✅ Load Talukas
-  useEffect(() => {
-    axios.get("http://localhost:8080/api/talukas")
-      .then(res => {
-        const talukaNames = res.data.map(t => t.taluka);
-        setTalukas(talukaNames);
-      })
-      .catch(err => console.log(err));
-  }, []);
 
-  // ✅ Load Villages when taluka changes
-  useEffect(() => {
-    if (!formData.taluka) return;
+useEffect(() => {
+  const token = localStorage.getItem("token");
 
-    axios.get(`http://localhost:8080/api/villages/${formData.taluka}`)
-      .then(res => {
-        const villageNames = res.data.map(v => v.village);
-        setVillages(villageNames);
-      })
-      .catch(err => console.log(err));
+  axios.get("http://localhost:8080/api/talukas", {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+    .then(res => {
+      console.log("Talukas:", res.data);
 
-  }, [formData.taluka]);
+      // ✅ FIX: object → string
+      const talukaNames = res.data.map(t => t.taluka);
 
-  // ✅ Handle Taluka Change
-  const handleTalukaChange = (e) => {
+      setTalukas(talukaNames);
+    })
+    .catch(err => console.log(err));
+
+}, []);
+
+useEffect(() => {
+  if (!formData.taluka) return;
+
+  const token = localStorage.getItem("token");
+
+  axios.get(`http://localhost:8080/api/villages/${formData.taluka}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+    .then(res => {
+      console.log("Villages:", res.data);
+
+      // ✅ FIX: object → string
+      const villageNames = res.data.map(v => v.village);
+
+      setVillages(villageNames);
+    })
+    .catch(err => console.log(err));
+
+}, [formData.taluka]);
+
+ const handleTalukaChange = (e) => {
     const selectedTaluka = e.target.value;
 
     setFormData({
