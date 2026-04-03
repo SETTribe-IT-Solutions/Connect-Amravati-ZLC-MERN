@@ -2,7 +2,7 @@ package com.tribe.set.dto;
 
 import java.time.LocalDateTime;
 
-import com.tribe.set.Entity.Appreciation;
+import com.tribe.set.entity.Appreciation;
 
 public class AppreciationResponse {
 

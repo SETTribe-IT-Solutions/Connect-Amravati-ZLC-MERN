@@ -1,7 +1,7 @@
 
 package com.tribe.set.dto;
 
-import com.tribe.set.Entity.Role;
+import com.tribe.set.entity.Role;
 import jakarta.validation.constraints.*;
 
 public class UpdateUserRequest {

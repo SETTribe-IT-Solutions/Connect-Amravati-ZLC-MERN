@@ -2,11 +2,11 @@ package com.tribe.set.service;
 
 import org.springframework.stereotype.Service;
 
-import com.tribe.set.Entity.User;
+import com.tribe.set.entity.User;
 import com.tribe.set.dto.TaskRequest;
 import com.tribe.set.dto.TaskResponse;
 
-import com.tribe.set.Entity.*;
+import com.tribe.set.entity.*;
 import com.tribe.set.dto.*;
 import com.tribe.set.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;

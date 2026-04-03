@@ -1,7 +1,7 @@
 package com.tribe.set.repository;
 
-import com.tribe.set.Entity.Task;
-import com.tribe.set.Entity.TaskRemark;
+import com.tribe.set.entity.Task;
+import com.tribe.set.entity.TaskRemark;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

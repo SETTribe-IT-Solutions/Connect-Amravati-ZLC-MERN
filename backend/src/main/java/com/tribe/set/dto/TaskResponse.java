@@ -1,8 +1,8 @@
 package com.tribe.set.dto;
 
-import com.tribe.set.Entity.Task;
-import com.tribe.set.Entity.TaskPriority;
-import com.tribe.set.Entity.TaskStatus;
+import com.tribe.set.entity.Task;
+import com.tribe.set.entity.TaskPriority;
+import com.tribe.set.entity.TaskStatus;
 
 public class TaskResponse {
 

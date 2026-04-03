@@ -9,10 +9,10 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.tribe.set.Entity.Role;
-import com.tribe.set.Entity.Task;
-import com.tribe.set.Entity.TaskStatus;
-import com.tribe.set.Entity.User;
+import com.tribe.set.entity.Role;
+import com.tribe.set.entity.Task;
+import com.tribe.set.entity.TaskStatus;
+import com.tribe.set.entity.User;
 import com.tribe.set.repository.TaskRepository;
 import com.tribe.set.repository.UserRepository;
 

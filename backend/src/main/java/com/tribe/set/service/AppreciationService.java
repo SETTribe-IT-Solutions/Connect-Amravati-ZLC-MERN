@@ -7,8 +7,8 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.tribe.set.Entity.Appreciation;
-import com.tribe.set.Entity.User;
+import com.tribe.set.entity.Appreciation;
+import com.tribe.set.entity.User;
 import com.tribe.set.dto.AppreciationRequest;
 import com.tribe.set.dto.AppreciationResponse;
 import com.tribe.set.repository.AppreciationRepository;

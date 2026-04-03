@@ -3,7 +3,7 @@ package com.tribe.set.dto;
 
 import java.time.LocalDate;
 
-import com.tribe.set.Entity.TaskPriority;
+import com.tribe.set.entity.TaskPriority;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -3,7 +3,7 @@ package com.tribe.set.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.tribe.set.Entity.User;
+import com.tribe.set.entity.User;
 import com.tribe.set.repository.UserRepository;
 import com.tribe.set.security.JwtUtils;
 import com.tribe.set.security.UserDetailsImpl;

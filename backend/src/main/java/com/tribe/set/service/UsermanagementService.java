@@ -1,7 +1,7 @@
 package com.tribe.set.service;
 
-import com.tribe.set.Entity.Role;
-import com.tribe.set.Entity.User;
+import com.tribe.set.entity.Role;
+import com.tribe.set.entity.User;
 
 import com.tribe.set.dto.CreateuserRequest;
 import com.tribe.set.dto.UpdateUserRequest;
@@ -245,7 +245,7 @@ public class UsermanagementService {
         User user = userRepository.findByUserID(res.getUserID()).orElse(null);
         if (user != null) {
             res.setTasksCompleted(
-                    taskRepository.countByAssignedToAndStatus(user, com.tribe.set.Entity.TaskStatus.COMPLETED));
+                    taskRepository.countByAssignedToAndStatus(user, com.tribe.set.entity.TaskStatus.COMPLETED));
             res.setAchievements(appreciationRepository.countByToUser(user));
 
             // Pending tasks = Total tasks - Completed tasks

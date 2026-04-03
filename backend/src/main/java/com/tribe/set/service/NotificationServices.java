@@ -5,9 +5,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.tribe.set.Entity.Notification;
-import com.tribe.set.Entity.NotificationType;
-import com.tribe.set.Entity.User;
+import com.tribe.set.entity.Notification;
+import com.tribe.set.entity.NotificationType;
+import com.tribe.set.entity.User;
 import com.tribe.set.repository.NotificationRepository;
 import com.tribe.set.repository.UserRepository;
 
