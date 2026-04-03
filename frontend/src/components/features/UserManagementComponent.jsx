@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllUsers, addUser, updateUser, deleteUser, toggleUserStatus } from '../../services/userService';
 import { toast } from 'react-hot-toast';
+import axios from "axios";
 
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -33,6 +34,9 @@ const UserManagementComponent = () => {
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [talukas, setTalukas] = useState([]);
+const [villages, setVillages] = useState([]);
 
   const fetchUsers = async () => {
     try {
@@ -625,6 +629,48 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
   });
 
   const [phoneError, setPhoneError] = React.useState('');
+  
+  //dropdown  taluka and village value from backend in db
+  //changed by Aditya Patil on 03-04-2026
+
+ const [talukas, setTalukas] = useState([]);
+  const [villages, setVillages] = useState([]);
+
+  // ✅ Load Talukas
+  useEffect(() => {
+    axios.get("http://localhost:8080/api/talukas")
+      .then(res => {
+        const talukaNames = res.data.map(t => t.taluka);
+        setTalukas(talukaNames);
+      })
+      .catch(err => console.log(err));
+  }, []);
+
+  // ✅ Load Villages when taluka changes
+  useEffect(() => {
+    if (!formData.taluka) return;
+
+    axios.get(`http://localhost:8080/api/villages/${formData.taluka}`)
+      .then(res => {
+        const villageNames = res.data.map(v => v.village);
+        setVillages(villageNames);
+      })
+      .catch(err => console.log(err));
+
+  }, [formData.taluka]);
+
+  // ✅ Handle Taluka Change
+  const handleTalukaChange = (e) => {
+    const selectedTaluka = e.target.value;
+
+    setFormData({
+      ...formData,
+      taluka: selectedTaluka,
+      village: "" // reset village
+    });
+  };
+//till here
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -792,26 +838,46 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Taluka <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.taluka}
-                    onChange={(e) => setFormData({...formData, taluka: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Taluka"
-                  />
+                
+
+<select
+  required
+  value={formData.taluka}
+  onChange={handleTalukaChange}
+  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+>
+  <option value=""> Select Taluka </option>
+  {talukas.map((t, index) => (
+    <option key={index} value={t}>
+      {t}
+    </option>
+  ))}
+</select>
+
+                  
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Village
                   </label>
-                  <input
-                    type="text"
-                    value={formData.village}
-                    onChange={(e) => setFormData({...formData, village: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Village"
-                  />
+                  
+                 
+<select
+  value={formData.village}
+  onChange={(e) => setFormData({...formData, village: e.target.value})}
+  disabled={!formData.taluka}
+  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+>
+  <option value=""> Select Village </option>
+  {villages.map((v, index) => (
+    <option key={index} value={v}>
+      {v}
+    </option>
+  ))}
+</select>
+
+
+
                 </div>
               </div>
             </div>
