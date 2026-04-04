@@ -24,6 +24,10 @@ public class UpdateUserRequest {
 
     @NotNull(message = "Requester ID is required")
     private Long requesterId;
+    
+    private Boolean active;
+
+    
 
     // Getters
     public String getName() {
@@ -57,6 +61,10 @@ public class UpdateUserRequest {
     public String getPassword() {
         return password;
     }
+    
+    public Boolean getActive() {
+        return active;
+    }
 
     // Setters
     public void setName(String name) {
@@ -64,7 +72,7 @@ public class UpdateUserRequest {
     }
 
     public void setEmail(String email) {
-        this.email = email;
+        this.email = (email != null) ? email.toLowerCase().trim() : null;
     }
 
     public void setRole(Role role) {
@@ -98,4 +106,9 @@ public class UpdateUserRequest {
     public void setRequesterId(Long requesterId) {
         this.requesterId = requesterId;
     }
+    
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
 }

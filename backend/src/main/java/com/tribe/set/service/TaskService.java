@@ -172,15 +172,15 @@ public class TaskService {
         Task task = findTask(taskId);
         User newAssignee = findUser(newAssigneeId);
 
-        // Verify that the task is assigned to the requester, or they are a senior
-        // officer
-        boolean isAssignee = task.getAssignedTo().getUserID().equals(requesterId);
-        boolean isCreator = task.getCreatedBy().getUserID().equals(requesterId);
-        boolean isSenior = requester.getRole().canAllocateTask() &&
-                requester.getRole().canAssignTo(task.getAssignedTo().getRole());
+        if (task.getStatus() == TaskStatus.COMPLETED) {
+            throw new RuntimeException("Validation Error: Cannot forward a completed task");
+        }
 
-        if (!isAssignee && !isCreator && !isSenior) {
-            throw new RuntimeException("Access Denied: You cannot forward this task");
+        // Verify that the task is assigned to the requester
+        boolean isAssignee = task.getAssignedTo().getUserID().equals(requesterId);
+
+        if (!isAssignee) {
+            throw new RuntimeException("Access Denied: You cannot forward this task because you are not the current assignee");
         }
 
         // CHECK 2: Hierarchy rule — requester must be HIGHER than assignee
@@ -313,39 +313,43 @@ public class TaskService {
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
 
-        // ONLY the assigned user can update their OWN task progress
-        if (!task.getAssignedTo().getUserID().equals(requesterId)) {
-            throw new RuntimeException("Access Denied: Only the assigned user (" +
-                    task.getAssignedTo().getName() + ") can update their own progress.");
-        }
+        boolean isAssignedTo = task.getAssignedTo().getUserID().equals(requesterId);
+        boolean isCreatedBy = task.getCreatedBy().getUserID().equals(requesterId);
 
-        if (task.getTarget() == null || task.getTarget() <= 0) {
-            throw new RuntimeException("Cannot update progress: Task target is not set or invalid.");
+        // ONLY the assigned user or the creator can update the progress
+        if (!isAssignedTo && !isCreatedBy) {
+            throw new RuntimeException("Access Denied: Only the assigned user (" +
+                    task.getAssignedTo().getName() + ") or the assigner can update this task's progress.");
         }
 
         if (achievedWork < 0) {
             throw new RuntimeException("Achievement cannot be negative.");
         }
 
-        // Progress can only increase — cannot decrease achievement once recorded
-        if (task.getAchievement() != null && achievedWork < task.getAchievement()) {
-            throw new RuntimeException("Validation Error: Achievement (" + achievedWork +
-                    ") cannot be less than the previously recorded value (" +
-                    task.getAchievement() + ").");
+        // Target processing
+        Integer target = task.getTarget();
+        if (target != null && target > 0) {
+            if (achievedWork > target) {
+                throw new RuntimeException(
+                        "Achievement (" + achievedWork + ") cannot exceed the target (" + target + ").");
+            }
         }
 
-        if (achievedWork > task.getTarget()) {
-            throw new RuntimeException(
-                    "Achievement (" + achievedWork + ") cannot exceed the target (" + task.getTarget() + ").");
+        // Progress can only increase for assignee — cannot decrease achievement once recorded. Assigner can bypass.
+        if (isAssignedTo && !isCreatedBy) {
+            if (task.getAchievement() != null && achievedWork < task.getAchievement()) {
+                throw new RuntimeException("Validation Error: As the assignee, you can only update achievement in increasing order. You cannot enter less than " + task.getAchievement() + ". Contact the assigner for corrections.");
+            }
         }
 
         task.setAchievement(achievedWork);
 
         // Calculate progress percentage with safety check
-        if (task.getTarget() == null || task.getTarget() <= 0) {
-            task.setProgress(achievedWork > 0 ? 100 : 0);
+        if (target == null || target <= 0) {
+            int newProgress = Math.min(100, Math.max(0, achievedWork));
+            task.setProgress(newProgress);
         } else {
-            double percentage = ((double) achievedWork / task.getTarget()) * 100;
+            double percentage = ((double) achievedWork / target) * 100;
             task.setProgress((int) Math.min(100, Math.max(0, percentage)));
         }
 
@@ -358,15 +362,28 @@ public class TaskService {
 
         Task saved = taskRepository.save(task);
 
-        // Notify the person who assigned the task (creator)
+        // Notify appropriately
         try {
-            notificationService.send(
-                    task.getCreatedBy(),
-                    "Progress update by " + requester.getName() + " on task '" + task.getTitle() +
-                            "': " + achievedWork + "/" + (task.getTarget() != null ? task.getTarget() : "NA") +
-                            " (" + task.getProgress() + "%)",
-                    NotificationType.TASK_COMPLETED // Using existing type until DB is updated to TASK_UPDATE
-            );
+            if (isAssignedTo && !isCreatedBy) {
+                // Assignee updated it, notify creator
+                notificationService.send(
+                        task.getCreatedBy(),
+                        "Progress update by " + requester.getName() + " on task '" + task.getTitle() +
+                                "': " + achievedWork + "/" + (target != null ? target : "NA") +
+                                " (" + task.getProgress() + "%)",
+                        NotificationType.TASK_COMPLETED 
+                );
+            } else if (isCreatedBy && !isAssignedTo) {
+                // Creator updated it, notify assignee
+                notificationService.send(
+                        task.getAssignedTo(),
+                        "Progress update modified by Assigner on task '" + task.getTitle() +
+                                "': " + achievedWork + "/" + (target != null ? target : "NA") +
+                                " (" + task.getProgress() + "%)",
+                        NotificationType.TASK_COMPLETED 
+                );
+            }
+            
         } catch (Exception e) {
             // Silently log and allow transaction to complete if DB schema is outdated
             System.err.println("Notification failed (DB Schema mismatch): " + e.getMessage());

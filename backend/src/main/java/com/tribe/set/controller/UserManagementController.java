@@ -50,12 +50,12 @@ public class UserManagementController {
         return ResponseEntity.ok(userService.getUserProfile(id, requesterId));
     }
 
-    @PostMapping("/toggle-status/{id}")
-    public ResponseEntity<UserResponse> toggleUserStatus(
-            @PathVariable(name = "id") Long id,
-            @RequestBody DeleteUserRequest request) { // Reusing DeleteUserRequest for requesterId
-        return ResponseEntity.ok(userService.toggleUserStatus(id, request.getRequesterId()));
-    }
+//    @PostMapping("/toggle-status/{id}")
+//    public ResponseEntity<UserResponse> toggleUserStatus(
+//            @PathVariable(name = "id") Long id,
+//            @RequestBody DeleteUserRequest request) { // Reusing DeleteUserRequest for requesterId
+//        return ResponseEntity.ok(userService.toggleUserStatus(id, request.getRequesterId()));
+//    }
     
     @GetMapping("/role/{role}")
     public ResponseEntity<List<UserResponse>> getUsersByRole(
