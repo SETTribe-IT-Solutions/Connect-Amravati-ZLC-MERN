@@ -855,12 +855,11 @@ useEffect(() => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Taluka <span className="text-red-500">*</span>
+                    Taluka
                   </label>
                 
 
 <select
-  required
   value={formData.taluka}
   onChange={handleTalukaChange}
   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
