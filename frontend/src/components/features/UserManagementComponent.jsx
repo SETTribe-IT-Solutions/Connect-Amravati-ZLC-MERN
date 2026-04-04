@@ -557,8 +557,10 @@ const [villages, setVillages] = useState([]);
                 const payload = {
                   ...userData,
                   role: roleMap[userData.role] || userData.role,
-                  requesterId: localStorage.getItem('userID')
+                  requesterId: localStorage.getItem('userID'),
+                  active: userData.status === 'Active'
                 };
+                delete payload.status;
 
                 // Remove empty password for existing users to keep original password
                 if (selectedUser && !payload.password) {
