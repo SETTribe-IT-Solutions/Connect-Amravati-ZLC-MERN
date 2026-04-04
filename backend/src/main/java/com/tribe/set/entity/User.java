@@ -10,221 +10,232 @@ import java.util.ArrayList;
 @Table(name = "users")
 public class User {
 
-	@Id
-	@Column(name = "userid")
-	private Long userID;
+    @Id
+    @Column(name = "userid")
+    private Long userID;
 
-	@NotBlank(message = "Name cannot be empty")
-	@Column(nullable = false)
-	private String name;
+    @NotBlank(message = "Name cannot be empty")
+    @Column(nullable = false)
+    private String name;
 
-	@Email(message = "Invalid email format")
-	@NotBlank(message = "Email cannot be empty")
-	@Column(unique = true, nullable = false)
-	private String email;
+    @Email(message = "Invalid email format")
+    @NotBlank(message = "Email cannot be empty")
+    @Pattern(
+        regexp = "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$",
+        message = "Email must be in lowercase only"
+    )
+    @Column(unique = true, nullable = false)
+    private String email;
 
-	@NotBlank(message = "Password cannot be empty")
-	@com.fasterxml.jackson.annotation.JsonIgnore
-	@Column(nullable = false)
-	private String password;
+    @NotBlank(message = "Password cannot be empty")
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Column(nullable = false)
+    private String password;
 
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
-	private Role role;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
 
-	private String district;
-	private String taluka;
-	private String village;
-	@Size(min = 10, max = 10, message = "Phone number must be 10 digits")
-	@Pattern(regexp = "^[6-9][0-9]{9}$", message = "Indian mobile numbers must be 10 digits and start with 6, 7, 8, or 9")
-	private String phone;
-	private Double rating = 0.0;
+    private String district;
+    private String taluka;
+    private String village;
 
-	@Column(nullable = false)
-	private Boolean active = true;
+    @NotBlank(message = "Phone number cannot be empty")
+    @Size(min = 10, max = 10, message = "Phone number must be exactly 10 digits")
+    @Pattern(
+        regexp = "^[6-9][0-9]{9}$",
+        message = "Invalid phone number: must start with 6, 7, 8, or 9. Numbers starting with 1, 2, 3, 4, or 5 are not allowed"
+    )
+    private String phone;
 
-	@Column(updatable = false)
-	private LocalDateTime createdAt = LocalDateTime.now();
+    private Double rating = 0.0;
 
-	// Relationships with Cascade Delete
-	@com.fasterxml.jackson.annotation.JsonIgnore
-	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<Notification> notifications = new ArrayList<>();
+    @Column( nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
+    private Boolean active = true;
 
-	@com.fasterxml.jackson.annotation.JsonIgnore
-	@OneToMany(mappedBy = "fromUser", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<Appreciation> sentAppreciations = new ArrayList<>();
+    @Column(updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-	@com.fasterxml.jackson.annotation.JsonIgnore
-	@OneToMany(mappedBy = "toUser", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<Appreciation> receivedAppreciations = new ArrayList<>();
+    // Relationships
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications = new ArrayList<>();
 
-	@com.fasterxml.jackson.annotation.JsonIgnore
-	@OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<Task> createdTasks = new ArrayList<>();
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "fromUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Appreciation> sentAppreciations = new ArrayList<>();
 
-	@com.fasterxml.jackson.annotation.JsonIgnore
-	@OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<Task> assignedTasks = new ArrayList<>();
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "toUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Appreciation> receivedAppreciations = new ArrayList<>();
 
-	@com.fasterxml.jackson.annotation.JsonIgnore
-	@OneToMany(mappedBy = "addedBy", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<TaskRemark> addedRemarks = new ArrayList<>();
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> createdTasks = new ArrayList<>();
 
-	@com.fasterxml.jackson.annotation.JsonIgnore
-	@OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<Announcement> createdAnnouncements = new ArrayList<>();
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> assignedTasks = new ArrayList<>();
 
-	public Long getUserID() {
-		return userID;
-	}
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "addedBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaskRemark> addedRemarks = new ArrayList<>();
 
-	public void setUserID(Long userID) {
-		this.userID = userID;
-	}
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Announcement> createdAnnouncements = new ArrayList<>();
 
-	public String getName() {
-		return name;
-	}
+    // Getters and Setters
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public Long getUserID() {
+        return userID;
+    }
 
-	public String getEmail() {
-		return email;
-	}
+    public void setUserID(Long userID) {
+        this.userID = userID;
+    }
 
-	public void setEmail(String email) {
-		this.email = (email != null) ? email.toLowerCase() : null;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getPassword() {
-		return password;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    public String getEmail() {
+        return email;
+    }
 
-	public Role getRole() {
-		return role;
-	}
+    public void setEmail(String email) {
+        this.email = (email != null) ? email.toLowerCase().trim() : null;
+    }
 
-	public void setRole(Role role) {
-		this.role = role;
-	}
+    public String getPassword() {
+        return password;
+    }
 
-	public String getDistrict() {
-		return district;
-	}
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-	public void setDistrict(String district) {
-		this.district = district;
-	}
+    public Role getRole() {
+        return role;
+    }
 
-	public String getTaluka() {
-		return taluka;
-	}
+    public void setRole(Role role) {
+        this.role = role;
+    }
 
-	public void setTaluka(String taluka) {
-		this.taluka = taluka;
-	}
+    public String getDistrict() {
+        return district;
+    }
 
-	public String getVillage() {
-		return village;
-	}
+    public void setDistrict(String district) {
+        this.district = district;
+    }
 
-	public void setVillage(String village) {
-		this.village = village;
-	}
+    public String getTaluka() {
+        return taluka;
+    }
 
-	public String getPhone() {
-		return phone;
-	}
+    public void setTaluka(String taluka) {
+        this.taluka = taluka;
+    }
 
-	public void setPhone(String phone) {
-		this.phone = phone;
-	}
+    public String getVillage() {
+        return village;
+    }
 
-	public Double getRating() {
-		return rating;
-	}
+    public void setVillage(String village) {
+        this.village = village;
+    }
 
-	public void setRating(Double rating) {
-		this.rating = rating;
-	}
+    public String getPhone() {
+        return phone;
+    }
 
-	public Boolean getActive() {
-		return active;
-	}
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
-	public void setActive(Boolean active) {
-		this.active = active;
-	}
+    public Double getRating() {
+        return rating;
+    }
 
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
-	}
+    public void setRating(Double rating) {
+        this.rating = rating;
+    }
 
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
+    public Boolean getActive() {
+        return active;
+    }
 
-	public List<Notification> getNotifications() {
-		return notifications;
-	}
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
 
-	public void setNotifications(List<Notification> notifications) {
-		this.notifications = notifications;
-	}
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-	public List<Appreciation> getSentAppreciations() {
-		return sentAppreciations;
-	}
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
-	public void setSentAppreciations(List<Appreciation> sentAppreciations) {
-		this.sentAppreciations = sentAppreciations;
-	}
+    public List<Notification> getNotifications() {
+        return notifications;
+    }
 
-	public List<Appreciation> getReceivedAppreciations() {
-		return receivedAppreciations;
-	}
+    public void setNotifications(List<Notification> notifications) {
+        this.notifications = notifications;
+    }
 
-	public void setReceivedAppreciations(List<Appreciation> receivedAppreciations) {
-		this.receivedAppreciations = receivedAppreciations;
-	}
+    public List<Appreciation> getSentAppreciations() {
+        return sentAppreciations;
+    }
 
-	public List<Task> getCreatedTasks() {
-		return createdTasks;
-	}
+    public void setSentAppreciations(List<Appreciation> sentAppreciations) {
+        this.sentAppreciations = sentAppreciations;
+    }
 
-	public void setCreatedTasks(List<Task> createdTasks) {
-		this.createdTasks = createdTasks;
-	}
+    public List<Appreciation> getReceivedAppreciations() {
+        return receivedAppreciations;
+    }
 
-	public List<Task> getAssignedTasks() {
-		return assignedTasks;
-	}
+    public void setReceivedAppreciations(List<Appreciation> receivedAppreciations) {
+        this.receivedAppreciations = receivedAppreciations;
+    }
 
-	public void setAssignedTasks(List<Task> assignedTasks) {
-		this.assignedTasks = assignedTasks;
-	}
+    public List<Task> getCreatedTasks() {
+        return createdTasks;
+    }
 
-	public List<TaskRemark> getAddedRemarks() {
-		return addedRemarks;
-	}
+    public void setCreatedTasks(List<Task> createdTasks) {
+        this.createdTasks = createdTasks;
+    }
 
-	public void setAddedRemarks(List<TaskRemark> addedRemarks) {
-		this.addedRemarks = addedRemarks;
-	}
+    public List<Task> getAssignedTasks() {
+        return assignedTasks;
+    }
 
-	public List<Announcement> getCreatedAnnouncements() {
-		return createdAnnouncements;
-	}
+    public void setAssignedTasks(List<Task> assignedTasks) {
+        this.assignedTasks = assignedTasks;
+    }
 
-	public void setCreatedAnnouncements(List<Announcement> createdAnnouncements) {
-		this.createdAnnouncements = createdAnnouncements;
-	}
+    public List<TaskRemark> getAddedRemarks() {
+        return addedRemarks;
+    }
 
+    public void setAddedRemarks(List<TaskRemark> addedRemarks) {
+        this.addedRemarks = addedRemarks;
+    }
+
+    public List<Announcement> getCreatedAnnouncements() {
+        return createdAnnouncements;
+    }
+
+    public void setCreatedAnnouncements(List<Announcement> createdAnnouncements) {
+        this.createdAnnouncements = createdAnnouncements;
+    }
 }
