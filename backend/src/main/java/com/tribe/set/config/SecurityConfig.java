@@ -72,6 +72,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/talukas", "/api/villages/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/tasks/**")
                         .hasAnyRole("BDO", "TALATHI", "GRAMSEVAK", "COLLECTOR", "SDO", "TEHSILDAR",
                                 "ADDITIONAL_DEPUTY_COLLECTOR", "SYSTEM_ADMINISTRATOR")
