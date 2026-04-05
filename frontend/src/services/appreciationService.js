@@ -19,3 +19,8 @@ export const getSentAppreciations = async (userId) => {
   const response = await axiosInstance.get(`/appreciations/sent/${userId}`);
   return response.data;
 };
+
+export const getEligibleUsers = async () => {
+  const response = await axiosInstance.get("/appreciations/eligible-users");
+  return response.data;
+};

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { getTasks, createTask, updateTaskStatus, addTaskRemark } from '../../services/taskService';
-import { getAllUsers } from '../../services/userService';
+import { getTasks, createTask, updateTaskStatus, addTaskRemark, updateTaskProgressAPI, forwardTaskAPI } from '../../services/taskService';
+import { getAllUsers, getSubordinates } from '../../services/userService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PlusCircleIcon, ArrowPathIcon, ClockIcon, MagnifyingGlassIcon, FunnelIcon,
@@ -32,6 +32,12 @@ const TaskDashboard = ({ user }) => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  
+  // Forward Modal State
+  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
+  const [subordinates, setSubordinates] = useState([]);
+  const [forwardLoading, setForwardLoading] = useState(false);
+  const [selectedTaskForForward, setSelectedTaskForForward] = useState(null);
   
   const [newTask, setNewTask] = useState({
     title: '', description: '', department: 'Revenue', priority: 'Medium',
@@ -137,6 +143,40 @@ const TaskDashboard = ({ user }) => {
     }
   };
 
+  const handleOpenForwardModal = async (task) => {
+    try {
+      const userID = user?.userID || localStorage.getItem('userID');
+      
+      // Verification: Check if task is actually assigned to the requester
+      if (task.assignedToName && task.assignedToName !== user?.name && roleLower !== 'admin' && roleLower !== 'system_administrator') {
+         // This is a safety check. The backend also validates this.
+         // But here we need to be careful with names vs IDs.
+      }
+
+      setForwardLoading(true);
+      const data = await getSubordinates(userID);
+      setSubordinates(data || []);
+      setSelectedTaskForForward(task);
+      setIsForwardModalOpen(true);
+    } catch (error) {
+      showToast('Failed to fetch subordinates', 'error');
+    } finally {
+      setForwardLoading(false);
+    }
+  };
+
+  const handleConfirmForward = async (targetUserId) => {
+    try {
+      const userID = user?.userID || localStorage.getItem('userID');
+      await forwardTaskAPI(selectedTaskForForward.id, targetUserId, userID);
+      setIsForwardModalOpen(false);
+      fetchTasks();
+      showToast('Task forwarded successfully!', 'success');
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Failed to forward task', 'error');
+    }
+  };
+
   const handleForwardTask = (taskId, forwardTo) => {
     if (!forwardTo?.trim()) {
       showToast('Please enter who to forward to', 'error');
@@ -150,14 +190,12 @@ const TaskDashboard = ({ user }) => {
     showToast(`Task forwarded to ${forwardTo} successfully!`, 'success');
   };
 
-  const handleUpdateProgress = async (taskId, newProgress) => {
-    const progress = Math.min(100, Math.max(0, parseInt(newProgress) || 0));
+  const handleUpdateProgress = async (taskId, achieved) => {
     try {
       const userID = user?.userID || localStorage.getItem('userID');
-      if (progress > 0 && progress < 100) await updateTaskStatus(taskId, 'IN_PROGRESS', userID);
-      else if (progress === 100) await updateTaskStatus(taskId, 'COMPLETED', userID);
+      await updateTaskProgressAPI(taskId, parseInt(achieved), userID);
       fetchTasks();
-      showToast(`Progress updated to ${progress}%`, 'success');
+      showToast(`Achievement updated to ${achieved}`, 'success');
     } catch (error) {
       showToast('Failed to update progress', 'error');
     }
@@ -418,7 +456,10 @@ const TaskDashboard = ({ user }) => {
                         <td className="px-3 py-2 text-sm text-gray-600">{task.assignedTo}</td>
                         <td className="px-3 py-2 text-sm text-gray-600">{new Date(task.dueDate).toLocaleDateString()}</td>
                         <td className="px-3 py-2 text-sm text-gray-600">{task.target || 'NA'}</td>
-                        <td className="px-3 py-2 text-sm text-gray-600">{task.achievement || 'Not Started'}</td>
+                        <td className="px-3 py-2 text-sm text-gray-600">
+                          <div>{task.achievement || 0}</div>
+                          <div className="text-[10px] text-blue-500 font-medium">{task.progress || 0}%</div>
+                        </td>
                         <td className="px-3 py-2">
                           {task.attachments.length > 0 ? (
                             <a href={task.attachments[0].url} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-800">
@@ -430,8 +471,19 @@ const TaskDashboard = ({ user }) => {
                           <div className="flex gap-2">
                             <button onClick={() => { setSelectedTask(task); setShowDetailsModal(true); }} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="View Details"><EyeIcon className="h-4 w-4" /></button>
                             <button onClick={() => { const remark = prompt('Enter remark:'); if (remark) handleAddRemark(task.id, remark); }} className="p-1 text-green-600 hover:bg-green-50 rounded" title="Add Remark"><ChatBubbleLeftRightIcon className="h-4 w-4" /></button>
-                            <button onClick={() => { const forwardTo = prompt('Forward to (name/role):'); if (forwardTo) handleForwardTask(task.id, forwardTo); }} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded" title="Forward"><PaperAirplaneIcon className="h-4 w-4" /></button>
-                            <button onClick={() => { const progress = prompt('Update progress (0-100):', task.progress || 0); if (progress) handleUpdateProgress(task.id, progress); }} className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Update Progress"><ArrowPathIcon className="h-4 w-4" /></button>
+                            <button onClick={() => { 
+                              const isAssignee = (task.assignedToName === user?.name) || (task.assignedToId?.toString() === user?.userID?.toString());
+                              if (!isAssignee && roleLower !== 'admin' && roleLower !== 'system_administrator') {
+                                showToast('Access Denied', 'You can only forward tasks assigned to you');
+                                return;
+                              }
+                              handleOpenForwardModal(task);
+                            }} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded" title="Forward"><PaperAirplaneIcon className="h-4 w-4" /></button>
+                            <button onClick={() => { 
+                              const target = parseInt(task.target) || 100;
+                              const val = prompt(`Update Achievement (Enter value between 0 and ${target}):`, task.achievement || 0); 
+                              if (val !== null && val !== "") handleUpdateProgress(task.id, val); 
+                            }} className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Update Achievement"><ArrowPathIcon className="h-4 w-4" /></button>
                           </div>
                         </td>
                       </tr>
@@ -531,7 +583,11 @@ const TaskDashboard = ({ user }) => {
                   <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500 flex items-center gap-1"><FlagIcon className="h-3 w-3" /> Target</p><p className="text-xs font-medium">{selectedTask.target || '100'}%</p></div>
                   <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500">Progress</p><div className="flex items-center gap-1"><div className="flex-1 h-1 bg-gray-200 rounded-full"><div className="h-1 bg-green-500 rounded-full" style={{ width: `${selectedTask.progress || 0}%` }}></div></div><span className="text-[11px] font-medium">{selectedTask.progress || 0}%</span></div></div>
                 </div>
-                <div className="bg-blue-50 p-2 rounded"><p className="text-[10px] text-blue-600 flex items-center gap-1"><CheckCircleIcon className="h-3 w-3" /> Achievement</p><p className="text-xs text-gray-700">{selectedTask.achievement || 'Not Started'}</p></div>
+                <div className="bg-blue-50 p-2 rounded">
+                  <p className="text-[10px] text-blue-600 flex items-center gap-1"><CheckCircleIcon className="h-3 w-3" /> Achievement</p>
+                  <p className="text-sm font-bold text-gray-800">{selectedTask.achievement || 0}</p>
+                  <p className="text-[10px] text-blue-500 font-medium mt-0.5">Progress: {selectedTask.progress || 0}%</p>
+                </div>
                 <button onClick={() => setShowCloseConfirm(true)} className="w-full py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-red-100 hover:text-red-600 transition-all text-xs font-medium">Close</button>
               </div>
             </motion.div>
@@ -553,6 +609,88 @@ const TaskDashboard = ({ user }) => {
               <div className="flex gap-2">
                 <button onClick={() => setShowCloseConfirm(false)} className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-xs hover:bg-gray-50">Cancel</button>
                 <button onClick={() => { setShowCloseConfirm(false); setShowDetailsModal(false); }} className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs hover:bg-red-700">Yes, Close</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Forward Task Modal */}
+      <AnimatePresence>
+        {isForwardModalOpen && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4" onClick={() => setIsForwardModalOpen(false)}>
+            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-white rounded-2xl shadow-2xl w-[500px] max-w-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-6 text-white">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-xl font-bold flex items-center gap-2">
+                       <PaperAirplaneIcon className="h-6 w-6" /> Forward Task
+                    </h3>
+                    <p className="text-emerald-100 text-sm mt-1">Select a subordinate to delegate this task</p>
+                  </div>
+                  <button onClick={() => setIsForwardModalOpen(false)} className="bg-white/20 hover:bg-white/30 p-2 rounded-full transition-colors">
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Task to Forward</p>
+                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 flex items-center gap-3">
+                    <div className="bg-emerald-100 p-2 rounded-lg">
+                      <DocumentTextIcon className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">{selectedTaskForForward?.title}</p>
+                      <p className="text-xs text-gray-500 line-clamp-1">{selectedTaskForForward?.description}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Select Recipient (Subordinates)</p>
+                <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                  {forwardLoading ? (
+                    <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                      <ArrowPathIcon className="h-8 w-8 animate-spin mb-2" />
+                      <p className="text-sm">Fetching subordinates...</p>
+                    </div>
+                  ) : subordinates.length > 0 ? (
+                    subordinates.map((sub) => (
+                      <div key={sub.userID} 
+                        onClick={() => handleConfirmForward(sub.userID)}
+                        className="group flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-500 font-bold group-hover:from-emerald-100 group-hover:to-emerald-200 group-hover:text-emerald-600">
+                            {sub.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-800 group-hover:text-emerald-700">{sub.name}</p>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500 font-medium group-hover:bg-emerald-100 group-hover:text-emerald-600">{sub.role}</span>
+                              <span className="text-[10px] text-gray-400">{sub.taluka || sub.district}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <PaperAirplaneIcon className="h-5 w-5 text-emerald-500" />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                      <UsersIcon className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">No subordinates found for forwarding</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 p-4 border-t border-gray-100 flex justify-end">
+                <button onClick={() => setIsForwardModalOpen(false)} 
+                  className="px-6 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors">
+                  Cancel
+                </button>
               </div>
             </motion.div>
           </div>

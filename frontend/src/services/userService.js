@@ -44,3 +44,9 @@ export const getUsersByRole = async (role, requesterId) => {
   });
   return response.data;
 };
+export const getSubordinates = async (requesterId) => {
+  const response = await axiosInstance.get("/users/subordinates", {
+    params: { requesterId }
+  });
+  return response.data;
+};
