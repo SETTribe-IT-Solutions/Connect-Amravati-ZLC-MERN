@@ -81,6 +81,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.tribe.set.dto.TalukaDTO;
 import com.tribe.set.dto.VillageDTO;
+import com.tribe.set.entity.Role;
 import com.tribe.set.service.TalukaVillageService;
 
 @RestController
@@ -92,12 +93,20 @@ public class TalukaVillageController {
     private TalukaVillageService service;
 
     @GetMapping("/talukas")
-    public List<TalukaDTO> getTalukas() {
+    public List<TalukaDTO> getTalukas(@RequestParam(required = false) Role role) {
+        if (role != null) {
+            return service.getTalukasByRole(role);
+        }
         return service.getAllTalukas();
     }
 
     @GetMapping("/villages/{taluka}")
-    public List<VillageDTO> getVillages(@PathVariable String taluka) {
+    public List<VillageDTO> getVillages(
+            @PathVariable String taluka,
+            @RequestParam(required = false) Role role) {
+        if (role != null) {
+            return service.getVillagesByRoleAndTaluka(role, taluka);
+        }
         return service.getVillagesByTaluka(taluka);
     }
 }

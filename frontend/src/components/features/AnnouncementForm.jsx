@@ -53,28 +53,36 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
   const availableTargetRoles = Object.keys(roleLevels).filter(role => roleLevels[role] > currentUserLevel);
 
   useEffect(() => {
-    // Fetch Talukas
-    axios.get("http://localhost:8080/api/talukas")
+    // Fetch Talukas (Filtered by targetRole if selected)
+    const url = formData.targetRole 
+      ? `http://localhost:8080/api/talukas?role=${formData.targetRole}`
+      : "http://localhost:8080/api/talukas";
+
+    axios.get(url)
       .then(res => {
         const talukaNames = res.data.map(t => t.taluka);
         setTalukas(talukaNames);
       })
       .catch(err => console.error("Error fetching talukas:", err));
-  }, []);
+  }, [formData.targetRole]);
 
   useEffect(() => {
     if (!formData.targetTaluka) {
       setVillages([]);
       return;
     }
-    // Fetch Villages for selected Taluka
-    axios.get(`http://localhost:8080/api/villages/${formData.targetTaluka}`)
+    // Fetch Villages for selected Taluka (Filtered by targetRole if selected)
+    const url = formData.targetRole
+      ? `http://localhost:8080/api/villages/${formData.targetTaluka}?role=${formData.targetRole}`
+      : `http://localhost:8080/api/villages/${formData.targetTaluka}`;
+
+    axios.get(url)
       .then(res => {
         const villageNames = res.data.map(v => v.village);
         setVillages(villageNames);
       })
       .catch(err => console.error("Error fetching villages:", err));
-  }, [formData.targetTaluka]);
+  }, [formData.targetTaluka, formData.targetRole]);
   
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -183,7 +191,12 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
                 </label>
                 <select
                   value={formData.targetRole}
-                  onChange={(e) => setFormData({ ...formData, targetRole: e.target.value })}
+                  onChange={(e) => setFormData({ 
+                    ...formData, 
+                    targetRole: e.target.value,
+                    targetTaluka: '',
+                    targetVillage: ''
+                  })}
                   className="w-full px-5 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 bg-gray-50 transition-all appearance-none"
                 >
                   <option value="">Broadcast to All Roles</option>
