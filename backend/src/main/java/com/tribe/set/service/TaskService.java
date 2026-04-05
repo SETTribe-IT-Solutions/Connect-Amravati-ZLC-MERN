@@ -107,6 +107,10 @@ public class TaskService {
             }
         }
 
+        // Reset appreciation status for assignee as they have a new task
+        assignee.setIsAppreciated(false);
+        userRepository.save(assignee);
+
         Task saved = taskRepository.save(task);
 
         // Auto-notify assignee
@@ -148,6 +152,11 @@ public class TaskService {
         User oldAssignee = task.getAssignedTo();
         task.setAssignedTo(newAssignee);
         task.setStatus(TaskStatus.PENDING);
+
+        // Reset appreciation status for new assignee
+        newAssignee.setIsAppreciated(false);
+        userRepository.save(newAssignee);
+
         Task saved = taskRepository.save(task);
 
         // Notify old assignee
@@ -205,6 +214,11 @@ public class TaskService {
 
         User oldAssignee = task.getAssignedTo();
         task.setAssignedTo(newAssignee);
+
+        // Reset appreciation status for new assignee
+        newAssignee.setIsAppreciated(false);
+        userRepository.save(newAssignee);
+
         Task saved = taskRepository.save(task);
 
         // Add a remark that it was forwarded

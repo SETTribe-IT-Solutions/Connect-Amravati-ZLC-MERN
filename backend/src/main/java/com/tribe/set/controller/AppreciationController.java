@@ -46,4 +46,9 @@ public class AppreciationController {
     public ResponseEntity<List<AppreciationResponse>> getSentAppreciations(@PathVariable(name = "userId") Long userId) {
         return ResponseEntity.ok(appreciationService.getSentAppreciations(userId));
     }
+
+    @GetMapping("/eligible-users")
+    public ResponseEntity<List<com.tribe.set.entity.User>> getEligibleUsers() {
+        return ResponseEntity.ok(appreciationService.getEligibleUsers());
+    }
 }

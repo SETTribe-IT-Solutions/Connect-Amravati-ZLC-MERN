@@ -63,4 +63,9 @@ public class UserManagementController {
             @RequestParam(name = "requesterId") Long requesterId) {
         return ResponseEntity.ok(userService.getUsersByRole(role, requesterId));
     }
+
+    @GetMapping("/subordinates")
+    public ResponseEntity<List<UserResponse>> getSubordinates(@RequestParam(name = "requesterId") Long requesterId) {
+        return ResponseEntity.ok(userService.getSubordinates(requesterId));
+    }
 }
