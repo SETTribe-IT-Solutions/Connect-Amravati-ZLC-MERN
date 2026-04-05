@@ -21,18 +21,28 @@ public class NotificationServices {
     private UserRepository userRepository;
 
     // Called by OTHER services internally — not directly by controller
-    public void send(User user, String message, NotificationType type) {
+    public void send(User user, String title, String message, NotificationType type, Long taskId) {
         Notification notification = new Notification();
         notification.setUser(user);
+        notification.setTitle(title);
         notification.setMessage(message);
         notification.setType(type);
         notification.setIsRead(false);
+        notification.setTaskId(taskId);
         notificationRepository.save(notification);
     }
 
     public List<Notification> getMyNotifications(Long userId) {
         User user = findUser(userId);
         return notificationRepository.findByUserOrderByCreatedAtDesc(user);
+    }
+
+    /**
+     * Requirement: Get ONLY UNREAD notifications to show in dropdown
+     */
+    public List<Notification> getUnreadNotifications(Long userId) {
+        User user = findUser(userId);
+        return notificationRepository.findByUserAndIsReadOrderByCreatedAtDesc(user, false);
     }
 
     public long getUnreadCount(Long userId) {
@@ -56,6 +66,11 @@ public class NotificationServices {
     public void markAllAsRead(Long userId) {
         User user = findUser(userId);
         notificationRepository.markAllAsReadForUser(user);
+    }
+
+    public void createNotification(Long userId, String title, String message, NotificationType type, Long taskId) {
+        User user = findUser(userId);
+        send(user, title, message, type, taskId);
     }
 
     // ─── Helper method ───

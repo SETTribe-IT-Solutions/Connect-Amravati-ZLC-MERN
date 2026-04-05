@@ -17,7 +17,12 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findByAssignedToOrderByCreatedAtDesc(User assignedTo);
 
-    List<Task> findByAssignedToOrCreatedByOrderByCreatedAtDesc(User assignedTo, User createdBy);
+    @Query("SELECT t FROM Task t " +
+           "JOIN FETCH t.assignedTo " +
+           "JOIN FETCH t.createdBy " +
+           "WHERE t.assignedTo = :assignedTo OR t.createdBy = :createdBy " +
+           "ORDER BY t.createdAt DESC")
+    List<Task> findByAssignedToOrCreatedByOrderByCreatedAtDesc(@Param("assignedTo") User assignedTo, @Param("createdBy") User createdBy);
 
     List<Task> findByStatusOrderByCreatedAtDesc(TaskStatus status);
 

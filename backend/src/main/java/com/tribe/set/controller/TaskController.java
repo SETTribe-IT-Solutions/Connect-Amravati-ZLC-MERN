@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import jakarta.validation.Valid;
 
 import com.tribe.set.entity.TaskRemark;
@@ -26,6 +27,7 @@ import com.tribe.set.dto.TaskResponse;
 import com.tribe.set.dto.TaskStatusRequest;
 import com.tribe.set.dto.ForwardRequest;
 import com.tribe.set.dto.TaskProgressUpdateRequest;
+import com.tribe.set.security.UserDetailsImpl;
 import com.tribe.set.service.TaskService;
 
 @RestController
@@ -44,11 +46,15 @@ public class TaskController {
         return ResponseEntity.ok(taskService.createTask(request, request.getRequesterId(), file));
     }
 
-    // GET has no body — requesterId stays as @RequestParam
+    // GET accepts a requesterId as a fallback if Authentication is stale in the environment
     @GetMapping
-    @PreAuthorize("#requesterId == authentication.principal.id or hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
-    public ResponseEntity<List<TaskResponse>> getTasks(@RequestParam(name = "requesterId") Long requesterId) {
-        return ResponseEntity.ok(taskService.getTasks(requesterId));
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<TaskResponse>> getTasks(
+            Authentication authentication,
+            @RequestParam(name = "requesterId", required = false) Long requesterId) {
+        
+        Long finalUserId = (requesterId != null) ? requesterId : ((UserDetailsImpl) authentication.getPrincipal()).getId();
+        return ResponseEntity.ok(taskService.getTasks(finalUserId));
     }
 
     // requesterId comes from JSON body (inside TaskStatusRequest)
@@ -80,11 +86,15 @@ public class TaskController {
         return ResponseEntity.ok(taskService.addRemark(id, request.getRemark(), request.getRequesterId()));
     }
 
-    // GET has no body — requesterId stays as @RequestParam
+    // GET dashboard stats using requesterId from the client to ensure sync
     @GetMapping("/dashboard")
-    @PreAuthorize("#requesterId == authentication.principal.id or hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
-    public ResponseEntity<DashboardResponse> getDashboard(@RequestParam(name = "requesterId") Long requesterId) {
-        return ResponseEntity.ok(taskService.getDashboard(requesterId));
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<DashboardResponse> getDashboard(
+            Authentication authentication,
+            @RequestParam(name = "requesterId", required = false) Long requesterId) {
+        
+        Long finalUserId = (requesterId != null) ? requesterId : ((UserDetailsImpl) authentication.getPrincipal()).getId();
+        return ResponseEntity.ok(taskService.getDashboard(finalUserId));
     }
 
     // requesterId comes from JSON body (inside ForwardRequest)

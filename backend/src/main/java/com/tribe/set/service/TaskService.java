@@ -22,6 +22,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
 public class TaskService {
 
@@ -110,9 +112,11 @@ public class TaskService {
         // Auto-notify assignee
         notificationService.send(
                 assignee,
+                "New Task Assigned",
                 "New task assigned to you by " + creator.getName() +
                         " (" + creator.getRole() + "): " + task.getTitle(),
-                NotificationType.TASK_ASSIGNED);
+                NotificationType.TASK_ASSIGNED,
+                saved.getId());
 
         return TaskResponse.from(saved);
     }
@@ -149,15 +153,19 @@ public class TaskService {
         // Notify old assignee
         notificationService.send(
                 oldAssignee,
+                "Task Reassigned",
                 "Task reassigned away from you: " + task.getTitle(),
-                NotificationType.TASK_REASSIGNED);
+                NotificationType.TASK_REASSIGNED,
+                saved.getId());
 
         // Notify new assignee
         notificationService.send(
                 newAssignee,
+                "New Task Assigned",
                 "Task reassigned to you by " + requester.getName() +
                         ": " + task.getTitle(),
-                NotificationType.TASK_ASSIGNED);
+                NotificationType.TASK_ASSIGNED,
+                saved.getId());
 
         return TaskResponse.from(saved);
     }
@@ -211,15 +219,19 @@ public class TaskService {
         if (!oldAssignee.getUserID().equals(requesterId)) {
             notificationService.send(
                     oldAssignee,
+                    "Task Forwarded",
                     "Your task was forwarded to someone else: " + task.getTitle(),
-                    NotificationType.TASK_REASSIGNED);
+                    NotificationType.TASK_REASSIGNED,
+                    saved.getId());
         }
 
         // Notify new assignee
         notificationService.send(
                 newAssignee,
+                "Task Forwarded",
                 requester.getRole() + " " + requester.getName() + " forwarded a task to you: " + task.getTitle(),
-                NotificationType.TASK_ASSIGNED);
+                NotificationType.TASK_ASSIGNED,
+                saved.getId());
 
         return TaskResponse.from(saved);
     }
@@ -228,18 +240,17 @@ public class TaskService {
     // GET TASKS
     // ═══════════════════════════════════════════════════
 
+    @Transactional(readOnly = true)
     public List<TaskResponse> getTasks(Long requesterId) {
         User requester = findUser(requesterId);
 
         List<Task> tasks;
 
-        if (requester.getRole().canAllocateTask() ||
-                requester.getRole() == Role.SYSTEM_ADMINISTRATOR) {
-            // Senior officers and admin see ALL tasks
+        if (requester.getRole() == Role.SYSTEM_ADMINISTRATOR) {
+            // Only system administrator sees all tasks
             tasks = taskRepository.findAll();
         } else {
-            // Field officers see tasks assigned to them OR created by them (forwarded
-            // tasks)
+            // Everyone else sees only tasks assigned to them or forwarded/created by them
             tasks = taskRepository.findByAssignedToOrCreatedByOrderByCreatedAtDesc(requester, requester);
         }
 
@@ -297,9 +308,11 @@ public class TaskService {
                 oldStatus != TaskStatus.COMPLETED) {
             notificationService.send(
                     task.getCreatedBy(),
+                    "Task Completed",
                     "Task completed by " + requester.getName() +
                             " (" + requester.getRole() + "): " + task.getTitle(),
-                    NotificationType.TASK_COMPLETED);
+                    NotificationType.TASK_COMPLETED,
+                    task.getId());
         }
 
         return TaskResponse.from(saved);
@@ -368,19 +381,23 @@ public class TaskService {
                 // Assignee updated it, notify creator
                 notificationService.send(
                         task.getCreatedBy(),
+                        "Task Progress Updated",
                         "Progress update by " + requester.getName() + " on task '" + task.getTitle() +
                                 "': " + achievedWork + "/" + (target != null ? target : "NA") +
                                 " (" + task.getProgress() + "%)",
-                        NotificationType.TASK_COMPLETED 
+                        NotificationType.TASK_COMPLETED,
+                        task.getId()
                 );
             } else if (isCreatedBy && !isAssignedTo) {
                 // Creator updated it, notify assignee
                 notificationService.send(
                         task.getAssignedTo(),
+                        "Task Progress Modified",
                         "Progress update modified by Assigner on task '" + task.getTitle() +
                                 "': " + achievedWork + "/" + (target != null ? target : "NA") +
                                 " (" + task.getProgress() + "%)",
-                        NotificationType.TASK_COMPLETED 
+                        NotificationType.TASK_COMPLETED,
+                        task.getId()
                 );
             }
             
@@ -433,8 +450,7 @@ public class TaskService {
 
         long total, pending, inProgress, completed, overdue;
 
-        if (requester.getRole().canAllocateTask() ||
-                requester.getRole() == Role.SYSTEM_ADMINISTRATOR) {
+        if (requester.getRole() == Role.SYSTEM_ADMINISTRATOR) {
 
             // Admin sees stats of ALL tasks
             total = taskRepository.count();
@@ -445,7 +461,7 @@ public class TaskService {
 
         } else {
 
-            // Field officer sees stats for tasks assigned to them OR created by them
+            // Everyone else sees stats only for their own associated tasks
             total = taskRepository.countAssociatedTasks(requester);
             pending = taskRepository.countAssociatedTasksByStatus(requester, TaskStatus.PENDING);
             inProgress = taskRepository.countAssociatedTasksByStatus(requester, TaskStatus.IN_PROGRESS);
@@ -469,14 +485,18 @@ public class TaskService {
 
             notificationService.send(
                     task.getAssignedTo(),
+                    "Task Overdue",
                     "OVERDUE: Task '" + task.getTitle() + "' has passed its due date!",
-                    NotificationType.TASK_OVERDUE);
+                    NotificationType.OVERDUE,
+                    task.getId());
 
             notificationService.send(
                     task.getCreatedBy(),
+                    "Task Overdue Alert",
                     "Task is overdue: '" + task.getTitle() +
                             "' assigned to " + task.getAssignedTo().getName(),
-                    NotificationType.TASK_OVERDUE);
+                    NotificationType.OVERDUE,
+                    task.getId());
         }
     }
 
@@ -492,9 +512,11 @@ public class TaskService {
         for (Task task : dueSoon) {
             notificationService.send(
                     task.getAssignedTo(),
+                    "Upcoming Task Due Date",
                     "Reminder: Task '" + task.getTitle() +
                             "' is due on " + task.getDueDate(),
-                    NotificationType.TASK_DUE_SOON);
+                    NotificationType.REMINDER,
+                    task.getId());
         }
     }
 
