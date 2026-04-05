@@ -876,7 +876,7 @@ const TaskDashboard = ({ user }) => {
               className="bg-white rounded-2xl shadow-xl overflow-hidden"
             >
               <div className="p-6">
-                <div className="flex gap-4 mb-6">
+                <div className="flex flex-col lg:flex-row gap-4 mb-6">
                   <div className="relative flex-1">
                     <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input
@@ -887,53 +887,55 @@ const TaskDashboard = ({ user }) => {
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-                  <select
-                    className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                  >
-                    <option value="all">All Status</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="PENDING">Pending</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="OVERDUE">Overdue</option>
-                  </select>
-                  <div className="flex gap-2">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      animate={filterAnimation ? { scale: [1, 1.05, 1] } : {}}
-                      onClick={handleApplyFilters}
-                      className="flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all"
+                  <div className="flex flex-wrap sm:flex-nowrap gap-3 items-center">
+                    <select
+                      className="flex-1 sm:flex-initial px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white"
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value)}
                     >
-                      <FunnelIcon className="h-5 w-5 mr-2" />
-                      Apply Filters
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleResetFilters}
-                      className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all"
-                    >
-                      Reset
-                    </motion.button>
+                      <option value="all">All Status</option>
+                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="COMPLETED">Completed</option>
+                      <option value="OVERDUE">Overdue</option>
+                    </select>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        animate={filterAnimation ? { scale: [1, 1.05, 1] } : {}}
+                        onClick={handleApplyFilters}
+                        className="flex-1 sm:flex-initial flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all"
+                      >
+                        <FunnelIcon className="h-5 w-5 mr-2" />
+                        Apply Filter
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleResetFilters}
+                        className="flex-1 sm:flex-initial px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium"
+                      >
+                        Reset
+                      </motion.button>
+                    </div>
                   </div>
                 </div>
 
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50 border-b-2 border-gray-200">
+                    <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">TASK</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">PRIORITY</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">STATUS</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ASSIGNED TO</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">DUE DATE</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">TARGET</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ACHIEVEMENT</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ATTACHMENTS</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">REMARK</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ACTIONS</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">TASK</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">PRIORITY</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">STATUS</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">ASSIGNED TO</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">DUE DATE</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">TARGET</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">ACHIEVEMENT</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">FILES</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">REMARK</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">ACTIONS</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -981,16 +983,17 @@ const TaskDashboard = ({ user }) => {
                               <span className="text-gray-400">-</span>
                             )}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 whitespace-nowrap">
                             <button
                               onClick={() => {
                                 const remarkInput = prompt('Enter remark:', '');
                                 if (remarkInput) handleAddRemark(task.id, remarkInput);
                               }}
-                              className="text-green-600 hover:text-green-800"
+                              className="text-green-600 hover:text-green-800 p-1.5 bg-green-50 rounded-lg shadow-sm font-bold text-xs flex items-center gap-1"
                               title="Add Remark"
                             >
-                              <ChatBubbleLeftRightIcon className="h-5 w-5" />
+                              <ChatBubbleLeftRightIcon className="h-4 w-4" />
+                              Remark
                             </button>
                           </td>
                           <td className="px-4 py-3">
@@ -1105,15 +1108,15 @@ const TaskDashboard = ({ user }) => {
                   </div>
                 ) : (
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Task</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Department</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Priority</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Due Date</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Owner</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">Task</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">Department</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">Priority</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">Due Date</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">Owner</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">Status</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
