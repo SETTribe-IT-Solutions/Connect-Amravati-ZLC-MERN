@@ -194,7 +194,7 @@ const CommunicationsDashboard = ({ user }) => {
       </div>
 
       {/* Tabs and Filters */}
-      <div className="mb-8 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+      <div className="mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         {/* Tabs */}
         <div className="flex bg-white/50 backdrop-blur-sm p-1.5 rounded-2xl border border-gray-200 w-fit self-start">
           <button
@@ -229,7 +229,7 @@ const CommunicationsDashboard = ({ user }) => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 bg-white/80 backdrop-blur-sm p-4 rounded-3xl border border-blue-100 shadow-sm transition-all hover:shadow-md">
+        <div className="flex flex-wrap items-center gap-3 bg-white/80 backdrop-blur-sm p-3 md:p-4 rounded-2xl md:rounded-3xl border border-blue-100 shadow-sm transition-all hover:shadow-md w-full lg:w-auto">
           <div className="flex items-center gap-2 text-blue-600 font-bold text-sm px-2">
             <FunnelIcon className="h-5 w-5" />
             Filter By:
@@ -257,7 +257,7 @@ const CommunicationsDashboard = ({ user }) => {
             name="year"
             value={filters.year}
             onChange={handleFilterChange}
-            className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all cursor-pointer"
+            className="flex-1 md:flex-initial px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all cursor-pointer min-w-[120px]"
           >
             <option value="">All Years</option>
             {years.map(y => <option key={y} value={y}>{y}</option>)}
