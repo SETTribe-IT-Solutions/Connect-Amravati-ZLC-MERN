@@ -26,6 +26,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByUserID(Long userID);
     
+    @Query("SELECT DISTINCT u.taluka FROM User u WHERE u.role = :role AND u.active = true AND u.taluka IS NOT NULL")
+    List<String> findDistinctTalukasByRole(@Param("role") Role role);
+
+    @Query("SELECT DISTINCT u.village FROM User u WHERE u.role = :role AND u.taluka = :taluka AND u.active = true AND u.village IS NOT NULL")
+    List<String> findDistinctVillagesByRoleAndTaluka(@Param("role") Role role, @Param("taluka") String taluka);
+
     @Modifying
     @Query("UPDATE User u SET u.active = :active WHERE u.userID = :userId")
     int updateActiveStatus(Long userId, Boolean active);

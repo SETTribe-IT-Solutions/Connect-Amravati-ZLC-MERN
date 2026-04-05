@@ -8,13 +8,18 @@ import org.springframework.stereotype.Service;
 
 import com.tribe.set.dto.TalukaDTO;
 import com.tribe.set.dto.VillageDTO;
+import com.tribe.set.entity.Role;
 import com.tribe.set.repository.TalukaVillageRepository;
+import com.tribe.set.repository.UserRepository;
 
 @Service
 public class TalukaVillageService {
 
     @Autowired
     private TalukaVillageRepository repository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     public List<TalukaDTO> getAllTalukas() {
         return repository.findDistinctTalukas()
@@ -29,4 +34,18 @@ public class TalukaVillageService {
                 .map(VillageDTO::new)
                 .collect(Collectors.toList());
     }
-}
+
+    public List<TalukaDTO> getTalukasByRole(Role role) {
+        return userRepository.findDistinctTalukasByRole(role)
+                .stream()
+                .map(TalukaDTO::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<VillageDTO> getVillagesByRoleAndTaluka(Role role, String taluka) {
+        return userRepository.findDistinctVillagesByRoleAndTaluka(role, taluka)
+                .stream()
+                .map(VillageDTO::new)
+                .collect(Collectors.toList());
+    }
+}
