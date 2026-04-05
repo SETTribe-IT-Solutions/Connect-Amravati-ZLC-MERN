@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getAllUsers, addUser, updateUser, deleteUser, toggleUserStatus } from '../../services/userService';
-import { toast } from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from "axios";
 
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlusIcon,
   MagnifyingGlassIcon,
@@ -19,7 +18,9 @@ import {
   CheckBadgeIcon,
   TrophyIcon,
   FlagIcon,
-  ClockIcon
+  ClockIcon,
+  EyeIcon,
+  CheckCircleIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 
@@ -28,15 +29,33 @@ const UserManagementComponent = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
-  const [viewMode, setViewMode] = useState('grid'); // grid or list
+  const [viewMode, setViewMode] = useState('list');
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [showTooltip, setShowTooltip] = useState({ visible: false, message: '', x: 0, y: 0 });
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [talukas, setTalukas] = useState([]);
-const [villages, setVillages] = useState([]);
+  const [villages, setVillages] = useState([]);
+
+  const showToast = (title, value) => {
+    setToast({ title, value });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const showIconTooltip = (message, event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setShowTooltip({
+      visible: true,
+      message: message,
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10
+    });
+    setTimeout(() => setShowTooltip({ visible: false, message: '', x: 0, y: 0 }), 1500);
+  };
 
   const fetchUsers = async () => {
     try {
@@ -45,7 +64,6 @@ const [villages, setVillages] = useState([]);
       const requesterId = (savedId && !isNaN(savedId)) ? Number(savedId) : null;
       const data = await getAllUsers(requesterId);
       
-      // Role mapping from backend to human-friendly
       const revRoleMap = {
         'COLLECTOR': 'Collector',
         'ADDITIONAL_DEPUTY_COLLECTOR': 'Additional Collector',
@@ -57,7 +75,6 @@ const [villages, setVillages] = useState([]);
         'SYSTEM_ADMINISTRATOR': 'System Administrator'
       };
 
-      // Map backend User to frontend User
       const mapped = (data || []).map(u => ({
         id: u.userID,
         name: u.name || 'Unknown',
@@ -79,8 +96,6 @@ const [villages, setVillages] = useState([]);
       setUsers(mapped);
     } catch (error) {
        console.error("Fetch Users Error:", error);
-       const errorMessage = error.response?.data?.message || error.message || "Failed to load user list";
-       toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -90,8 +105,6 @@ const [villages, setVillages] = useState([]);
     fetchUsers();
   }, []);
 
-
-  // Role options
   const roles = [
     'Collector',
     'Additional Collector',
@@ -103,62 +116,31 @@ const [villages, setVillages] = useState([]);
     'System Administrator'
   ];
 
-  // Updated Statistics with Dashboard-like styling
+  // Stats without arrows and without Avg Rating
   const stats = [
-    { 
-      label: 'Total Users', 
-      value: users.length, 
-      icon: UserCircleIcon, 
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600',
-      change: ''
-    },
-    { 
-      label: 'Active Users', 
-      value: users.filter(u => u.status === 'Active').length, 
-      icon: ShieldCheckIcon, 
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-600',
-      change: ''
-    },
-    { 
-      label: 'New This Month', 
-      value: users.filter(u => {
+    { label: 'Total Users', value: users.length, icon: UserCircleIcon, bgColor: 'bg-blue-50', textColor: 'text-blue-600' },
+    { label: 'Active Users', value: users.filter(u => u.status === 'Active').length, icon: ShieldCheckIcon, bgColor: 'bg-green-50', textColor: 'text-green-600' },
+    { label: 'New This Month', value: users.filter(u => {
         const jDate = new Date(u.joinDate);
         const now = new Date();
         return jDate.getMonth() === now.getMonth() && jDate.getFullYear() === now.getFullYear();
-      }).length, 
-      icon: TrophyIcon, 
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-600',
-      change: ''
-    },
-    { 
-      label: 'Avg. Rating', 
-      value: users.length > 0 ? (users.reduce((acc, u) => acc + u.rating, 0) / users.length).toFixed(1) : '0', 
-      icon: StarIcon, 
-      bgColor: 'bg-yellow-50',
-      textColor: 'text-yellow-600',
-      change: ''
-    },
+      }).length, icon: TrophyIcon, bgColor: 'bg-purple-50', textColor: 'text-purple-600' }
   ];
 
-  // Helper functions
   const getRoleColor = (role) => {
     const colors = {
-      'Collector': 'bg-gradient-to-r from-purple-500 to-purple-600 text-white border-purple-200',
-      'Additional Collector': 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white border-indigo-200',
-      'SDO': 'bg-gradient-to-r from-blue-500 to-blue-600 text-white border-blue-200',
-      'Tehsildar': 'bg-gradient-to-r from-green-500 to-green-600 text-white border-green-200',
-      'BDO': 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-yellow-200',
-      'Talathi': 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-200',
-      'Gram Sevak': 'bg-gradient-to-r from-teal-500 to-teal-600 text-white border-teal-200',
-      'System Administrator': 'bg-gradient-to-r from-gray-500 to-gray-600 text-white border-gray-200'
+      'Collector': 'bg-gradient-to-r from-purple-500 to-purple-600 text-white',
+      'Additional Collector': 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white',
+      'SDO': 'bg-gradient-to-r from-blue-500 to-blue-600 text-white',
+      'Tehsildar': 'bg-gradient-to-r from-green-500 to-green-600 text-white',
+      'BDO': 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white',
+      'Talathi': 'bg-gradient-to-r from-orange-500 to-orange-600 text-white',
+      'Gram Sevak': 'bg-gradient-to-r from-teal-500 to-teal-600 text-white',
+      'System Administrator': 'bg-gradient-to-r from-gray-500 to-gray-600 text-white'
     };
-    return colors[role] || 'bg-gradient-to-r from-gray-500 to-gray-600 text-white border-gray-200';
+    return colors[role] || 'bg-gradient-to-r from-gray-500 to-gray-600 text-white';
   };
 
-  // Filter users
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -167,7 +149,6 @@ const [villages, setVillages] = useState([]);
     return matchesSearch && matchesRole;
   });
 
-  // Handle delete
   const handleDelete = async (userId) => {
     try {
       const requesterId = localStorage.getItem('userID');
@@ -175,53 +156,56 @@ const [villages, setVillages] = useState([]);
       setUsers(users.filter(user => user.id !== userId));
       setShowDeletePopup(false);
       setUserToDelete(null);
+      showToast('User Deleted', 'Successfully removed');
     } catch (error) {
       console.error("Delete user error:", error);
-      alert("Failed to delete user. Make sure you have administrator privileges.");
+      showToast('Delete Failed', 'Unable to delete user');
     }
+  };
+
+  const handleStatClick = (stat) => {
+    showToast(stat.label, stat.value);
   };
 
   return (
     <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-      {/* Header with Dashboard-like styling */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
+      {/* Toast Popup */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }}
+            className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600 text-white rounded-lg shadow-lg">
+            <div className="flex items-center gap-3 p-3 px-5">
+              <CheckCircleIcon className="h-5 w-5 text-white/80" />
+              <div><p className="text-sm font-medium">{toast.title}</p><p className="text-lg font-bold">{toast.value}</p></div>
+              <button onClick={() => setToast(null)} className="text-white/70 hover:text-white"><XMarkIcon className="h-4 w-4" /></button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Tooltip */}
+      <AnimatePresence>
+        {showTooltip.visible && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed z-50 bg-gray-900 text-white text-xs py-1 px-2 rounded-md whitespace-nowrap pointer-events-none"
+            style={{ left: showTooltip.x, top: showTooltip.y, transform: 'translateX(-50%)' }}
+          >
+            {showTooltip.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Header */}
+      <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              User Management
-            </h1>
-            <p className="text-gray-600 mt-2 flex items-center gap-2">
-              <span className="w-1 h-1 bg-blue-600 rounded-full"></span>
-              Manage users, roles, and permissions across all departments
-            </p>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">User Management</h1>
+            <p className="text-gray-600 mt-1">Manage users, roles, and permissions across all departments</p>
           </div>
           <div className="flex gap-3">
-            <div className="flex bg-white rounded-xl border border-gray-200 p-1">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`px-3 py-2 rounded-lg transition-colors ${
-                  viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-2 rounded-lg transition-colors ${
-                  viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -236,42 +220,35 @@ const [villages, setVillages] = useState([]);
             </motion.button>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Stats Cards - Updated to match Dashboard style */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+      {/* Stats Cards - 3 cards only */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {stats.map((stat, index) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            whileHover={{ y: -5, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
-            className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 p-6 border border-gray-100"
+            whileHover={{ y: -5 }}
+            onClick={() => handleStatClick(stat)}
+            className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all p-4 border border-gray-100 cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                <p className={`text-xs mt-2 flex items-center gap-1 ${stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                  <span>{stat.change.startsWith('+') ? '↑' : '↓'}</span> {stat.change} from last month
-                </p>
+                <p className="text-xs text-gray-500">{stat.label}</p>
+                <p className="text-2xl font-bold text-gray-800 mt-1">{stat.value}</p>
               </div>
-              <div className={`${stat.bgColor} p-4 rounded-2xl`}>
-                <stat.icon className={`h-8 w-8 ${stat.textColor}`} />
+              <div className={`${stat.bgColor} p-2 rounded-lg`}>
+                <stat.icon className={`h-5 w-5 ${stat.textColor}`} />
               </div>
             </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Search and Filter - Updated to match Task Management style */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="bg-white rounded-2xl shadow-sm p-4 mb-6 border border-gray-100"
-      >
+      {/* Search and Filter */}
+      <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-100">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -280,7 +257,7 @@ const [villages, setVillages] = useState([]);
               placeholder="Search users by name, email, or role..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div className="flex gap-2">
@@ -299,230 +276,96 @@ const [villages, setVillages] = useState([]);
             </button>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Users Grid View - Updated to match Task Management card style */}
+      {/* List View Only */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center p-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex flex-col items-center justify-center p-20 bg-white rounded-xl border border-gray-100">
            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
            <p className="text-gray-500 font-medium">Loading user data...</p>
         </div>
       ) : filteredUsers.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-sm p-12 text-center border border-gray-100">
+        <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
            <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <UserCircleIcon className="h-10 w-10 text-blue-300" />
            </div>
            <h3 className="text-xl font-bold text-gray-900 mb-2">No Users Found</h3>
-           <p className="text-gray-500 max-w-sm mx-auto">
-              {searchTerm || roleFilter !== 'all' 
-                ? "We couldn't find any users matching your filters. Try clearing your search or using a different filter."
-                : "The user database appears to be empty. Use the 'Add User' button to create your first user account."
-              }
-           </p>
-        </div>
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredUsers.map((user, index) => (
-            <motion.div
-              key={user.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -5 }}
-              className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group"
-            >
-              {/* Header with gradient - Updated to blue/indigo theme */}
-              <div className="h-20 bg-gradient-to-r from-blue-500 to-indigo-600 relative">
-                <div className="absolute -bottom-10 left-6">
-                  <div className="h-20 w-20 rounded-2xl bg-white shadow-lg flex items-center justify-center border-4 border-white">
-                    <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                      {user.avatar}
-                    </span>
-                  </div>
-                </div>
-                <div className="absolute top-4 right-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                    user.status === 'Active' 
-                      ? 'bg-green-100 text-green-800 border-green-200' 
-                      : 'bg-gray-100 text-gray-800 border-gray-200'
-                  }`}>
-                    {user.status}
-                  </span>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="pt-12 p-6">
-                <div className="mb-4">
-                  <h3 className="text-xl font-bold text-gray-900">{user.name}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-                      {user.role}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <StarIcon className="h-4 w-4 text-yellow-400" />
-                      <span className="text-sm text-gray-600">{user.rating}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Stats Row - Similar to Task Management */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  <div className="bg-blue-50 rounded-lg p-2 text-center">
-                    <p className="text-xs text-blue-600">Tasks</p>
-                    <p className="text-sm font-semibold text-blue-700">{user.tasksCompleted}</p>
-                  </div>
-                  <div className="bg-green-50 rounded-lg p-2 text-center">
-                    <p className="text-xs text-green-600">Achievements</p>
-                    <p className="text-sm font-semibold text-green-700">{user.achievements}</p>
-                  </div>
-                  <div className="bg-yellow-50 rounded-lg p-2 text-center">
-                    <p className="text-xs text-yellow-600">Pending</p>
-                    <p className="text-sm font-semibold text-yellow-700">{user.pendingTasks}</p>
-                  </div>
-                </div>
-
-                {/* Contact Info */}
-                <div className="space-y-3 mb-4">
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <EnvelopeIcon className="h-4 w-4 text-gray-400" />
-                    <span className="truncate">{user.email}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <PhoneIcon className="h-4 w-4 text-gray-400" />
-                    <span>{user.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <MapPinIcon className="h-4 w-4 text-gray-400" />
-                    <span>{user.jurisdiction}</span>
-                  </div>
-                </div>
-
-                {/* Join Date */}
-                <div className="mb-4 text-xs text-gray-500">
-                  Joined: {user.joinDate}
-                </div>
-
-                {/* Actions - Updated to match Task Management */}
-                <div className="flex gap-2 pt-2 border-t border-gray-100">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setIsModalOpen(true);
-                    }}
-                    className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
-                  >
-                    <PencilIcon className="h-4 w-4" />
-                    Edit
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setUserToDelete(user);
-                      setShowDeletePopup(true);
-                    }}
-                    className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
-                  >
-                    <TrashIcon className="h-4 w-4" />
-                    Delete
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+           <p className="text-gray-500 max-w-sm mx-auto">No users match your search criteria.</p>
         </div>
       ) : (
-        // List View - Updated to match Task Management list style
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px]">
-              <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">User</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Role</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Contact</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Jurisdiction</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Stats</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Status</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Actions</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">User</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Role</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Contact</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Jurisdiction</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Stats</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Status</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50 transition-colors group">
-                    <td className="py-4 px-6">
+                    <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm">
                           {user.avatar}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{user.name}</p>
-                          <div className="flex items-center gap-1">
-                            <StarIcon className="h-3 w-3 text-yellow-400" />
-                            <span className="text-xs text-gray-500">{user.rating}</span>
-                          </div>
+                          <p className="font-medium text-gray-800 text-sm">{user.name}</p>
                         </div>
                       </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
+                     </td>
+                    <td className="py-3 px-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
                         {user.role}
                       </span>
-                    </td>
-                    <td className="py-4 px-6">
+                     </td>
+                    <td className="py-3 px-4">
                       <p className="text-sm text-gray-600">{user.email}</p>
                       <p className="text-xs text-gray-500">{user.phone}</p>
-                    </td>
-                    <td className="py-4 px-6 text-sm text-gray-600">{user.jurisdiction}</td>
-                    <td className="py-4 px-6">
+                     </td>
+                    <td className="py-3 px-4 text-sm text-gray-600">{user.jurisdiction}</td>
+                    <td className="py-3 px-4">
                       <div className="flex gap-2">
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                          {user.tasksCompleted} tasks
-                        </span>
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                          {user.achievements} achv
-                        </span>
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{user.tasksCompleted} tasks</span>
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">{user.achievements} achv</span>
                       </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                        user.status === 'Active' 
-                          ? 'bg-green-100 text-green-800 border-green-200' 
-                          : 'bg-gray-100 text-gray-800 border-gray-200'
+                     </td>
+                    <td className="py-3 px-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
                       }`}>
                         {user.status}
                       </span>
-                    </td>
-                    <td className="py-4 px-6">
+                     </td>
+                    <td className="py-3 px-4">
                       <div className="flex gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setIsModalOpen(true);
-                          }}
+                        <button
+                          onClick={(e) => { showIconTooltip('View Details', e); setSelectedUser(user); setIsModalOpen(true); }}
                           className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
                         >
-                          <PencilIcon className="h-4 w-4 text-gray-500 hover:text-blue-600" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => {
-                            setUserToDelete(user);
-                            setShowDeletePopup(true);
-                          }}
+                          <EyeIcon className="h-4 w-4 text-gray-500 hover:text-blue-600" />
+                        </button>
+                        <button
+                          onClick={(e) => { showIconTooltip('Edit User', e); setSelectedUser(user); setIsModalOpen(true); }}
+                          className="p-1.5 hover:bg-green-50 rounded-lg transition-colors"
+                        >
+                          <PencilIcon className="h-4 w-4 text-gray-500 hover:text-green-600" />
+                        </button>
+                        <button
+                          onClick={(e) => { showIconTooltip('Delete User', e); setUserToDelete(user); setShowDeletePopup(true); }}
                           className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
                         >
                           <TrashIcon className="h-4 w-4 text-gray-500 hover:text-red-600" />
-                        </motion.button>
+                        </button>
                       </div>
-                    </td>
-                  </tr>
+                     </td>
+                   </tr>
                 ))}
               </tbody>
             </table>
@@ -530,19 +373,20 @@ const [villages, setVillages] = useState([]);
         </div>
       )}
 
-      {/* Add/Edit User Modal */}
+      {/* User Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <UserModal 
             user={selectedUser} 
             roles={roles}
+            talukas={talukas}
+            villages={villages}
             onClose={() => {
               setIsModalOpen(false);
               setSelectedUser(null);
             }}
             onSave={async (userData) => {
               try {
-                // Map roles to backend enum format
                 const roleMap = {
                   'Collector': 'COLLECTOR',
                   'Additional Collector': 'ADDITIONAL_DEPUTY_COLLECTOR',
@@ -562,36 +406,17 @@ const [villages, setVillages] = useState([]);
                 };
                 delete payload.status;
 
-                // Remove empty password for existing users to keep original password
-                if (selectedUser && !payload.password) {
-                  delete payload.password;
-                }
-                if (selectedUser) {
-                  await updateUser(selectedUser.id, payload);
-                } else {
-                  await addUser(payload);
-                }
+                if (selectedUser && !payload.password) delete payload.password;
+                
+                if (selectedUser) await updateUser(selectedUser.id, payload);
+                else await addUser(payload);
                 
                 fetchUsers();
                 setIsModalOpen(false);
                 setSelectedUser(null);
+                showToast(selectedUser ? 'User Updated' : 'User Created', 'Successfully');
               } catch (error) {
-                console.error("Save User Error:", error);
-                let errorMessage = "Failed to save user. Please check if User ID is unique and fields are valid.";
-                
-                // Try to extract specific backend validation error
-                if (error.response && error.response.data) {
-                  const data = error.response.data;
-                  if (typeof data === 'string') {
-                    errorMessage = data;
-                  } else if (data.message) {
-                    errorMessage = data.message;
-                  } else if (data.errors && Array.isArray(data.errors)) {
-                    errorMessage = data.errors.map(err => err.defaultMessage || err).join(', ');
-                  }
-                }
-                
-                alert(errorMessage);
+                showToast('Operation Failed', 'Please try again');
               }
             }}
           />
@@ -615,8 +440,8 @@ const [villages, setVillages] = useState([]);
   );
 };
 
-// User Modal Component (Updated with better styling)
-const UserModal = ({ user, roles, onClose, onSave }) => {
+// User Modal Component
+const UserModal = ({ user, roles, talukas, villages, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     userID: user?.id || '',
     name: user?.name || '',
@@ -630,68 +455,7 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
     password: ''
   });
 
-  const [phoneError, setPhoneError] = React.useState('');
-  
-  //dropdown  taluka and village value from backend in db
-  //changed by Aditya Patil on 03-04-2026
-
- const [talukas, setTalukas] = useState([]);
-  const [villages, setVillages] = useState([]);
-
-
-useEffect(() => {
-  const token = localStorage.getItem("token");
-
-  axios.get("http://localhost:8080/api/talukas", {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
-    .then(res => {
-      console.log("Talukas:", res.data);
-
-      // ✅ FIX: object → string
-      const talukaNames = res.data.map(t => t.taluka);
-
-      setTalukas(talukaNames);
-    })
-    .catch(err => console.log(err));
-
-}, []);
-
-useEffect(() => {
-  if (!formData.taluka) return;
-
-  const token = localStorage.getItem("token");
-
-  axios.get(`http://localhost:8080/api/villages/${formData.taluka}`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
-    .then(res => {
-      console.log("Villages:", res.data);
-
-      // ✅ FIX: object → string
-      const villageNames = res.data.map(v => v.village);
-
-      setVillages(villageNames);
-    })
-    .catch(err => console.log(err));
-
-}, [formData.taluka]);
-
- const handleTalukaChange = (e) => {
-    const selectedTaluka = e.target.value;
-
-    setFormData({
-      ...formData,
-      taluka: selectedTaluka,
-      village: "" // reset village
-    });
-  };
-//till here
-
+  const [phoneError, setPhoneError] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -711,232 +475,122 @@ useEffect(() => {
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
       onClick={onClose}
     >
-        <motion.div
-          initial={{ scale: 0.9, y: 20 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.9, y: 20 }}
-          className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-        {/* Header with gradient */}
-        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between z-10">
-          <h2 className="text-xl sm:text-2xl font-bold text-white">
-            {user ? 'Edit User' : 'Add New User'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 sm:p-2 hover:bg-white/20 rounded-lg transition-colors text-white"
-          >
-            <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+      <motion.div
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+        className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-white">{user ? 'Edit User' : 'Add New User'}</h2>
+          <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg transition-colors text-white">
+            <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Form */}
-        <div className="p-4 sm:p-6">
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-            {/* User ID and Name */}
+        <div className="p-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  User ID (ID for Login) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  required
-                  disabled={user}
-                  value={formData.userID}
+                <label className="block text-sm font-medium text-gray-700 mb-1">User ID <span className="text-red-500">*</span></label>
+                <input type="number" required disabled={user} value={formData.userID}
                   onChange={(e) => setFormData({...formData, userID: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
-                  placeholder="Enter unique User ID"
-                />
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 text-sm" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
+                <input type="text" required value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter full name"
-                />
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
               </div>
             </div>
 
-            {/* Email and Phone */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
+                <input type="email" required value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="email@amravati.gov.in"
-                />
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.phone}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
+                <input type="text" required value={formData.phone}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, '').slice(0, 10);
                     setFormData({...formData, phone: value});
                     if (value.length === 10) setPhoneError('');
                   }}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    phoneError ? 'border-red-500 bg-red-50' : 'border-gray-200'
-                  }`}
-                  placeholder="9876543210"
-                  maxLength={10}
-                />
-                {phoneError && (
-                  <p className="mt-1 text-xs text-red-500 font-medium">
-                    {phoneError}
-                  </p>
-                )}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm ${phoneError ? 'border-red-500 bg-red-50' : 'border-gray-200'}`} />
+                {phoneError && <p className="mt-1 text-xs text-red-500">{phoneError}</p>}
               </div>
             </div>
 
-            {/* Role and Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Role <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={formData.role}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Role <span className="text-red-500">*</span></label>
+                <select required value={formData.role}
                   onChange={(e) => setFormData({...formData, role: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  {roles.map(role => (
-                    <option key={role} value={role}>{role}</option>
-                  ))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm">
+                  {roles.map(role => <option key={role} value={role}>{role}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <select
-                  value={formData.status}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select value={formData.status}
                   onChange={(e) => setFormData({...formData, status: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm">
+                  <option value="Active">Active</option><option value="Inactive">Inactive</option>
                 </select>
               </div>
             </div>
 
-            {/* District and Taluka/Village Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  District <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.district}
+                <label className="block text-sm font-medium text-gray-700 mb-1">District <span className="text-red-500">*</span></label>
+                <input type="text" required value={formData.district}
                   onChange={(e) => setFormData({...formData, district: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., Amravati"
-                />
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Taluka
-                  </label>
-                
-
-<select
-  value={formData.taluka}
-  onChange={handleTalukaChange}
-  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
->
-  <option value=""> Select Taluka </option>
-  {talukas.map((t, index) => (
-    <option key={index} value={t}>
-      {t}
-    </option>
-  ))}
-</select>
-
-                  
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Taluka</label>
+                  <select value={formData.taluka}
+                    onChange={(e) => setFormData({...formData, taluka: e.target.value, village: ''})}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                    <option value="">Select Taluka</option>
+                    {talukas.map((t, idx) => <option key={idx} value={t}>{t}</option>)}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Village
-                  </label>
-                  
-                 
-<select
-  value={formData.village}
-  onChange={(e) => setFormData({...formData, village: e.target.value})}
-  disabled={!formData.taluka}
-  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
->
-  <option value=""> Select Village </option>
-  {villages.map((v, index) => (
-    <option key={index} value={v}>
-      {v}
-    </option>
-  ))}
-</select>
-
-
-
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Village</label>
+                  <select value={formData.village}
+                    onChange={(e) => setFormData({...formData, village: e.target.value})}
+                    disabled={!formData.taluka}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                    <option value="">Select Village</option>
+                    {villages.map((v, idx) => <option key={idx} value={v}>{v}</option>)}
+                  </select>
                 </div>
               </div>
             </div>
 
-            {/* Password for user */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 {user ? 'New Password (leave blank to keep current)' : 'Password'} <span className="text-red-500">*</span>
               </label>
-              <input
-                type="password"
-                required={!user}
-                value={formData.password}
+              <input type="password" required={!user} value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder={user ? "Enter new password if changing" : "Enter temporary password"}
-              />
-              <p className="text-[10px] text-gray-500 mt-1">Min 8 chars, 1 Uppercase, 1 Number, 1 Special Char</p>
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3 pt-4">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
-              >
+            <div className="flex gap-3 pt-2">
+              <button type="submit" className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-md hover:shadow-lg font-medium text-sm">
                 {user ? 'Update User' : 'Create User'}
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="button"
-                onClick={onClose}
-                className="px-6 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors font-medium"
-              >
+              </button>
+              <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 font-medium text-sm">
                 Cancel
-              </motion.button>
+              </button>
             </div>
           </form>
         </div>
@@ -959,36 +613,18 @@ const DeletePopup = ({ user, onConfirm, onCancel }) => {
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
-        className="bg-white rounded-2xl shadow-2xl max-w-md w-full"
+        className="bg-white rounded-xl shadow-2xl max-w-md w-full"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6">
-          <div className="flex items-center justify-center mb-4">
-            <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
-              <TrashIcon className="h-8 w-8 text-red-600" />
-            </div>
+        <div className="p-5 text-center">
+          <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3">
+            <TrashIcon className="h-7 w-7 text-red-600" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 text-center mb-2">Delete User</h3>
-          <p className="text-gray-600 text-center mb-6">
-            Are you sure you want to delete "{user?.name}"? This action cannot be undone.
-          </p>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Delete User</h3>
+          <p className="text-sm text-gray-600 mb-5">Are you sure you want to delete "{user?.name}"? This action cannot be undone.</p>
           <div className="flex gap-3">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={onCancel}
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors font-medium"
-            >
-              Cancel
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onConfirm(user.id)}
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
-            >
-              Delete
-            </motion.button>
+            <button onClick={onCancel} className="flex-1 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 font-medium text-sm">Cancel</button>
+            <button onClick={() => onConfirm(user.id)} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm">Delete</button>
           </div>
         </div>
       </motion.div>

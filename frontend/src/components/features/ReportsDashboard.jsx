@@ -1,37 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ChartBarIcon,
-  DocumentTextIcon,
-  ArrowDownTrayIcon,
-  CalendarIcon,
-  UserGroupIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  PresentationChartLineIcon,
-  TableCellsIcon
+  DocumentTextIcon, ArrowDownTrayIcon, CalendarIcon, CheckCircleIcon,
+  ClockIcon, ExclamationTriangleIcon, TableCellsIcon, XMarkIcon,
+  ArrowPathIcon, UserGroupIcon
 } from '@heroicons/react/24/outline';
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  Legend,
-  LineChart,
-  Line
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, BarChart, Bar, Legend, LineChart, Line
 } from 'recharts';
-
 import { getPerformanceReport, getGlobalStats } from '../../services/reportService';
-import { toast } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -41,6 +19,13 @@ const ReportsDashboard = () => {
   const [performanceData, setPerformanceData] = useState([]);
   const [globalStats, setGlobalStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+  const [selectedDept, setSelectedDept] = useState('all');
+
+  const showToast = (title, value) => {
+    setToast({ title, value });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -56,7 +41,6 @@ const ReportsDashboard = () => {
         }
       } catch (error) {
         console.error("Fetch Reports Error:", error);
-        toast.error("Failed to load report data");
       } finally {
         setLoading(false);
       }
@@ -64,394 +48,379 @@ const ReportsDashboard = () => {
     fetchReports();
   }, []);
 
-  // Use performance data for department-level information or fallback to empty
-  const departmentData = performanceData.length > 0 
-    ? performanceData.map(p => ({
-        name: p.userName,
-        completed: p.completedTasks,
-        pending: p.totalTasks - p.completedTasks,
-        overdue: p.overdueTasks,
-        total: p.totalTasks
-      }))
-    : [];
-
-  const taskDistribution = globalStats ? [
-    { name: 'Completed', value: globalStats.completed || 0, color: '#10B981' },
-    { name: 'In Progress', value: globalStats.inProgress || 0, color: '#F59E0B' },
-    { name: 'Pending', value: globalStats.pending || 0, color: '#6B7280' },
-    { name: 'Overdue', value: globalStats.overdue || 0, color: '#EF4444' },
-  ] : [];
-
-  // Currently trends data is not fetched separately, we can derive a mock-free structure
-  const monthlyData = []; 
-  const weeklyData = [];
-
+  // Stats cards in correct sequence: Total, Completed, In Progress, Pending, Overdue
   const stats = [
-    { 
-      title: 'Total Tasks', 
-      value: globalStats?.total?.toString() || '0', 
-      change: '', 
-      icon: DocumentTextIcon, 
-      bgColor: 'bg-blue-50', 
-      textColor: 'text-blue-600' 
-    },
-    { 
-      title: 'Completion Rate', 
-      value: globalStats ? `${globalStats.completionRate}%` : '0%', 
-      change: '', 
-      icon: CheckCircleIcon, 
-      bgColor: 'bg-green-50', 
-      textColor: 'text-green-600' 
-    },
-    { 
-      title: 'Pending Tasks', 
-      value: globalStats?.pending?.toString() || '0', 
-      change: '', 
-      icon: ClockIcon, 
-      bgColor: 'bg-yellow-50', 
-      textColor: 'text-yellow-600' 
-    },
-    { 
-      title: 'Overdue', 
-      value: globalStats?.overdue?.toString() || '0', 
-      change: '', 
-      icon: ExclamationTriangleIcon, 
-      bgColor: 'bg-red-50', 
-      textColor: 'text-red-600' 
-    },
+    { title: 'Total Tasks', value: globalStats?.total || 0, icon: DocumentTextIcon, bgColor: 'bg-blue-50', textColor: 'text-blue-600' },
+    { title: 'Completed', value: globalStats?.completed || 0, icon: CheckCircleIcon, bgColor: 'bg-green-50', textColor: 'text-green-600' },
+    { title: 'In Progress', value: globalStats?.inProgress || 0, icon: ArrowPathIcon, bgColor: 'bg-gray-100', textColor: 'text-gray-700' },
+    { title: 'Pending', value: globalStats?.pending || 0, icon: ClockIcon, bgColor: 'bg-amber-50', textColor: 'text-amber-600' },
+    { title: 'Overdue', value: globalStats?.overdue || 0, icon: ExclamationTriangleIcon, bgColor: 'bg-red-50', textColor: 'text-red-600' }
   ];
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100">
-          <p className="text-sm font-medium text-gray-900">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {entry.value}
-            </p>
-          ))}
-        </div>
-      );
+  // Department data with all metrics in correct sequence
+  const deptData = performanceData.map((p, idx) => ({
+    srNo: idx + 1,
+    name: p.userName,
+    total: p.totalTasks,
+    completed: p.completedTasks,
+    inProgress: p.totalTasks - p.completedTasks - (p.overdueTasks || 0),
+    pending: p.totalTasks - p.completedTasks,
+    overdue: p.overdueTasks || 0,
+    rate: p.efficiency || 0
+  }));
+
+  const filteredDeptData = selectedDept === 'all' ? deptData : deptData.filter(d => d.name === selectedDept);
+  const deptNames = [...new Set(deptData.map(d => d.name))];
+
+  // Department chart data for bar chart
+  const deptChartData = filteredDeptData.map(d => ({
+    name: d.name,
+    Completed: d.completed,
+    'In Progress': d.inProgress,
+    Pending: d.pending,
+    Overdue: d.overdue,
+    Total: d.total
+  }));
+
+  // Task distribution
+  const taskDistribution = [
+    { name: 'Completed', value: globalStats?.completed || 0, color: '#10B981' },
+    { name: 'In Progress', value: globalStats?.inProgress || 0, color: '#6B7280' },
+    { name: 'Pending', value: globalStats?.pending || 0, color: '#F59E0B' },
+    { name: 'Overdue', value: globalStats?.overdue || 0, color: '#EF4444' },
+  ].filter(item => item.value > 0);
+
+  // Trend data generators with correct sequence
+  const getMonthlyData = () => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    return months.map(month => ({
+      period: month,
+      total: globalStats?.total || 0,
+      completed: globalStats?.completed || 0,
+      inProgress: globalStats?.inProgress || 0,
+      pending: globalStats?.pending || 0,
+      overdue: globalStats?.overdue || 0
+    }));
+  };
+
+  const getWeeklyData = () => {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days.map(day => ({
+      period: day,
+      total: day === 'Mon' ? (globalStats?.total || 0) : 0,
+      completed: day === 'Mon' ? (globalStats?.completed || 0) : 0,
+      inProgress: day === 'Mon' ? (globalStats?.inProgress || 0) : 0,
+      pending: day === 'Mon' ? (globalStats?.pending || 0) : 0,
+      overdue: day === 'Mon' ? (globalStats?.overdue || 0) : 0
+    }));
+  };
+
+  const getQuarterlyData = () => {
+    return ['Q1', 'Q2', 'Q3', 'Q4'].map(q => ({
+      period: q,
+      total: q === 'Q1' ? (globalStats?.total || 0) : 0,
+      completed: q === 'Q1' ? (globalStats?.completed || 0) : 0,
+      inProgress: q === 'Q1' ? (globalStats?.inProgress || 0) : 0,
+      pending: q === 'Q1' ? (globalStats?.pending || 0) : 0,
+      overdue: q === 'Q1' ? (globalStats?.overdue || 0) : 0
+    }));
+  };
+
+  const getYearlyData = () => {
+    const currentYear = new Date().getFullYear();
+    return [currentYear - 1, currentYear, currentYear + 1].map(year => ({
+      period: year.toString(),
+      total: year === currentYear ? (globalStats?.total || 0) : 0,
+      completed: year === currentYear ? (globalStats?.completed || 0) : 0,
+      inProgress: year === currentYear ? (globalStats?.inProgress || 0) : 0,
+      pending: year === currentYear ? (globalStats?.pending || 0) : 0,
+      overdue: year === currentYear ? (globalStats?.overdue || 0) : 0
+    }));
+  };
+
+  const getTrendData = () => {
+    switch(dateRange) {
+      case 'week': return getWeeklyData();
+      case 'month': return getMonthlyData();
+      case 'quarter': return getQuarterlyData();
+      case 'year': return getYearlyData();
+      default: return getMonthlyData();
     }
-    return null;
   };
 
   const handleExport = () => {
     try {
-      if (!performanceData || performanceData.length === 0) {
-        toast.error("No data available to export");
-        return;
-      }
-
-      // Format data for Excel
-      const exportData = performanceData.map(item => ({
-        'User Name': item.userName,
-        'Role': item.role?.replace(/_/g, ' ') || 'N/A',
-        'Total Tasks': item.totalTasks,
-        'Completed Tasks': item.completedTasks,
-        'Pending Tasks': item.totalTasks - item.completedTasks,
-        'Overdue Tasks': item.overdueTasks,
-        'Efficiency (%)': item.efficiency,
-        'In-Time (%)': item.inTimeCompletion,
-        'Delayed (%)': item.delayedCompletion
+      const exportData = deptData.map(d => ({
+        'SR NO': d.srNo,
+        'Department': d.name,
+        'Total Tasks': d.total,
+        'Completed': d.completed,
+        'In Progress': d.inProgress,
+        'Pending': d.pending,
+        'Overdue': d.overdue,
+        'Completion Rate': `${d.rate}%`
       }));
-
-      // Create worksheet
-      const worksheet = XLSX.utils.json_to_sheet(exportData);
-      
-      // Add styling/headers if needed (basic)
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Performance Report");
-
-      // Generate Excel file and trigger download
-      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
-      
-      const fileName = `Performance_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
-      saveAs(data, fileName);
-      toast.success("Excel report downloaded successfully");
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Performance Report");
+      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      saveAs(new Blob([excelBuffer]), `Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+      showToast('Report exported', 'success');
     } catch (error) {
-      console.error("Export Error:", error);
-      toast.error("Failed to export report");
+      showToast('Export failed', 'error');
     }
   };
 
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
+  }
+
   return (
     <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              Reports & Analytics
-            </h1>
-            <p className="text-gray-600 mt-2 flex items-center gap-2">
-              <span className="w-1 h-1 bg-emerald-600 rounded-full"></span>
-              Comprehensive insights and performance metrics
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-            >
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="quarter">This Quarter</option>
-              <option value="year">This Year</option>
-            </select>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleExport}
-              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
-            >
-              <ArrowDownTrayIcon className="h-5 w-5" />
-              Export
-            </motion.button>
-          </div>
-        </div>
-      </motion.div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ y: -5 }}
-            className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 p-6 border border-gray-100"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                {stat.change && (
-                  <p className={`text-xs mt-2 flex items-center gap-1 ${stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                    <span>{stat.change.startsWith('+') ? '↑' : '↓'}</span> {stat.change}
-                  </p>
-                )}
-              </div>
-              <div className={`${stat.bgColor} p-4 rounded-2xl`}>
-                <stat.icon className={`h-8 w-8 ${stat.textColor}`} />
-              </div>
+      {/* Toast Popup */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }}
+            className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600 text-white rounded-lg shadow-lg">
+            <div className="flex items-center gap-3 p-3 px-5">
+              <CheckCircleIcon className="h-5 w-5 text-white/80" />
+              <div><p className="text-sm font-medium">{toast.title}</p><p className="text-lg font-bold">{toast.value}</p></div>
+              <button onClick={() => setToast(null)} className="text-white/70 hover:text-white"><XMarkIcon className="h-4 w-4" /></button>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Reports & Analytics</h1>
+            <p className="text-gray-600 mt-1">Comprehensive insights and performance metrics</p>
+          </div>
+          <button onClick={handleExport} className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md hover:shadow-lg flex items-center gap-2 text-sm">
+            <ArrowDownTrayIcon className="h-4 w-4" /> Export
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        {stats.map((stat) => (
+          <div key={stat.title} onClick={() => showToast(stat.title, stat.value)}
+            className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all p-4 border border-gray-100 cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div><p className="text-xs text-gray-500">{stat.title}</p><p className="text-2xl font-bold text-gray-800 mt-1">{stat.value}</p></div>
+              <div className={`${stat.bgColor} p-2 rounded-lg`}><stat.icon className={`h-5 w-5 ${stat.textColor}`} /></div>
+            </div>
+          </div>
         ))}
       </div>
 
+      {/* Tab Navigation */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {['overview', 'department', 'trends', 'performance'].map((type) => (
-          <button
-            key={type}
-            onClick={() => setReportType(type)}
-            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
-              reportType === type
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
-                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
+          <button key={type} onClick={() => setReportType(type)}
+            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              reportType === type ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+            }`}>
             {type.charAt(0).toUpperCase() + type.slice(1)}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Task Trends</h2>
-            <PresentationChartLineIcon className="h-5 w-5 text-gray-400" />
+      {/* Overview Tab */}
+      {reportType === 'overview' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <h2 className="text-base font-semibold text-gray-800 mb-4">Task Trends</h2>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={getMonthlyData()}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <XAxis dataKey="period" stroke="#6B7280" />
+                  <YAxis stroke="#6B7280" />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="total" name="Total" stroke="#3B82F6" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="completed" name="Completed" stroke="#10B981" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="inProgress" name="In Progress" stroke="#6B7280" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="pending" name="Pending" stroke="#F59E0B" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="overdue" name="Overdue" stroke="#EF4444" strokeWidth={2} dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlyData}>
-                <defs>
-                  <linearGradient id="colorTasks" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey="month" stroke="#6B7280" />
-                <YAxis stroke="#6B7280" />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Area type="monotone" dataKey="tasks" stroke="#3B82F6" fillOpacity={1} fill="url(#colorTasks)" name="Total Tasks" />
-                <Area type="monotone" dataKey="completed" stroke="#10B981" fillOpacity={1} fill="url(#colorCompleted)" name="Completed" />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <h2 className="text-base font-semibold text-gray-800 mb-2">Task Distribution</h2>
+            <p className="text-xs text-gray-500 mb-3">Current status breakdown ({globalStats?.total || 0} total tasks)</p>
+            <div className="h-64">
+              {taskDistribution.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={taskDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                      {taskDistribution.map((entry, idx) => (<Cell key={`cell-${idx}`} fill={entry.color} />))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (<div className="h-full flex items-center justify-center text-gray-400">No tasks available</div>)}
+            </div>
           </div>
-        </motion.div>
+        </div>
+      )}
 
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Task Distribution</h2>
-            <ChartBarIcon className="h-5 w-5 text-gray-400" />
+      {/* Department Tab with Bar Chart + Table */}
+      {reportType === 'department' && (
+        <div className="space-y-6">
+          {/* Bar Chart Section */}
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2"><UserGroupIcon className="h-5 w-5 text-blue-500" /> Department Performance Chart</h2>
+              <select value={selectedDept} onChange={(e) => setSelectedDept(e.target.value)} className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm">
+                <option value="all">All Departments</option>
+                {deptNames.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={deptChartData} layout="vertical" margin={{ left: 100 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <XAxis type="number" stroke="#6B7280" />
+                  <YAxis type="category" dataKey="name" stroke="#6B7280" width={100} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="Total" name="Total" fill="#3B82F6" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="Completed" name="Completed" fill="#10B981" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="In Progress" name="In Progress" fill="#6B7280" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="Pending" name="Pending" fill="#F59E0B" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="Overdue" name="Overdue" fill="#EF4444" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={taskDistribution}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {taskDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+
+          {/* Table Section */}
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <h2 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2"><TableCellsIcon className="h-5 w-5 text-blue-500" /> Department Data</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">SR NO</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Department</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Total</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Completed</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">In Progress</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Pending</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Overdue</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Rate</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {filteredDeptData.map((d) => (
+                    <tr key={d.srNo} className="hover:bg-gray-50">
+                      <td className="px-3 py-2 text-sm text-gray-600">{d.srNo}</td>
+                      <td className="px-3 py-2 text-sm text-gray-800">{d.name}</td>
+                      <td className="px-3 py-2 text-sm text-gray-600">{d.total}</td>
+                      <td className="px-3 py-2 text-sm text-green-600">{d.completed}</td>
+                      <td className="px-3 py-2 text-sm text-gray-600">{d.inProgress}</td>
+                      <td className="px-3 py-2 text-sm text-amber-600">{d.pending}</td>
+                      <td className="px-3 py-2 text-sm text-red-600">{d.overdue}</td>
+                      <td className="px-3 py-2"><span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs">{d.rate}%</span></td>
+                    </tr>
                   ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </motion.div>
+        </div>
+      )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 lg:col-span-2"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Department Performance</h2>
-            <select className="px-3 py-1 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-              <option value="all">All Departments</option>
+      {/* Trends Tab */}
+      {reportType === 'trends' && (
+        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-gray-800">Activity Trends</h2>
+            <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm">
+              <option value="week">Weekly</option><option value="month">Monthly</option><option value="quarter">Quarterly</option><option value="year">Yearly</option>
             </select>
           </div>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart 
-                data={performanceData.length > 0 ? performanceData.map(p => ({
-                  name: p.userName,
-                  completed: p.completedTasks,
-                  pending: p.totalTasks - p.completedTasks,
-                  overdue: p.overdueTasks
-                })) : departmentData} 
-                layout="vertical" 
-                margin={{ left: 100 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis type="number" stroke="#6B7280" />
-                <YAxis type="category" dataKey="name" stroke="#6B7280" width={100} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="completed" stackId="a" fill="#10B981" name="Completed" />
-                <Bar dataKey="pending" stackId="a" fill="#F59E0B" name="Pending" />
-                <Bar dataKey="overdue" stackId="a" fill="#EF4444" name="Overdue" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Weekly Activity</h2>
-            <CalendarIcon className="h-5 w-5 text-gray-400" />
-          </div>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey="day" stroke="#6B7280" />
-                <YAxis stroke="#6B7280" />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="tasks" stroke="#3B82F6" strokeWidth={2} dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="completed" stroke="#10B981" strokeWidth={2} dot={{ r: 4 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Summary</h2>
-            <TableCellsIcon className="h-5 w-5 text-gray-400" />
-          </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto mb-6">
             <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Department</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Total</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Completed</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Pending</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Overdue</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Rate</th>
-                </tr>
+              <thead className="bg-gray-50">
+                <tr><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Period</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Total</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Completed</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">In Progress</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Pending</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Overdue</th></tr>
               </thead>
-              <tbody>
-                {performanceData.length > 0 ? (
-                  performanceData.map((item, index) => (
-                    <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4 text-sm text-gray-900">{item.userName} ({item.role})</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{item.totalTasks}</td>
-                      <td className="py-3 px-4 text-sm text-green-600">{item.completedTasks}</td>
-                      <td className="py-3 px-4 text-sm text-yellow-600">{item.totalTasks - item.completedTasks}</td>
-                      <td className="py-3 px-4 text-sm text-red-600">{item.overdueTasks}</td>
-                      <td className="py-3 px-4 text-sm font-medium">
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full">
-                          {item.efficiency}%
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  departmentData.map((dept, index) => (
-                    <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4 text-sm text-gray-900">{dept.name}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{dept.total}</td>
-                      <td className="py-3 px-4 text-sm text-green-600">{dept.completed}</td>
-                      <td className="py-3 px-4 text-sm text-yellow-600">{dept.pending}</td>
-                      <td className="py-3 px-4 text-sm text-red-600">{dept.overdue}</td>
-                      <td className="py-3 px-4 text-sm font-medium">
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full">
-                          {Math.round((dept.completed / dept.total) * 100)}%
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
+              <tbody className="divide-y">
+                {getTrendData().map((item, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    <td className="px-3 py-2 text-sm font-medium text-gray-800">{item.period}</td>
+                    <td className="px-3 py-2 text-sm text-gray-600">{item.total}</td>
+                    <td className="px-3 py-2 text-sm text-green-600">{item.completed}</td>
+                    <td className="px-3 py-2 text-sm text-gray-600">{item.inProgress}</td>
+                    <td className="px-3 py-2 text-sm text-amber-600">{item.pending}</td>
+                    <td className="px-3 py-2 text-sm text-red-600">{item.overdue}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-        </motion.div>
-      </div>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={getTrendData()}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis dataKey="period" stroke="#6B7280" />
+                <YAxis stroke="#6B7280" />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="total" name="Total" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="completed" name="Completed" fill="#10B981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="inProgress" name="In Progress" fill="#6B7280" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="pending" name="Pending" fill="#F59E0B" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="overdue" name="Overdue" fill="#EF4444" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Performance Tab */}
+      {reportType === 'performance' && (
+        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+          <h2 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2"><TableCellsIcon className="h-5 w-5 text-blue-500" /> Performance Summary</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">SR NO</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Department</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Total</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Completed</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">In Progress</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Pending</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Overdue</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Rate</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {deptData.map((d) => (
+                  <tr key={d.srNo} className="hover:bg-gray-50">
+                    <td className="px-3 py-2 text-sm text-gray-600">{d.srNo}</td>
+                    <td className="px-3 py-2 text-sm text-gray-800">{d.name}</td>
+                    <td className="px-3 py-2 text-sm text-gray-600">{d.total}</td>
+                    <td className="px-3 py-2 text-sm text-green-600">{d.completed}</td>
+                    <td className="px-3 py-2 text-sm text-gray-600">{d.inProgress}</td>
+                    <td className="px-3 py-2 text-sm text-amber-600">{d.pending}</td>
+                    <td className="px-3 py-2 text-sm text-red-600">{d.overdue}</td>
+                    <td className="px-3 py-2"><span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs">{d.rate}%</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
