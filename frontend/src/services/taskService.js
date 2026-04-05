@@ -1,27 +1,30 @@
 import axiosInstance from "../config/axiosConfig";
 
-export const getDashboardStats = async (requesterId) => {
-  const response = await axiosInstance.get("/tasks/dashboard", {
-    params: { requesterId }
-  });
+export const getDashboardStats = async () => {
+  const requesterId = localStorage.getItem('userID');
+  const response = await axiosInstance.get(`/tasks/dashboard?requesterId=${requesterId}`);
   return response.data; // { total, pending, inProgress, completed, overdue }
 };
 
-export const getTasks = async (requesterId) => {
-  const response = await axiosInstance.get("/tasks", {
-    params: { requesterId }
-  });
+export const getTasks = async () => {
+  const requesterId = localStorage.getItem('userID');
+  const response = await axiosInstance.get(`/tasks?requesterId=${requesterId}`);
   return response.data; // List<TaskResponse>
 };
 
 export const createTask = async (formData) => {
-  const response = await axiosInstance.post("/tasks", formData, {
-    headers: {
-      // Removing 'Content-Type': 'multipart/form-data' so the browser automatically appends the correct boundary!
-      'Content-Type': undefined
-    }
-  });
-  return response.data;
+  console.log("Sending Task Data (FormData):", Object.fromEntries(formData.entries()));
+  try {
+    const response = await axiosInstance.post("/tasks", formData, {
+      headers: {
+        'Content-Type': undefined // Browser sets it automatically with boundary
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("API Error in createTask:", error.response?.data || error.message);
+    throw error; // Rethrow to be caught by the component
+  }
 };
 
 export const updateTaskStatus = async (taskId, status, requesterId) => {

@@ -17,6 +17,7 @@ import Communications from './pages/Communications';
 import Reports from './pages/Reports';
 import UserManagement from './pages/UserManagement';
 import Appreciation from './pages/Appreciation';
+import Notifications from './pages/Notifications';
 import ChangePassword from './pages/ChangePassword';
 import { changePassword, loginUser } from './services/authService';
 
@@ -244,6 +245,11 @@ function App() {
                 <Route 
                   path="appreciation" 
                   element={<Appreciation user={user} />} 
+                />
+
+                <Route 
+                  path="notifications" 
+                  element={<Notifications user={user} />} 
                 />
 
                 {/* Change Password Page */}

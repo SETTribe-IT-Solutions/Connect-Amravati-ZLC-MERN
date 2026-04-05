@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { getTasks, createTask, updateTaskStatus, addTaskRemark, updateTaskProgressAPI, forwardTaskAPI } from '../../services/taskService';
 import { getAllUsers } from '../../services/userService';
 
 import { motion, AnimatePresence } from 'framer-motion';
+// ... rest of icons ...
 import { 
   PlusCircleIcon, 
   ArrowPathIcon, 
@@ -91,10 +93,9 @@ const TaskDashboard = ({ user }) => {
 
   const fetchTasks = async () => {
     try {
-      const userID = user?.userID || localStorage.getItem('userID');
-      if (userID) {
+      if (user?.userID || localStorage.getItem('userID')) {
         setLoading(true);
-        const data = await getTasks(userID);
+        const data = await getTasks();
         const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
         const serverURL = baseURL.replace('/api', '');
         
@@ -130,11 +131,36 @@ const TaskDashboard = ({ user }) => {
     }
   };
 
+  const [searchParams] = useSearchParams();
+  const highlightId = searchParams.get('highlightId');
+
   useEffect(() => {
     fetchTasks();
     fetchStaff();
   }, [user]);
 
+  useEffect(() => {
+    if (highlightId && tasks.length > 0) {
+      // Switch to tracking tab to see the task list
+      setActiveTab('tracking');
+      
+      // Expand the specific task
+      setExpandedTasks(prev => ({
+        ...prev,
+        [highlightId]: true
+      }));
+
+      // Scroll to the task after a short delay to ensure DOM is ready
+      setTimeout(() => {
+        const element = document.getElementById(`task-${highlightId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+          setTimeout(() => element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2'), 3000);
+        }
+      }, 500);
+    }
+  }, [highlightId, tasks.length]);
 
   // Form state for creating new task
   const [newTask, setNewTask] = useState({
@@ -213,30 +239,59 @@ const TaskDashboard = ({ user }) => {
     return diffDays > 0 ? diffDays : 0;
   };
 
+  const validateTaskForm = () => {
+    if (!newTask.title?.trim()) {
+      showInfoPopup('Task title is required', 'error');
+      return false;
+    }
+    if (!newTask.assignedTo) {
+      showInfoPopup('Please select a person to assign this task to', 'error');
+      return false;
+    }
+    if (!newTask.dueDate) {
+      showInfoPopup('Please select a due date', 'error');
+      return false;
+    }
+    if (newTask.targetType === 'target' && (!newTask.targetValue || isNaN(newTask.targetValue))) {
+      showInfoPopup('Please enter a valid numeric target value', 'error');
+      return false;
+    }
+    return true;
+  };
+
   const handleCreateTask = async (e) => {
     e.preventDefault();
+    
+    if (!validateTaskForm()) return;
+
     try {
       const userID = user?.userID || localStorage.getItem('userID');
+      if (!userID) {
+        showInfoPopup('User session not found. Please log in again.', 'error');
+        return;
+      }
+
       const taskData = {
-        title: newTask.title,
-        description: newTask.description,
+        title: newTask.title.trim(),
+        description: newTask.description?.trim() || '',
         department: newTask.department,
-        priority: newTask.priority.toUpperCase(),
-        assignedTo: parseInt(newTask.assignedTo), // Should be the userID
-        requesterId: userID,
-        dueDate: newTask.dueDate ? newTask.dueDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        target: newTask.targetType === 'target' ? parseInt(newTask.targetValue) || 0 : null,
-        location: newTask.location,
+        priority: (newTask.priority || 'Medium').toUpperCase(),
+        assignedTo: Number(newTask.assignedTo),
+        requesterId: Number(userID),
+        dueDate: newTask.dueDate.toISOString().split('T')[0],
+        target: newTask.targetType === 'target' ? Number(newTask.targetValue) : null,
+        location: newTask.location?.trim() || '',
         progress: 0
       };
-      
+
+      console.log("Creating Task with Payload:", taskData);
+
       const formData = new FormData();
       formData.append('task', new Blob([JSON.stringify(taskData)], {
         type: 'application/json'
       }));
       
-      // Append the first file if it exists
-      if (newTask.attachments && newTask.attachments.length > 0 && newTask.attachments[0].file) {
+      if (newTask.attachments?.length > 0 && newTask.attachments[0].file) {
         formData.append('file', newTask.attachments[0].file);
       }
       
@@ -262,7 +317,8 @@ const TaskDashboard = ({ user }) => {
       showInfoPopup('Task created successfully!', 'success');
     } catch (error) {
        console.error("Create Task Error:", error);
-       showInfoPopup('Failed to create task', 'error');
+       const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to create task';
+       showInfoPopup(errorMessage, 'error');
     }
   };
 
@@ -882,7 +938,7 @@ const TaskDashboard = ({ user }) => {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {filteredTasks.map((task) => (
-                        <tr key={task.id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={task.id} id={`task-${task.id}`} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-3">
                             <div>
                               <p className="font-semibold text-gray-900">{task.title}</p>
