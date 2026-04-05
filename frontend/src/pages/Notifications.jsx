@@ -216,12 +216,12 @@ const Notifications = () => {
 
         {/* Filters and Actions */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 w-full sm:w-auto">
             <FaFilter className="text-gray-500" />
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 sm:flex-initial px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
             >
               <option value="all">All Notifications</option>
               <option value="unread">Unread Only</option>
@@ -230,10 +230,10 @@ const Notifications = () => {
           </div>
 
           {selectedNotifications.length > 0 && (
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={handleSelectAll}
-                className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
               >
                 {selectedNotifications.length === filteredNotifications.filter(n => !n.isRead).length
                   ? 'Deselect All'
@@ -241,10 +241,10 @@ const Notifications = () => {
               </button>
               <button
                 onClick={handleMarkMultipleAsRead}
-                className="px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center"
+                className="px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center justify-center font-bold"
               >
                 <FaCheck className="mr-2" />
-                Mark Selected as Read ({selectedNotifications.length})
+                Mark Read ({selectedNotifications.length})
               </button>
             </div>
           )}
@@ -294,30 +294,30 @@ const Notifications = () => {
                       )}
                     </div>
                     <p className="text-gray-700 mb-3">{notification.message}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <span className="text-xs text-gray-500">
                         {formatDate(notification.createdAt)}
                       </span>
-                      <div className="flex items-center space-x-3">
+                      <div className="flex flex-wrap items-center gap-2">
                         {(notification.task || notification.taskId) && (
                           <button
                             onClick={() => {
                                 const tId = notification.taskId || (notification.task && notification.task.id);
                                 navigate(`/tasks?highlightId=${tId}`);
                             }}
-                            className="inline-flex items-center px-4 py-2 text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors font-bold shadow-sm"
+                            className="flex-1 sm:flex-initial inline-flex items-center justify-center px-3 py-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors font-bold shadow-sm"
                           >
                             <FaExternalLinkAlt className="mr-2 h-3 w-3" />
-                            View Details
+                            View
                           </button>
                         )}
                         {!notification.isRead && (
                           <button
                             onClick={() => handleMarkAsRead(notification.id)}
-                            className="inline-flex items-center px-4 py-2 text-sm bg-green-100 hover:bg-green-200 text-green-800 rounded-lg transition-colors font-bold shadow-sm"
+                            className="flex-1 sm:flex-initial inline-flex items-center justify-center px-3 py-2 text-xs bg-green-100 hover:bg-green-200 text-green-800 rounded-lg transition-colors font-bold shadow-sm whitespace-nowrap"
                           >
                             <FaCheck className="mr-2" />
-                            Mark as Read
+                            Mark Read
                           </button>
                         )}
                         {filter === 'all' && !notification.isRead && (
@@ -325,7 +325,7 @@ const Notifications = () => {
                             type="checkbox"
                             checked={selectedNotifications.includes(notification.id)}
                             onChange={() => handleSelectNotification(notification.id)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-5 w-5 sm:h-4 sm:w-4 ml-1"
                           />
                         )}
                       </div>

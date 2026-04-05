@@ -227,6 +227,13 @@
     "terms": "उपयोग की शर्तें",
     "contact": "संपर्क करें"
   },
+  "notifications": {
+    "title": "सूचनाएं",
+    "new": "नया",
+    "viewDetails": "सूचना देखें",
+    "seeAll": "सभी देखें",
+    "noNew": "कोई नई सूचना नहीं"
+  },
   "language": {
     "select": "भाषा चुनें",
     "english": "English",

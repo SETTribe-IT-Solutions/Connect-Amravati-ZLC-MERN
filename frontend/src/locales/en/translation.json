@@ -240,6 +240,13 @@
     "admin_cred": "dist_admin / password123",
     "employee_cred": "sdo_user / password123"
   },
+  "notifications": {
+    "title": "Notifications",
+    "new": "New",
+    "viewDetails": "View Notification",
+    "seeAll": "See All",
+    "noNew": "No new notifications"
+  },
   "language": {
     "select": "Select Language",
     "english": "English",

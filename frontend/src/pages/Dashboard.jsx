@@ -116,7 +116,7 @@ const Dashboard = ({ user }) => {
     <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
           Dashboard
         </h1>
         <p className="text-gray-600 mt-2 flex items-center gap-2">
@@ -138,8 +138,8 @@ const Dashboard = ({ user }) => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                <p className="text-sm font-medium text-gray-600 truncate">{stat.name}</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-900 mt-1 md:mt-2">{stat.value}</p>
                 <p className={`text-xs mt-2 flex items-center gap-1 ${
                   stat.change.includes('+') ? 'text-green-600' : 
                   stat.change.includes('-') ? 'text-red-600' : 
@@ -257,21 +257,21 @@ const Dashboard = ({ user }) => {
         <div className="space-y-4">
           {recentTasks.length > 0 ? recentTasks.map((activity) => (
             <div key={activity.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="flex items-center space-x-4">
-                <div className={`w-2 h-2 rounded-full ${
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <div className={`hidden sm:block w-2 h-2 rounded-full flex-shrink-0 ${
                   activity.priority === 'HIGH' ? 'bg-red-500' :
                   activity.priority === 'MEDIUM' ? 'bg-yellow-500' : 'bg-green-500'
                 }`} />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                  <p className="text-sm text-gray-600">
-                    Assigned to: <span className="font-medium">{activity.assignedToName}</span> | Status: <span className="font-medium">{activity.status}</span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-gray-900 md:font-medium truncate">{activity.title}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                    <span className="font-medium">{activity.assignedToName}</span> | <span className="font-medium text-blue-600">{activity.status}</span>
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-xs text-gray-500">{activity.dueDate}</span>
-                <span className={`text-xs px-2 py-1 rounded-full ${
+              <div className="flex items-center space-x-3 mt-3 sm:mt-0">
+                <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">{activity.dueDate}</span>
+                <span className={`text-[10px] sm:text-xs px-2 py-1 rounded-full font-bold ${
                   activity.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
                   activity.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
                 }`}>

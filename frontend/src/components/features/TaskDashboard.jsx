@@ -482,14 +482,14 @@ const TaskDashboard = ({ user }) => {
       <div className="container mx-auto px-6 py-8">
         {/* Header Title - Aligned Left */}
         <div className="mb-8">
-          <h2 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
             Task Management
           </h2>
-          <p className="text-gray-500 mt-1">Create, track and manage all your tasks in one place</p>
+          <p className="text-sm text-gray-500 mt-1">Create, track and manage all your tasks in one place</p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+        {/* Stats Cards - Improved responsiveness for mobile */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4 mb-8">
           {stats.map((stat) => (
             <motion.div
               key={stat.name}
@@ -507,14 +507,14 @@ const TaskDashboard = ({ user }) => {
                   {stat.change}
                 </span>
               </div>
-              <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
-              <p className="text-xs text-gray-500 mt-1">{stat.name}</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-800">{stat.value}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1 truncate">{stat.name}</p>
             </motion.div>
           ))}
         </div>
 
-        {/* Tab Navigation - Aligned Left */}
-        <div className="bg-white rounded-2xl shadow-md p-1.5 mb-8 inline-flex flex-wrap gap-1">
+        {/* Tab Navigation - Scrollable on mobile */}
+        <div className="bg-white rounded-2xl shadow-md p-1.5 mb-8 inline-flex flex-nowrap overflow-x-auto max-w-full custom-scrollbar gap-1">
           {tabs.map((tab) => (
             <motion.button
               key={tab.id}
@@ -525,13 +525,13 @@ const TaskDashboard = ({ user }) => {
                 if (tab.id === 'create') setShowCreateForm(false);
                 showInfoPopup(`Switched to ${tab.name}`, 'info');
               }}
-              className={`flex items-center px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+              className={`flex items-center px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <tab.icon className="h-5 w-5 mr-2" />
+              <tab.icon className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               {tab.name}
             </motion.button>
           ))}
@@ -570,8 +570,8 @@ const TaskDashboard = ({ user }) => {
                       Create New Task
                     </h2>
                   </div>
-                  <form onSubmit={handleCreateTask} className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <form onSubmit={handleCreateTask} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Task Title *</label>
                         <input 
@@ -1189,13 +1189,13 @@ const TaskDashboard = ({ user }) => {
             className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
             onClick={() => setShowTrackingDetails(false)}
           >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-2"
+                onClick={(e) => e.stopPropagation()}
+              >
               <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-5 rounded-t-2xl flex justify-between items-center">
                 <h3 className="text-xl font-bold">Task Details</h3>
                 <button
@@ -1206,18 +1206,21 @@ const TaskDashboard = ({ user }) => {
                 </button>
               </div>
               <div className="p-6 space-y-5">
-                <div className="bg-blue-50 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <UserIcon className="h-5 w-5 text-blue-600" />
-                    <span className="font-semibold text-gray-900">Created By: {selectedTaskForTracking.createdByName || 'N/A'}</span>
+                <div className="bg-blue-50 rounded-xl p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <UserIcon className="h-5 w-5 text-blue-600" />
+                      <span className="font-semibold text-gray-900 text-sm sm:text-base">Created By:</span>
+                    </div>
+                    <span className="font-medium text-gray-800 text-sm">{selectedTaskForTracking.createdByName || 'N/A'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CalendarIcon className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Created on: {selectedTaskForTracking.timeline?.[0]?.date || new Date().toISOString().split('T')[0]}</span>
+                    <span className="text-xs sm:text-sm text-gray-600">Created on: {selectedTaskForTracking.timeline?.[0]?.date || new Date().toISOString().split('T')[0]}</span>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-gray-500 font-medium">Task Title</p>
                     <p className="font-semibold text-gray-900">{selectedTaskForTracking.title}</p>
@@ -1256,24 +1259,24 @@ const TaskDashboard = ({ user }) => {
                   </div>
                 </div>
                 
-                <div>
-                  <p className="text-xs text-gray-500 font-medium">Description</p>
-                  <p className="text-gray-700">{selectedTaskForTracking.description}</p>
-                </div>
+                  <div className="sm:col-span-2">
+                    <p className="text-xs text-gray-500 font-medium mb-1">Description</p>
+                    <p className="text-sm sm:text-base text-gray-700 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100">{selectedTaskForTracking.description}</p>
+                  </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="bg-blue-50/50 rounded-lg p-3 border border-blue-100">
                     <p className="text-xs text-gray-500 font-medium mb-1">Target</p>
-                    <p className="font-semibold text-gray-900 flex items-center gap-1">
-                      <FlagIcon className="h-4 w-4 text-gray-400" />
+                    <p className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-1">
+                      <FlagIcon className="h-4 w-4 text-blue-400" />
                       {selectedTaskForTracking.target || 'NA'}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-green-50/50 rounded-lg p-3 border border-green-100">
                     <p className="text-xs text-gray-500 font-medium mb-1">Achievement</p>
-                    <p className="font-semibold text-gray-900 flex items-center gap-1">
+                    <p className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-1">
                       <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                      {selectedTaskForTracking.achievement || 'Not Started'}
+                      {selectedTaskForTracking.achievement || '0'}
                     </p>
                   </div>
                 </div>
