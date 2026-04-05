@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAllAppreciations, sendAppreciation } from '../../services/appreciationService';
+import { getAllAppreciations, sendAppreciation, getEligibleUsers } from '../../services/appreciationService';
 import { getAllUsers } from '../../services/userService';
 import { toast } from 'react-hot-toast';
 import {
@@ -46,7 +46,8 @@ const AppreciationComponent = ({ user }) => {
         likes: 0,
         comments: 0,
         badge: app.badge || 'Excellence Award',
-        liked: false
+        liked: false,
+        toUserEverAppreciated: app.toUserEverAppreciated
       }));
       setAppreciations(mapped);
     } catch (error) {
@@ -59,14 +60,11 @@ const AppreciationComponent = ({ user }) => {
 
   const fetchStaff = async () => {
     try {
-      const uID = user?.userID || localStorage.getItem('userID');
-      if (uID) {
-        const data = await getAllUsers(uID);
-        setStaff(data || []);
-      }
+      const data = await getEligibleUsers();
+      setStaff(data || []);
     } catch (error) {
-      console.error("Fetch Staff Error:", error);
-      toast.error("Failed to load staff members");
+      console.error("Fetch Eligible Users Error:", error);
+      toast.error("Failed to load eligible users");
     }
   };
 
@@ -265,16 +263,24 @@ const AppreciationComponent = ({ user }) => {
                     </div>
                   </div>
                   <div className="text-gray-300">→</div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm">
-                      {apt.toAvatar}
+                    <div className="relative">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm">
+                        {apt.toAvatar}
+                      </div>
+                      {apt.toUserEverAppreciated && (
+                        <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-0.5 border-2 border-white shadow-sm" title="Permanently Appreciated">
+                          <StarIcon className="h-3 w-3 text-white fill-current" />
+                        </div>
+                      )}
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">To</p>
-                      <p className="font-semibold text-gray-900">{apt.to}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="font-semibold text-gray-900">{apt.to}</p>
+                        {apt.toUserEverAppreciated && <StarIcon className="h-3 w-3 text-yellow-500 fill-current" />}
+                      </div>
                     </div>
                   </div>
-                </div>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -333,7 +339,10 @@ const AppreciationComponent = ({ user }) => {
           <AppreciationModal 
             onClose={() => setIsModalOpen(false)} 
             staff={staff} 
-            onSuccess={fetchAppreciations} 
+            onSuccess={() => {
+              fetchAppreciations();
+              fetchStaff();
+            }} 
           />
         )}
       </AnimatePresence>
