@@ -44,12 +44,11 @@ const Dashboard = ({ user }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userID = user?.userID || localStorage.getItem('userID');
-        if (userID) {
-          const stats = await getDashboardStats(userID);
+        if (user?.userID || localStorage.getItem('userID')) {
+          const stats = await getDashboardStats();
           setDashboardData(stats);
           
-          const tasks = await getTasks(userID);
+          const tasks = await getTasks();
           setRecentTasks(tasks.slice(0, 5)); // Get last 5 tasks for recent activity
         }
       } catch (error) {
