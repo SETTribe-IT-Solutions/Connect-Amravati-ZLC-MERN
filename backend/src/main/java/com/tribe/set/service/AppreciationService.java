@@ -23,6 +23,7 @@ public class AppreciationService {
         @Autowired
         private UserRepository userRepository;
 
+        @org.springframework.transaction.annotation.Transactional
         public AppreciationResponse sendAppreciation(AppreciationRequest request) {
                 User fromUser = userRepository.findByUserID(request.getFromUserId())
                                 .orElseThrow(() -> new RuntimeException(
@@ -38,6 +39,11 @@ public class AppreciationService {
                 app.setMessage(request.getMessage());
                 app.setBadge(request.getBadge());
                 app.setCreatedAt(LocalDateTime.now());
+
+                // Update user appreciation status
+                toUser.setIsAppreciated(true);
+                toUser.setEverAppreciated(true);
+                userRepository.save(toUser);
 
                 return AppreciationResponse.from(appreciationRepository.save(app));
         }
@@ -67,5 +73,9 @@ public class AppreciationService {
                                 .stream()
                                 .map(AppreciationResponse::from)
                                 .collect(Collectors.toList());
+        }
+
+        public List<User> getEligibleUsers() {
+                return userRepository.findEligibleForAppreciation();
         }
 }

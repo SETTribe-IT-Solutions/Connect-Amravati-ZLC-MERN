@@ -14,6 +14,7 @@ public class AppreciationResponse {
     private String message;
     private String badge;
     private LocalDateTime createdAt;
+    private Boolean toUserEverAppreciated;
 
     public AppreciationResponse() {
     }
@@ -28,6 +29,7 @@ public class AppreciationResponse {
         res.setMessage(app.getMessage());
         res.setBadge(app.getBadge());
         res.setCreatedAt(app.getCreatedAt());
+        res.setToUserEverAppreciated(app.getToUser().getEverAppreciated());
         return res;
     }
 
@@ -93,5 +95,13 @@ public class AppreciationResponse {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Boolean getToUserEverAppreciated() {
+        return toUserEverAppreciated;
+    }
+
+    public void setToUserEverAppreciated(Boolean toUserEverAppreciated) {
+        this.toUserEverAppreciated = toUserEverAppreciated;
     }
 }

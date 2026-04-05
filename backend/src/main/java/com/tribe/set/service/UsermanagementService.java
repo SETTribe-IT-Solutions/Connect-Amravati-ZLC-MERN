@@ -243,6 +243,38 @@ public class UsermanagementService {
     // HELPER METHODS
     // ═══════════════════════════════════════════════════
  
+    // ═══════════════════════════════════════════════════
+    // GET SUBORDINATES
+    // ═══════════════════════════════════════════════════
+    public List<UserResponse> getSubordinates(Long requesterId) {
+        User requester = findUser(requesterId);
+        int requesterLevel = requester.getRole().getLevel();
+        
+        return userRepository.findByActive(true)
+                .stream()
+                .filter(u -> u.getRole() != Role.SYSTEM_ADMINISTRATOR)
+                .filter(u -> u.getRole().getLevel() > requesterLevel)
+                .filter(u -> {
+                    // Collector and Admin can see everyone lower
+                    if (requester.getRole() == Role.COLLECTOR || requester.getRole() == Role.SYSTEM_ADMINISTRATOR) {
+                        return true;
+                    }
+                    // Others should stay within their district
+                    if (requester.getDistrict() != null && !requester.getDistrict().equalsIgnoreCase(u.getDistrict())) {
+                        return false;
+                    }
+                    // If requester is SDO or Tehsildar or BDO, they should stay within their taluka
+                    if (requester.getRole() == Role.SDO || requester.getRole() == Role.TEHSILDAR || requester.getRole() == Role.BDO) {
+                        if (requester.getTaluka() != null && !requester.getTaluka().equalsIgnoreCase(u.getTaluka())) {
+                            return false;
+                        }
+                    }
+                    return true;
+                })
+                .map(u -> enrichWithStats(UserResponse.from(u)))
+                .collect(Collectors.toList());
+    }
+
     private User findUser(Long userId) {
         return userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));

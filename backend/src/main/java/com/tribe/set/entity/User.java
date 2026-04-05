@@ -53,6 +53,12 @@ public class User {
     @Column( nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
     private Boolean active = true;
 
+    @Column(name = "is_appreciated", columnDefinition = "TINYINT(1) DEFAULT 0")
+    private Boolean isAppreciated = false;
+
+    @Column(name = "ever_appreciated", columnDefinition = "TINYINT(1) DEFAULT 0")
+    private Boolean everAppreciated = false;
+
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -181,6 +187,22 @@ public class User {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Boolean getIsAppreciated() {
+        return isAppreciated;
+    }
+
+    public void setIsAppreciated(Boolean isAppreciated) {
+        this.isAppreciated = isAppreciated;
+    }
+
+    public Boolean getEverAppreciated() {
+        return everAppreciated;
+    }
+
+    public void setEverAppreciated(Boolean everAppreciated) {
+        this.everAppreciated = everAppreciated;
     }
 
     public List<Notification> getNotifications() {
