@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { format } from 'date-fns';
 import { useSearchParams } from 'react-router-dom';
 import { getTasks, createTask, updateTaskStatus, addTaskRemark, updateTaskProgressAPI, forwardTaskAPI } from '../../services/taskService';
 import { getAllUsers } from '../../services/userService';
@@ -252,6 +253,18 @@ const TaskDashboard = ({ user }) => {
       showInfoPopup('Please select a due date', 'error');
       return false;
     }
+    
+    // Check if due date is in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(newTask.dueDate);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      showInfoPopup('Due date cannot be in the past', 'error');
+      return false;
+    }
+
     if (newTask.targetType === 'target' && (!newTask.targetValue || isNaN(newTask.targetValue))) {
       showInfoPopup('Please enter a valid numeric target value', 'error');
       return false;
@@ -278,7 +291,7 @@ const TaskDashboard = ({ user }) => {
         priority: (newTask.priority || 'Medium').toUpperCase(),
         assignedTo: Number(newTask.assignedTo),
         requesterId: Number(userID),
-        dueDate: newTask.dueDate.toISOString().split('T')[0],
+        dueDate: format(newTask.dueDate, 'yyyy-MM-dd'),
         target: newTask.targetType === 'target' ? Number(newTask.targetValue) : null,
         location: newTask.location?.trim() || '',
         progress: 0
@@ -616,6 +629,7 @@ const TaskDashboard = ({ user }) => {
                           onChange={(date) => setNewTask({...newTask, dueDate: date})}
                           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                           placeholderText="Select due date"
+                          minDate={new Date()}
                           required
                         />
                       </div>

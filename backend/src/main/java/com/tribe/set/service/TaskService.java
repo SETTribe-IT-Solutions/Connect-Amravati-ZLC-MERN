@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.web.multipart.MultipartFile;
@@ -73,6 +74,11 @@ public class TaskService {
         task.setTitle(request.getTitle());
         task.setDescription(request.getDescription());
         task.setPriority(request.getPriority());
+        // CHECK 4: Due date cannot be in the past (using Asia/Kolkata timezone)
+        if (request.getDueDate() != null && request.getDueDate().isBefore(LocalDate.now(ZoneId.of("Asia/Kolkata")))) {
+            throw new RuntimeException("Validation Error: Due date cannot be in the past.");
+        }
+
         task.setDueDate(request.getDueDate());
         task.setDepartment(request.getDepartment());
         task.setProgress(request.getProgress());
