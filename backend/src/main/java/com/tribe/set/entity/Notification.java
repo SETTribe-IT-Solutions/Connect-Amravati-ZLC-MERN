@@ -27,12 +27,17 @@ public class Notification {
 	private User user; // who receives this notification
 
 	@Column(nullable = false)
+	private String title; // "New Task Assigned"
+
+	@Column(nullable = false)
 	private String message; // "New task assigned to you: Clean River Bank"
 
 	@Enumerated(EnumType.STRING)
 	private NotificationType type; // TASK_ASSIGNED, TASK_OVERDUE, etc.
 
 	private Boolean isRead = false; // unread by default
+
+	private Long taskId; // reference to the task
 
 	private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -42,6 +47,14 @@ public class Notification {
 
 	public void setId(Long id) {
 		this.id = id;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
 	}
 
 	public User getUser() {
@@ -82,6 +95,14 @@ public class Notification {
 
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
+	}
+
+	public Long getTaskId() {
+		return taskId;
+	}
+
+	public void setTaskId(Long taskId) {
+		this.taskId = taskId;
 	}
 
 }
