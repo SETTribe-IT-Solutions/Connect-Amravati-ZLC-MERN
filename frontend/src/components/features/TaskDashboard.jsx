@@ -106,7 +106,8 @@ const TaskDashboard = ({ user }) => {
       const taskData = {
         title: newTask.title, description: newTask.description, department: newTask.department,
         priority: newTask.priority.toUpperCase(), assignedTo: parseInt(newTask.assignedTo),
-        requesterId: userID, dueDate: newTask.dueDate ? newTask.dueDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        requesterId: userID, 
+        dueDate: newTask.dueDate ? new Date(newTask.dueDate.getTime() - newTask.dueDate.getTimezoneOffset() * 60000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         target: newTask.targetType === 'target' ? newTask.targetValue : 'NA', location: newTask.location, progress: 0
       };
       const formData = new FormData();
@@ -118,7 +119,9 @@ const TaskDashboard = ({ user }) => {
       setShowCreateForm(false);
       showToast('Task created successfully!', 'success');
     } catch (error) {
-      showToast('Failed to create task', 'error');
+      console.error("Create Task Error:", error);
+      const msg = error.response?.data?.message || error.message || 'Failed to create task';
+      showToast(msg, 'error');
     }
   };
 
@@ -336,7 +339,8 @@ const TaskDashboard = ({ user }) => {
                           className="w-full px-3 py-2 border border-gray-200 rounded-lg"><option>High</option><option>Medium</option><option>Low</option></select></div>
                       <div><label className="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
                         <DatePicker selected={newTask.dueDate} onChange={(date) => setNewTask({...newTask, dueDate: date})}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholderText="Select due date" required /></div>
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholderText="Select due date" 
+                          minDate={new Date()} required /></div>
                       
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
