@@ -25,7 +25,7 @@ const Logout = ({ onLogout, onClose }) => {
   // Success view
   if (isSuccess) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4">
         <div className="bg-white rounded-xl max-w-md w-full p-8 text-center">
           <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircleIcon className="h-8 w-8 text-white" />
@@ -40,7 +40,7 @@ const Logout = ({ onLogout, onClose }) => {
   // Processing view
   if (isProcessing) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4">
         <div className="bg-white rounded-xl max-w-md w-full p-8 text-center">
           <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <h3 className="text-lg font-bold text-gray-900 mb-2">Logging out...</h3>
@@ -52,7 +52,7 @@ const Logout = ({ onLogout, onClose }) => {
 
   // Confirm view
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4">
       <div className="bg-white rounded-xl max-w-lg w-full overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">

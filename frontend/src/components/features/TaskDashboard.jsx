@@ -246,7 +246,7 @@ const TaskDashboard = ({ user }) => {
       <AnimatePresence>
         {toast && (
           <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }}
-            className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600 text-white rounded-lg shadow-lg">
+            className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[200] bg-blue-600 text-white rounded-lg shadow-lg">
             <div className="flex items-center gap-3 p-3 px-5">
               <DocumentTextIcon className="h-5 w-5 text-white/80" />
               <div><p className="text-sm font-medium">{toast.title}</p><p className="text-lg font-bold">{toast.value}</p></div>
@@ -543,7 +543,7 @@ const TaskDashboard = ({ user }) => {
       {/* Task Details Modal */}
       <AnimatePresence>
         {showDetailsModal && selectedTask && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowDetailsModal(false)}>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4" onClick={() => setShowDetailsModal(false)}>
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white rounded-xl shadow-xl w-[500px] max-w-[90vw] max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 text-white rounded-t-xl sticky top-0">
@@ -590,7 +590,7 @@ const TaskDashboard = ({ user }) => {
       {/* Close Confirmation Modal */}
       <AnimatePresence>
         {showCloseConfirm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCloseConfirm(false)}>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4" onClick={() => setShowCloseConfirm(false)}>
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white rounded-xl shadow-xl max-w-xs w-full p-4 text-center" onClick={(e) => e.stopPropagation()}>
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2"><ExclamationTriangleIcon className="h-5 w-5 text-red-600" /></div>
@@ -605,7 +605,7 @@ const TaskDashboard = ({ user }) => {
       {/* Forward Task Modal */}
       <AnimatePresence>
         {isForwardModalOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={() => setIsForwardModalOpen(false)}>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[210] p-4" onClick={() => setIsForwardModalOpen(false)}>
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white rounded-2xl shadow-2xl w-[500px] max-w-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-4 text-white">

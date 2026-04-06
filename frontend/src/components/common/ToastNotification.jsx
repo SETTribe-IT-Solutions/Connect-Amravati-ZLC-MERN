@@ -40,7 +40,7 @@ const ToastNotification = ({ message, type, isVisible, onClose }) => {
           initial={{ x: 300, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 300, opacity: 0 }}
-          className={`fixed top-5 right-5 z-50 border-l-4 ${colors[type]} bg-white shadow-lg rounded-lg overflow-hidden max-w-sm`}
+          className={`fixed top-5 right-5 z-[210] border-l-4 ${colors[type]} bg-white shadow-lg rounded-lg overflow-hidden max-w-sm`}
         >
           <div className="flex items-center p-4">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${iconColors[type]}`}>
