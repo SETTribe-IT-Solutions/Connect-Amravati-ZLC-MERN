@@ -16,13 +16,17 @@ import {
   MapPinIcon,
   ChevronRightIcon,
   PaperClipIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
+  PencilSquareIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import { 
   getAnnouncements, 
   getSentAnnouncements, 
   acknowledgeAnnouncement,
-  getAnnouncementAcknowledgments 
+  getAnnouncementAcknowledgments,
+  updateAnnouncement,
+  deleteAnnouncement
 } from '../../services/announcementService';
 import AnnouncementForm from './AnnouncementForm';
 import { toast } from 'react-hot-toast';
@@ -41,6 +45,9 @@ const CommunicationsDashboard = ({ user }) => {
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [acknowledgments, setAcknowledgments] = useState([]);
   const [loadingAcks, setLoadingAcks] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState(null);
+  const [editForm, setEditForm] = useState({ title: '', message: '' });
+  const [updating, setUpdating] = useState(false);
 
   const roleLevels = {
     'COLLECTOR': 1,
@@ -103,6 +110,37 @@ const CommunicationsDashboard = ({ user }) => {
       setAcknowledgments([]);
     } finally {
       setLoadingAcks(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this communication? This will also remove it from recipients' inboxes.")) return;
+    try {
+      await deleteAnnouncement(id, user?.userID);
+      toast.success("Message deleted successfully");
+      fetchAnnouncements();
+    } catch (error) {
+      toast.error("Failed to delete message");
+    }
+  };
+
+  const openEditModal = (item) => {
+    setEditingAnnouncement(item);
+    setEditForm({ title: item.title, message: item.message });
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    setUpdating(true);
+    try {
+      await updateAnnouncement(editingAnnouncement.id, user?.userID, editForm);
+      toast.success('Message updated successfully');
+      setEditingAnnouncement(null);
+      fetchAnnouncements();
+    } catch (error) {
+      toast.error("Failed to update message");
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -436,6 +474,29 @@ const CommunicationsDashboard = ({ user }) => {
                         </div>
                       )
                     )}
+
+                    {activeTab === 'sent' && (
+                      <div className="flex items-center gap-2 mt-4 md:mt-0">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => openEditModal(item)}
+                          className="px-4 py-2 border border-blue-200 text-blue-600 hover:bg-blue-50 rounded-xl font-bold flex items-center gap-2 transition-colors text-sm"
+                        >
+                          <PencilSquareIcon className="h-4 w-4" />
+                          Edit
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleDelete(item.id)}
+                          className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-bold flex items-center gap-2 transition-colors text-sm"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                          Delete
+                        </motion.button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -455,6 +516,81 @@ const CommunicationsDashboard = ({ user }) => {
             }}
             currentUser={user}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Edit Modal Overlay */}
+      <AnimatePresence>
+        {editingAnnouncement && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setEditingAnnouncement(null)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-blue-100"
+            >
+              <div className="p-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold font-outfit flex items-center gap-2">
+                    <PencilSquareIcon className="h-6 w-6" />
+                    Edit Communication
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setEditingAnnouncement(null)}
+                  className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdate} className="p-6">
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Subject / Title</label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.title}
+                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50 outline-none"
+                  />
+                </div>
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Content</label>
+                  <textarea
+                    required
+                    rows={5}
+                    value={editForm.message}
+                    onChange={(e) => setEditForm({ ...editForm, message: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50 outline-none resize-none"
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setEditingAnnouncement(null)}
+                    className="px-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl font-bold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updating}
+                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {updating ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

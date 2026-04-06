@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -61,5 +64,31 @@ public class AnnouncementController {
             @RequestParam(name = "userId") Long userId) {
         announcementService.acknowledgeAnnouncement(id, userId);
         return ResponseEntity.ok("Acknowledged successfully");
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Announcement> updateAnnouncement(
+            @PathVariable(name = "id") Long id,
+            @RequestParam(name = "userId") Long userId,
+            @RequestBody UpdateRequest request) {
+        return ResponseEntity.ok(announcementService.updateAnnouncement(id, userId, request.getTitle(), request.getMessage()));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteAnnouncement(
+            @PathVariable(name = "id") Long id,
+            @RequestParam(name = "userId") Long userId) {
+        announcementService.deleteAnnouncement(id, userId);
+        return ResponseEntity.ok("Deleted successfully");
+    }
+
+    public static class UpdateRequest {
+        private String title;
+        private String message;
+
+        public String getTitle() { return title; }
+        public void setTitle(String title) { this.title = title; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
     }
 }

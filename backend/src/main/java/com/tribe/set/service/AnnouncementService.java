@@ -99,7 +99,7 @@ public class AnnouncementService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<Announcement> announcements = announcementRepository.findForUser(
-                user.getRole(), user.getTaluka(), user.getVillage());
+                user.getUserID(), user.getRole(), user.getTaluka(), user.getVillage());
 
         return announcements.stream().map(a -> {
             boolean acknowledged = acknowledgmentRepository.existsByAnnouncementAndUser(a, user);
@@ -136,6 +136,36 @@ public class AnnouncementService {
             AnnouncementAcknowledgment acknowledgment = new AnnouncementAcknowledgment(announcement, user);
             acknowledgmentRepository.save(acknowledgment);
         }
+    }
+
+    @Transactional
+    public Announcement updateAnnouncement(Long announcementId, Long userId, String title, String message) {
+        Announcement announcement = announcementRepository.findById(announcementId)
+                .orElseThrow(() -> new RuntimeException("Announcement not found"));
+                
+        if (!announcement.getCreatedBy().getUserID().equals(userId)) {
+            throw new RuntimeException("Unauthorized: You can only update your own communications");
+        }
+        
+        announcement.setTitle(title);
+        announcement.setMessage(message);
+        return announcementRepository.save(announcement);
+    }
+
+    @Transactional
+    public void deleteAnnouncement(Long announcementId, Long userId) {
+        Announcement announcement = announcementRepository.findById(announcementId)
+                .orElseThrow(() -> new RuntimeException("Announcement not found"));
+                
+        if (!announcement.getCreatedBy().getUserID().equals(userId)) {
+            throw new RuntimeException("Unauthorized: You can only delete your own communications");
+        }
+        
+        // Remove acknowledgments first to respect foreign keys (if cascade type doesn't handle it)
+        List<AnnouncementAcknowledgment> acks = acknowledgmentRepository.findByAnnouncementIdOrderByAcknowledgedAtDesc(announcementId);
+        acknowledgmentRepository.deleteAll(acks);
+        
+        announcementRepository.delete(announcement);
     }
 
     // Inner class for DTO since we're not using Lombok
