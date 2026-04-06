@@ -150,14 +150,7 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md relative"
       >
-        {/* Back Button */}
-        <button
-          onClick={() => onClose ? onClose() : navigate(-1)}
-          className="absolute -top-12 left-0 flex items-center text-gray-600 hover:text-blue-600 transition-colors font-medium group"
-        >
-          <ArrowLeftIcon className="h-5 w-5 mr-2 transition-transform group-hover:-translate-x-1" />
-          Back
-        </button>
+
         {/* Header */}
         <div className="mb-8 text-center">
           <motion.div
