@@ -222,7 +222,7 @@
     "signUp": "Sign Up"
   },
   "footer": {
-    "copyright": "© 2024 Amravati Collector Office. All rights reserved.",
+    "copyright": "© {{year}} Amravati Collector Office. All rights reserved.",
     "privacy": "Privacy Policy",
     "terms": "Terms of Use",
     "contact": "Contact Us"
@@ -253,4 +253,4 @@
     "hindi": "हिन्दी",
     "marathi": "मराठी"
   }
-}
+}

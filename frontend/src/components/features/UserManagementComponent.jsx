@@ -323,13 +323,18 @@ const UserManagementComponent = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">User</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Role</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Contact</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Jurisdiction</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Stats</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Status</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                  <th className="text-left py-3 px-10  text-s font-semibold text-gray-600 uppercase">User</th>
+                  <th className="text-left py-3 px-4  whitespace-nowrap text-s font-semibold text-gray-600 uppercase">Role</th>
+                  <th className="text-left py-3 px-4 whitespace-nowrap text-s font-semibold text-gray-600 uppercase">Email</th>
+                  
+                  <th className="text-left py-3 px-4 whitespace-nowrap text-s font-semibold text-gray-600 uppercase">Contact</th>
+                  
+                  
+                  
+                  <th className="text-left py-3 px-4 whitespace-nowrap text-s font-semibold text-gray-600 uppercase">Jurisdiction</th>
+                  <th className="text-left py-3 px-4 whitespace-nowrap text-s font-semibold text-gray-600 uppercase">Stats</th>
+                  <th className="text-left py-3 px-4  whitespace-nowrap text-s font-semibold text-gray-600 uppercase">Status</th>
+                  <th className="text-left py-3 px-4  whitespace-nowraptext-s font-semibold text-gray-600 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -341,7 +346,7 @@ const UserManagementComponent = () => {
                           {user.avatar}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-800 text-sm">{user.name}</p>
+                          <p className="font-medium text-gray-800 text-sm ">{user.name}</p>
                         </div>
                       </div>
                      </td>
@@ -352,6 +357,10 @@ const UserManagementComponent = () => {
                      </td>
                     <td className="py-3 px-4">
                       <p className="text-sm text-gray-600">{user.email}</p>
+                      
+                     </td> 
+                      <td className="py-3 px-4">
+                     
                       <p className="text-xs text-gray-500">{user.phone}</p>
                      </td>
                     <td className="py-3 px-4 text-sm text-gray-600">{user.jurisdiction}</td>
@@ -370,12 +379,12 @@ const UserManagementComponent = () => {
                      </td>
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
-                        <button
+                        {/* <button
                           onClick={(e) => { showIconTooltip('View Details', e); setSelectedUser(user); setIsModalOpen(true); }}
                           className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
                         >
                           <EyeIcon className="h-4 w-4 text-gray-500 hover:text-blue-600" />
-                        </button>
+                        </button> */}
                         <button
                           onClick={(e) => { showIconTooltip('Edit User', e); setSelectedUser(user); setIsModalOpen(true); }}
                           className="p-1.5 hover:bg-green-50 rounded-lg transition-colors"
@@ -569,14 +578,27 @@ const UserModal = ({ user, roles, talukas, villages, onClose, onSave, onFetchVil
                   {roles.map(role => <option key={role} value={role}>{role}</option>)}
                 </select>
               </div>
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select value={formData.status}
                   onChange={(e) => setFormData({...formData, status: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm">
                   <option value="Active">Active</option><option value="Inactive">Inactive</option>
                 </select>
-              </div>
+              </div> */}
+              {user && (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+    <select
+      value={formData.status}
+      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+    >
+      <option value="Active">Active</option>
+      <option value="Inactive">Inactive</option>
+    </select>
+  </div>
+)}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
