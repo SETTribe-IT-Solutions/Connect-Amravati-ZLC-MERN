@@ -22,7 +22,7 @@ const WelcomeOverlay = ({ onComplete }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-gradient-to-r from-blue-900 to-blue-800 z-50 flex items-center justify-center"
+          className="fixed inset-0 bg-gradient-to-r from-blue-900 to-blue-800 z-[200] flex items-center justify-center"
         >
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}

@@ -40,7 +40,7 @@ const LanguageSwitcher = () => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl overflow-hidden z-50 border border-gray-100"
+            className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl overflow-hidden z-[200] border border-gray-100"
           >
             {languages.map((lang) => (
               <motion.button
