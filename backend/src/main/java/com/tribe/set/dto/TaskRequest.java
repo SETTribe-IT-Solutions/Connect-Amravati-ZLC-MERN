@@ -7,6 +7,7 @@ import com.tribe.set.entity.TaskPriority;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.FutureOrPresent;
 
 public class TaskRequest {
 
@@ -24,7 +25,10 @@ public class TaskRequest {
 	@NotNull(message = "AssignedTo userId is required")
 	private Long assignedTo; // userID of the person to assign to
 
+
+	@FutureOrPresent(message = "Due date cannot be in the past")
 	private LocalDate dueDate; // optional
+
 	private String department;
 	private int progress = 0;
 	private Integer target;

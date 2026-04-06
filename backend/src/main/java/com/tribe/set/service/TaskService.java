@@ -67,6 +67,11 @@ public class TaskService {
                     "Cannot assign task to inactive user: " + assignee.getName());
         }
 
+        // CHECK 4: Due date cannot be in the past
+        if (request.getDueDate() != null && request.getDueDate().isBefore(LocalDate.now())) {
+            throw new RuntimeException("Validation Error: Due date cannot be in the past.");
+        }
+
         // Build Task object — use setAssignedTo() and setCreatedBy() NOT
         // setAssignedToId()
         Task task = new Task();
