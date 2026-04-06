@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAllUsers, addUser, updateUser, deleteUser, toggleUserStatus } from '../../services/userService';
+import { getTalukas, getVillagesByTaluka } from '../../services/locationService';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from "axios";
 
@@ -103,7 +104,31 @@ const UserManagementComponent = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchInitialTalukas();
   }, []);
+
+  const fetchInitialTalukas = async () => {
+    try {
+      const data = await getTalukas();
+      setTalukas(data || []);
+    } catch (error) {
+      console.error("Fetch Talukas Error:", error);
+    }
+  };
+
+  const handleFetchVillages = async (taluka) => {
+    if (!taluka) {
+      setVillages([]);
+      return;
+    }
+    try {
+      const data = await getVillagesByTaluka(taluka);
+      setVillages(data || []);
+    } catch (error) {
+      console.error("Fetch Villages Error:", error);
+      setVillages([]);
+    }
+  };
 
   const roles = [
     'Collector',
@@ -384,7 +409,9 @@ const UserManagementComponent = () => {
             onClose={() => {
               setIsModalOpen(false);
               setSelectedUser(null);
+              setVillages([]); // Clear villages when closing
             }}
+            onFetchVillages={handleFetchVillages}
             onSave={async (userData) => {
               try {
                 const roleMap = {
@@ -441,7 +468,7 @@ const UserManagementComponent = () => {
 };
 
 // User Modal Component
-const UserModal = ({ user, roles, talukas, villages, onClose, onSave }) => {
+const UserModal = ({ user, roles, talukas, villages, onClose, onSave, onFetchVillages }) => {
   const [formData, setFormData] = useState({
     userID: user?.id || '',
     name: user?.name || '',
@@ -456,6 +483,13 @@ const UserModal = ({ user, roles, talukas, villages, onClose, onSave }) => {
   });
 
   const [phoneError, setPhoneError] = useState('');
+
+  // Initial village fetch if editing a user with an existing taluka
+  useEffect(() => {
+    if (user?.taluka) {
+      onFetchVillages(user.taluka);
+    }
+  }, [user, onFetchVillages]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -556,7 +590,11 @@ const UserModal = ({ user, roles, talukas, villages, onClose, onSave }) => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Taluka</label>
                   <select value={formData.taluka}
-                    onChange={(e) => setFormData({...formData, taluka: e.target.value, village: ''})}
+                    onChange={(e) => {
+                      const newTaluka = e.target.value;
+                      setFormData({...formData, taluka: newTaluka, village: ''});
+                      onFetchVillages(newTaluka);
+                    }}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
                     <option value="">Select Taluka</option>
                     {talukas.map((t, idx) => <option key={idx} value={t}>{t}</option>)}

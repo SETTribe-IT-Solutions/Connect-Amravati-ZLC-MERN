@@ -47,7 +47,9 @@ const AppreciationComponent = ({ user }) => {
         comments: 0,
         badge: app.badge || 'Excellence Award',
         liked: false,
-        toUserEverAppreciated: app.toUserEverAppreciated
+        toUserEverAppreciated: app.toUserEverAppreciated,
+        fromRole: formatRole(app.fromRole),
+        toRole: formatRole(app.toRole)
       }));
       setAppreciations(mapped);
     } catch (error) {
@@ -119,6 +121,21 @@ const AppreciationComponent = ({ user }) => {
       'Team Excellence': 'bg-gradient-to-r from-indigo-500 to-blue-600 text-white'
     };
     return colors[badge] || 'bg-gradient-to-r from-gray-500 to-gray-600 text-white';
+  };
+
+  const formatRole = (roleStr) => {
+    if (!roleStr) return 'N/A';
+    const roleMap = {
+      'COLLECTOR': 'Collector',
+      'ADDITIONAL_DEPUTY_COLLECTOR': 'Additional Collector',
+      'SDO': 'SDO',
+      'TEHSILDAR': 'Tehsildar',
+      'BDO': 'BDO',
+      'TALATHI': 'Talathi',
+      'GRAMSEVAK': 'Gram Sevak',
+      'SYSTEM_ADMINISTRATOR': 'System Administrator'
+    };
+    return roleMap[roleStr.toUpperCase()] || roleStr;
   };
 
   // Filter appreciations
@@ -258,8 +275,9 @@ const AppreciationComponent = ({ user }) => {
                       {apt.fromAvatar}
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">From</p>
-                      <p className="font-semibold text-gray-900">{apt.from}</p>
+                      <p className="text-xs text-gray-500 font-medium">From</p>
+                      <p className="font-bold text-gray-900 text-sm">{apt.from}</p>
+                      <p className="text-[10px] text-gray-500 font-medium leading-none">{apt.fromRole}</p>
                     </div>
                   </div>
                   <div className="text-gray-300">→</div>
@@ -274,11 +292,12 @@ const AppreciationComponent = ({ user }) => {
                       )}
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">To</p>
+                      <p className="text-xs text-gray-500 font-medium">To</p>
                       <div className="flex items-center gap-1">
-                        <p className="font-semibold text-gray-900">{apt.to}</p>
+                        <p className="font-bold text-emerald-700 text-sm">{apt.to}</p>
                         {apt.toUserEverAppreciated && <StarIcon className="h-3 w-3 text-yellow-500 fill-current" />}
                       </div>
+                      <p className="text-[10px] text-emerald-600/70 font-medium leading-none">{apt.toRole}</p>
                     </div>
                   </div>
                 <motion.button
@@ -323,10 +342,6 @@ const AppreciationComponent = ({ user }) => {
                     <span>{apt.comments}</span>
                   </div>
                 </div>
-                <button className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
-                  View Details
-                  <span>→</span>
-                </button>
               </div>
             </div>
           </motion.div>
