@@ -56,3 +56,19 @@ export const acknowledgeAnnouncement = async (id, userId) => {
   });
   return response.data;
 };
+
+export const updateAnnouncement = async (id, userId, data) => {
+  const response = await axios.put(`${API_URL}/${id}`, data, {
+    params: { userId },
+    headers: getAuthHeader(),
+  });
+  return response.data;
+};
+
+export const deleteAnnouncement = async (id, userId) => {
+  const response = await axios.delete(`${API_URL}/${id}`, {
+    params: { userId },
+    headers: getAuthHeader(),
+  });
+  return response.data;
+};

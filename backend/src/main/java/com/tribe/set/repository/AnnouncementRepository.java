@@ -14,11 +14,13 @@ import com.tribe.set.entity.Role;
 public interface AnnouncementRepository extends JpaRepository<Announcement, Long> {
 
     @Query("SELECT a FROM Announcement a WHERE " +
+           "(a.createdBy.userID != :userId) AND " +
            "(a.targetRole IS NULL OR a.targetRole = :role) AND " +
            "(a.targetTaluka IS NULL OR a.targetTaluka = :taluka) AND " +
            "(a.targetVillage IS NULL OR a.targetVillage = :village) " +
            "ORDER BY a.createdAt DESC")
-    List<Announcement> findForUser(@Param("role") Role role, 
+    List<Announcement> findForUser(@Param("userId") Long userId,
+                                  @Param("role") Role role, 
                                   @Param("taluka") String taluka, 
                                   @Param("village") String village);
 
