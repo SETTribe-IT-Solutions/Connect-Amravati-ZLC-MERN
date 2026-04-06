@@ -19,15 +19,17 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Get current user ID
+  // Get current user ID and normalized role
   const userID = user?.userID;
+  const normalizedRole = user?.role?.toString().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const isSystemAdministrator = normalizedRole === 'SYSTEMADMINISTRATOR';
 
   // Show hamburger only on protected/dashboard pages
   const showHamburger = !['/login', '/register'].some(path => location.pathname.startsWith(path));
 
   // Fetch notifications
   const loadNotifications = async () => {
-    if (!userID) return;
+    if (!userID || isSystemAdministrator) return;
     try {
       setIsRefreshing(true);
       const data = await notificationService.fetchNotifications(userID);
@@ -142,7 +144,7 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
 
           <div className="flex items-center space-x-3 lg:space-x-5">
             {/* Notification Bell */}
-            {user?.userID && (
+            {user?.userID && !isSystemAdministrator && (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
