@@ -79,7 +79,9 @@ const TaskDashboard = ({ user }) => {
     try {
       const requesterId = localStorage.getItem('userID');
       const data = await getAllUsers(requesterId);
-      setStaff(data || []);
+      // Filter out self
+      const filteredStaff = (data || []).filter(u => u.userID.toString() !== requesterId.toString());
+      setStaff(filteredStaff);
     } catch (error) {
       console.error("Fetch Staff Error:", error);
     }
@@ -94,6 +96,13 @@ const TaskDashboard = ({ user }) => {
     e.preventDefault();
     try {
       const userID = user?.userID || localStorage.getItem('userID');
+      const assignedToId = parseInt(newTask.assignedTo);
+      
+      if (assignedToId === parseInt(userID)) {
+        showToast('You cannot assign a task to yourself', 'error');
+        return;
+      }
+
       const taskData = {
         title: newTask.title, description: newTask.description, department: newTask.department,
         priority: newTask.priority.toUpperCase(), assignedTo: parseInt(newTask.assignedTo),
@@ -148,7 +157,9 @@ const TaskDashboard = ({ user }) => {
       const userID = user?.userID || localStorage.getItem('userID');
       setForwardLoading(true);
       const data = await getSubordinates(userID);
-      setSubordinates(data || []);
+      // Filter out self
+      const filteredSubordinates = (data || []).filter(sub => sub.userID.toString() !== userID.toString());
+      setSubordinates(filteredSubordinates);
       setSelectedTaskForForward(task);
       setIsForwardModalOpen(true);
     } catch (error) {
@@ -161,6 +172,12 @@ const TaskDashboard = ({ user }) => {
   const handleConfirmForward = async (targetUserId) => {
     try {
       const userID = user?.userID || localStorage.getItem('userID');
+      
+      if (parseInt(targetUserId) === parseInt(userID)) {
+        showToast('You cannot forward a task to yourself', 'error');
+        return;
+      }
+
       await forwardTaskAPI(selectedTaskForForward.id, targetUserId, userID);
       setIsForwardModalOpen(false);
       fetchTasks();

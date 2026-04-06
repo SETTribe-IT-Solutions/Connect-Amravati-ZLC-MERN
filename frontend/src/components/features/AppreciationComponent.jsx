@@ -63,10 +63,12 @@ const AppreciationComponent = ({ user }) => {
   const fetchStaff = async () => {
     try {
       const data = await getEligibleUsers();
-      setStaff(data || []);
+      // Filter out the current user
+      const filteredData = (data || []).filter(u => u.userID.toString() !== currentUserID?.toString());
+      setStaff(filteredData);
       // Initialize form states for new staff
       const initialStates = {};
-      data.forEach(u => {
+      filteredData.forEach(u => {
         initialStates[u.userID] = {
           message: '',
           badge: 'Excellence Award',
