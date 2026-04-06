@@ -198,7 +198,7 @@ const UserManagementComponent = () => {
       <AnimatePresence>
         {toast && (
           <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }}
-            className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600 text-white rounded-lg shadow-lg">
+            className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[200] bg-blue-600 text-white rounded-lg shadow-lg">
             <div className="flex items-center gap-3 p-3 px-5">
               <CheckCircleIcon className="h-5 w-5 text-white/80" />
               <div><p className="text-sm font-medium">{toast.title}</p><p className="text-lg font-bold">{toast.value}</p></div>
@@ -215,7 +215,7 @@ const UserManagementComponent = () => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="fixed z-50 bg-gray-900 text-white text-xs py-1 px-2 rounded-md whitespace-nowrap pointer-events-none"
+            className="fixed z-[200] bg-gray-900 text-white text-xs py-1 px-2 rounded-md whitespace-nowrap pointer-events-none"
             style={{ left: showTooltip.x, top: showTooltip.y, transform: 'translateX(-50%)' }}
           >
             {showTooltip.message}
@@ -506,7 +506,7 @@ const UserModal = ({ user, roles, talukas, villages, onClose, onSave, onFetchVil
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div
@@ -644,7 +644,7 @@ const DeletePopup = ({ user, onConfirm, onCancel }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
+      className="fixed inset-0 z-[210] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
       onClick={onCancel}
     >
       <motion.div
