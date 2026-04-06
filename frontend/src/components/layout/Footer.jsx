@@ -16,9 +16,9 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-600 text-sm flex items-center">
-            <GiPeaceDove className="mr-2 text-blue-600" />
-            {t('footer.copyright') || '© 2024 Amravati Connect'}
-          </p>
+  <GiPeaceDove className="mr-2 text-blue-600" />
+  {t('footer.copyright', { year: new Date().getFullYear() })}
+</p>
           <p className="text-gray-500 text-xs">
             {t('All Rights Reserved')|| 'All Rights Reserved'}
           </p>
