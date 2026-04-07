@@ -1,10 +1,10 @@
 package com.tribe.set.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.tribe.set.dto.JwtResponse;
-import com.tribe.set.dto.LoginRequest;
 import com.tribe.set.dto.UserRequest;
 import com.tribe.set.dto.RegisterRequest;
 import com.tribe.set.service.AuthService;
@@ -25,9 +25,19 @@ public class AuthController {
 
     }
 
-    @RequestMapping(value = "/register", method = { RequestMethod.GET, RequestMethod.POST })
-    public String register(@Valid @RequestBody RegisterRequest request) {
-        return authService.register(request);
+//    @RequestMapping(value = "/register", method = { RequestMethod.GET, RequestMethod.POST })
+//    public String register(@Valid @RequestBody RegisterRequest request) {
+//        return authService.register(request);
+//    }
+    
+//    @PostMapping("/register")
+//    public String register(@Valid @RequestBody RegisterRequest request) {
+//        return authService.register(request);
+//    }
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
+        String response = authService.register(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/change-password")
