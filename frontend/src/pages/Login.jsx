@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaUser, FaLock, FaArrowRight, FaBell, FaShieldAlt } from 'react-icons/fa';
+import { FaUser, FaLock, FaArrowRight, FaBell, FaShieldAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { loginUser } from '../services/authService';
@@ -20,6 +20,7 @@ const LoginPage = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [isWelcomeActive, setIsWelcomeActive] = useState(true);
+  const [showPassword, setShowPassword] = useState(false); // New state for password visibility
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -112,7 +113,7 @@ const LoginPage = ({ onLogin }) => {
                     <div className="relative">
                       <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-600 text-xl z-10" />
                       <input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         onFocus={() => setFocusedField('password')}
@@ -123,6 +124,15 @@ const LoginPage = ({ onLogin }) => {
                       <label className={`floating-label ${focusedField === 'password' || formData.password ? 'active' : ''}`}>
                         {t('Password') || 'Password'}
                       </label>
+                      {/* Eye Icon */}
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-600 focus:outline-none z-10"
+                        tabIndex="-1"
+                      >
+                        {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                      </button>
                     </div>
 
 
