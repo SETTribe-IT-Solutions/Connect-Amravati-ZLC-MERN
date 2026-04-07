@@ -34,7 +34,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Modifying
     @Query("UPDATE User u SET u.active = :active WHERE u.userID = :userId")
-    int updateActiveStatus(String targetUserId, Boolean active);
+    int updateActiveStatus(@Param("userId") String userId, @Param("active") Boolean active);
 
     @Query("SELECT DISTINCT u FROM User u JOIN u.assignedTasks t WHERE u.isAppreciated = false AND t.status = com.tribe.set.entity.TaskStatus.COMPLETED")
     List<User> findEligibleForAppreciation();

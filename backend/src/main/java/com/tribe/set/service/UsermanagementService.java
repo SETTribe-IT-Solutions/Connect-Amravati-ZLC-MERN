@@ -67,8 +67,10 @@ public class UsermanagementService {
         user.setTaluka(request.getTaluka());
         user.setVillage(request.getVillage());
         user.setPhone(request.getPhone());
-        user.setActive(true); // always true on create — no option to set inactive here
- 
+        
+        // Force status to ACTIVE (true) regardless of any input from the request
+        user.setActive(true); 
+  
         return enrichWithStats(UserResponse.from(userRepository.save(user)));
     }
  

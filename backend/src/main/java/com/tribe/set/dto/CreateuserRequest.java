@@ -32,6 +32,8 @@ public class CreateuserRequest {
     @NotNull(message = "Requester ID is required")
     private String requesterId;
 
+    private Boolean active;
+
     // ─── Getters ───
 
     public String getUserID() {
@@ -114,5 +116,13 @@ public class CreateuserRequest {
 
     public void setRequesterId(String requesterId) {
         this.requesterId = requesterId;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 }

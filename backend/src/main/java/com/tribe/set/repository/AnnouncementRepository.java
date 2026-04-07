@@ -19,7 +19,7 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
            "(a.targetTaluka IS NULL OR a.targetTaluka = :taluka) AND " +
            "(a.targetVillage IS NULL OR a.targetVillage = :village) " +
            "ORDER BY a.createdAt DESC")
-    List<Announcement> findForUser(@Param("userId") Long userId,
+    List<Announcement> findForUser(@Param("userId") String userId,
                                   @Param("role") Role role, 
                                   @Param("taluka") String taluka, 
                                   @Param("village") String village);
