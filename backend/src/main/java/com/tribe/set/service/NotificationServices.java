@@ -32,7 +32,7 @@ public class NotificationServices {
         notificationRepository.save(notification);
     }
 
-    public List<Notification> getMyNotifications(Long userId) {
+    public List<Notification> getMyNotifications(String userId) {
         User user = findUser(userId);
         return notificationRepository.findByUserOrderByCreatedAtDesc(user);
     }
@@ -40,12 +40,12 @@ public class NotificationServices {
     /**
      * Requirement: Get ONLY UNREAD notifications to show in dropdown
      */
-    public List<Notification> getUnreadNotifications(Long userId) {
+    public List<Notification> getUnreadNotifications(String userId) {
         User user = findUser(userId);
         return notificationRepository.findByUserAndIsReadOrderByCreatedAtDesc(user, false);
     }
 
-    public long getUnreadCount(Long userId) {
+    public long getUnreadCount(String userId) {
         User user = findUser(userId);
         return notificationRepository.countByUserAndIsRead(user, false);
     }
@@ -63,18 +63,18 @@ public class NotificationServices {
         return notificationRepository.save(notification);
     }
 
-    public void markAllAsRead(Long userId) {
+    public void markAllAsRead(String userId) {
         User user = findUser(userId);
         notificationRepository.markAllAsReadForUser(user);
     }
 
-    public void createNotification(Long userId, String title, String message, NotificationType type, Long taskId) {
+    public void createNotification(String userId, String title, String message, NotificationType type, Long taskId) {
         User user = findUser(userId);
         send(user, title, message, type, taskId);
     }
 
     // ─── Helper method ───
-    private User findUser(Long userId) {
+    private User findUser(String userId) {
         return userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
     }

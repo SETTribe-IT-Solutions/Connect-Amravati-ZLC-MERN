@@ -21,7 +21,7 @@ public class CreateAnnouncementRequest {
     private boolean isCircular;
 
     @NotNull(message = "Requester ID is required")
-    private Long requesterId;
+    private String requesterId;
 
     public CreateAnnouncementRequest() {
     }
@@ -66,11 +66,11 @@ public class CreateAnnouncementRequest {
         this.targetVillage = targetVillage;
     }
 
-    public Long getRequesterId() {
+    public String getRequesterId() {
         return requesterId;
     }
 
-    public void setRequesterId(Long requesterId) {
+    public void setRequesterId(String requesterId) {
         this.requesterId = requesterId;
     }
 

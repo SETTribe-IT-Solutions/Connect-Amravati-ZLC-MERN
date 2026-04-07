@@ -4,7 +4,7 @@ import com.tribe.set.entity.User;
 
 public class UserResponse {
 
-    private Long userID;
+    private String userID;
     private String name;
     private String email;
     private String role;
@@ -40,7 +40,7 @@ public class UserResponse {
     }
 
     // Getters
-    public Long getUserID() {
+    public String getUserID() {
         return userID;
     }
 
@@ -101,7 +101,7 @@ public class UserResponse {
     }
 
     // Setters
-    public void setUserID(Long userID) {
+    public void setUserID(String userID) {
         this.userID = userID;
     }
 

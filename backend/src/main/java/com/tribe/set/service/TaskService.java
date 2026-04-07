@@ -43,7 +43,7 @@ public class TaskService {
     // CREATE TASK
     // ═══════════════════════════════════════════════════
 
-    public TaskResponse createTask(TaskRequest request, Long creatorId, MultipartFile file) {
+    public TaskResponse createTask(TaskRequest request, String creatorId, MultipartFile file) {
 
         User creator = findUser(creatorId);
         User assignee = findUser(request.getAssignedTo());
@@ -134,7 +134,12 @@ public class TaskService {
     // REASSIGN TASK
     // ═══════════════════════════════════════════════════
 
-    public TaskResponse reassignTask(Long taskId, Long newAssigneeId, Long requesterId) {
+    private User findUser(Long assignedTo) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public TaskResponse reassignTask(Long taskId, Long newAssigneeId, Long requesterId) {
 
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
@@ -260,8 +265,8 @@ public class TaskService {
     // ═══════════════════════════════════════════════════
 
     @Transactional(readOnly = true)
-    public List<TaskResponse> getTasks(Long requesterId) {
-        User requester = findUser(requesterId);
+    public List<TaskResponse> getTasks(String finalUserId) {
+        User requester = findUser(finalUserId);
 
         List<Task> tasks;
 
@@ -464,8 +469,8 @@ public class TaskService {
     // DASHBOARD STATS
     // ═══════════════════════════════════════════════════
 
-    public DashboardResponse getDashboard(Long requesterId) {
-        User requester = findUser(requesterId);
+    public DashboardResponse getDashboard(String finalUserId) {
+        User requester = findUser(finalUserId);
 
         long total, pending, inProgress, completed, overdue;
 
@@ -543,10 +548,10 @@ public class TaskService {
     // HELPER METHODS — used internally by all methods above
     // ═══════════════════════════════════════════════════
 
-    private User findUser(Long userId) {
-        return userRepository.findByUserID(userId)
+    private User findUser(String finalUserId) {
+        return userRepository.findByUserID(finalUserId)
                 .orElseThrow(() -> new RuntimeException(
-                        "User not found with ID: " + userId));
+                        "User not found with ID: " + finalUserId));
     }
 
     private Task findTask(Long taskId) {

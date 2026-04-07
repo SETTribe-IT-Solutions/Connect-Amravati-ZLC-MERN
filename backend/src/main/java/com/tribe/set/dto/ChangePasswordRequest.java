@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 public class ChangePasswordRequest {
 
     @NotNull(message = "User ID is required")
-    private Long userID;
+    private String userID;
 
     @NotBlank(message = "Current password is required")
     private String currentPassword;
@@ -18,11 +18,11 @@ public class ChangePasswordRequest {
     @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@#$%^&+=!]).{8,}$", message = "Password must contain uppercase, lowercase, number and special character")
     private String newPassword;
 
-    public Long getUserID() {
+    public String getUserID() {
         return userID;
     }
 
-    public void setUserID(Long userID) {
+    public void setUserID(String userID) {
         this.userID = userID;
     }
 

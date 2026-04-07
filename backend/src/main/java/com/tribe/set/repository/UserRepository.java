@@ -14,7 +14,7 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<User> findByUserID(Long userID);
+    Optional<User> findByUserID(String finalUserId);
 
     Optional<User> findByEmail(String email);
 
@@ -24,7 +24,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
-    boolean existsByUserID(Long userID);
+    boolean existsByUserID(String string);
     
     @Query("SELECT DISTINCT u.taluka FROM User u WHERE u.role = :role AND u.active = true AND u.taluka IS NOT NULL")
     List<String> findDistinctTalukasByRole(@Param("role") Role role);
@@ -34,7 +34,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Modifying
     @Query("UPDATE User u SET u.active = :active WHERE u.userID = :userId")
-    int updateActiveStatus(Long userId, Boolean active);
+    int updateActiveStatus(String targetUserId, Boolean active);
 
     @Query("SELECT DISTINCT u FROM User u JOIN u.assignedTasks t WHERE u.isAppreciated = false AND t.status = com.tribe.set.entity.TaskStatus.COMPLETED")
     List<User> findEligibleForAppreciation();

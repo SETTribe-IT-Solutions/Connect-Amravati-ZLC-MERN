@@ -41,12 +41,12 @@ public class AnnouncementController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<AnnouncementDTO>> getAnnouncements(@RequestParam(name = "userId") Long userId) {
+    public ResponseEntity<List<AnnouncementDTO>> getAnnouncements(@RequestParam(name = "userId") String userId) {
         return ResponseEntity.ok(announcementService.getAnnouncementsForUser(userId));
     }
 
     @GetMapping("/sent")
-    public ResponseEntity<List<AnnouncementDTO>> getSentAnnouncements(@RequestParam(name = "userId") Long userId) {
+    public ResponseEntity<List<AnnouncementDTO>> getSentAnnouncements(@RequestParam(name = "userId") String userId) {
         return ResponseEntity.ok(announcementService.getSentAnnouncements(userId));
     }
 
@@ -58,7 +58,7 @@ public class AnnouncementController {
     @PostMapping("/{id}/acknowledge")
     public ResponseEntity<String> acknowledgeAnnouncement(
             @PathVariable(name = "id") Long id,
-            @RequestParam(name = "userId") Long userId) {
+            @RequestParam(name = "userId") String userId) {
         announcementService.acknowledgeAnnouncement(id, userId);
         return ResponseEntity.ok("Acknowledged successfully");
     }

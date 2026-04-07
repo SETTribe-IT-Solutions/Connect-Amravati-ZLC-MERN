@@ -64,7 +64,7 @@ public class AuthService {
     }
 
     public String register(RegisterRequest request) {
-        if (userRepository.findById(request.getUserID()).isPresent()) {
+        if (userRepository.findByUserID(request.getUserID()).isPresent()) {
             throw new RuntimeException("User already exists");
         }
 

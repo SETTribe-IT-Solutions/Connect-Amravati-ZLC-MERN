@@ -55,7 +55,7 @@ public class AppreciationService {
                                 .collect(Collectors.toList());
         }
 
-        public List<AppreciationResponse> getReceivedAppreciations(Long userId) {
+        public List<AppreciationResponse> getReceivedAppreciations(String userId) {
                 User user = userRepository.findByUserID(userId)
                                 .orElseThrow(() -> new RuntimeException("User not found: " + userId));
 
@@ -65,7 +65,7 @@ public class AppreciationService {
                                 .collect(Collectors.toList());
         }
 
-        public List<AppreciationResponse> getSentAppreciations(Long userId) {
+        public List<AppreciationResponse> getSentAppreciations(String userId) {
                 User user = userRepository.findByUserID(userId)
                                 .orElseThrow(() -> new RuntimeException("User not found: " + userId));
 

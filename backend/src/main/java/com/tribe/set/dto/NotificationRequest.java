@@ -3,17 +3,17 @@ package com.tribe.set.dto;
 import com.tribe.set.entity.NotificationType;
 
 public class NotificationRequest {
-    private Long userId;
+    private String userId;
     private String title;
     private String message;
     private NotificationType type;
     private Long taskId;
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 

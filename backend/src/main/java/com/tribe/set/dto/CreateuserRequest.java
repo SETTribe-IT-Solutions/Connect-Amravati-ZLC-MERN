@@ -6,7 +6,7 @@ import jakarta.validation.constraints.*;
 public class CreateuserRequest {
 
     @NotNull(message = "UserID is required")
-    private Long userID;
+    private String userID;
 
     @NotBlank(message = "Name is required")
     private String name;
@@ -30,11 +30,11 @@ public class CreateuserRequest {
     private String phone;
 
     @NotNull(message = "Requester ID is required")
-    private Long requesterId;
+    private String requesterId;
 
     // ─── Getters ───
 
-    public Long getUserID() {
+    public String getUserID() {
         return userID;
     }
 
@@ -72,7 +72,7 @@ public class CreateuserRequest {
 
     // ─── Setters ───
 
-    public void setUserID(Long userID) {
+    public void setUserID(@NotNull(message = "UserID is required") String userID) {
         this.userID = userID;
     }
 
@@ -108,11 +108,11 @@ public class CreateuserRequest {
         this.phone = phone;
     }
 
-    public Long getRequesterId() {
+    public String getRequesterId() {
         return requesterId;
     }
 
-    public void setRequesterId(Long requesterId) {
+    public void setRequesterId(String requesterId) {
         this.requesterId = requesterId;
     }
 }

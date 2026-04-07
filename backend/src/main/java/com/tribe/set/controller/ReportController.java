@@ -23,12 +23,12 @@ public class ReportController {
 
     @GetMapping("/performance")
     public ResponseEntity<List<Map<String, Object>>> getPerformanceReport(
-            @RequestParam(name = "requesterId") Long requesterId) {
+            @RequestParam(name = "requesterId") String requesterId) {
         return ResponseEntity.ok(reportService.getPerformanceReport(requesterId));
     }
 
     @GetMapping("/global-stats")
-    public ResponseEntity<Map<String, Object>> getGlobalStats(@RequestParam(name = "requesterId") Long requesterId) {
+    public ResponseEntity<Map<String, Object>> getGlobalStats(@RequestParam(name = "requesterId") String requesterId) {
         return ResponseEntity.ok(reportService.getGlobalStats(requesterId));
     }
 }

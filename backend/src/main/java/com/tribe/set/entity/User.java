@@ -10,10 +10,13 @@ import java.util.ArrayList;
 @Table(name = "users")
 public class User {
 
-    @Id
-    @Column(name = "userid")
-    private Long userID;
-
+	@Id
+	@NotBlank(message = "User ID cannot be empty")
+	@Pattern(regexp = "^[0-9]+$", message = "User ID must contain only digits")
+	@Column(name = "userid")
+	private String userID;
+	
+	
     @NotBlank(message = "Name cannot be empty")
     @Column(nullable = false)
     private String name;
@@ -93,19 +96,21 @@ public class User {
 
     // Getters and Setters
 
-    public Long getUserID() {
-        return userID;
-    }
-
-    public void setUserID(Long userID) {
-        this.userID = userID;
-    }
+   
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public String getUserID() {
+		return userID;
+	}
+
+	public void setUserID(String userID) {
+		this.userID = userID;
+	}
+
+	public void setName(String name) {
         this.name = name;
     }
 

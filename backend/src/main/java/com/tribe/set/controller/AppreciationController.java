@@ -38,12 +38,12 @@ public class AppreciationController {
 
     @GetMapping("/received/{userId}")
     public ResponseEntity<List<AppreciationResponse>> getReceivedAppreciations(
-            @PathVariable(name = "userId") Long userId) {
+            @PathVariable(name = "userId") String userId) {
         return ResponseEntity.ok(appreciationService.getReceivedAppreciations(userId));
     }
 
     @GetMapping("/sent/{userId}")
-    public ResponseEntity<List<AppreciationResponse>> getSentAppreciations(@PathVariable(name = "userId") Long userId) {
+    public ResponseEntity<List<AppreciationResponse>> getSentAppreciations(@PathVariable(name = "userId") String userId) {
         return ResponseEntity.ok(appreciationService.getSentAppreciations(userId));
     }
 

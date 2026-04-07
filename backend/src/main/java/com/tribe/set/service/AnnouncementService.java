@@ -94,7 +94,7 @@ public class AnnouncementService {
         return announcementRepository.save(announcement);
     }
 
-    public List<AnnouncementDTO> getAnnouncementsForUser(Long userId) {
+    public List<AnnouncementDTO> getAnnouncementsForUser(String userId) {
         User user = userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -107,7 +107,7 @@ public class AnnouncementService {
         }).collect(Collectors.toList());
     }
 
-    public List<AnnouncementDTO> getSentAnnouncements(Long userId) {
+    public List<AnnouncementDTO> getSentAnnouncements(String userId) {
         User user = userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -125,7 +125,7 @@ public class AnnouncementService {
     }
 
     @Transactional
-    public void acknowledgeAnnouncement(Long announcementId, Long userId) {
+    public void acknowledgeAnnouncement(Long announcementId, String userId) {
         User user = userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         

@@ -25,28 +25,28 @@ public class UserManagementController {
 
     @PutMapping("/update/{id}")
     public ResponseEntity<UserResponse> updateUser(
-            @PathVariable(name = "id") Long id,
+            @PathVariable(name = "id") String id,
             @Valid @RequestBody UpdateUserRequest request) {
         return ResponseEntity.ok(userService.updateUser(id, request, request.getRequesterId()));
     }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteUser(
-            @PathVariable(name = "id") Long id,
+            @PathVariable(name = "id") String id,
             @Valid @RequestBody DeleteUserRequest request) {
         userService.deleteUser(id, request.getRequesterId());
         return ResponseEntity.ok("User deleted successfully");
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<UserResponse>> getAllUsers(@RequestParam(required = false, name = "requesterId") Long requesterId) {
+    public ResponseEntity<List<UserResponse>> getAllUsers(@RequestParam(required = false, name = "requesterId") String requesterId) {
         return ResponseEntity.ok(userService.getAllUsers(requesterId));
     }
 
     @GetMapping("/profile/{id}")
     public ResponseEntity<UserResponse> getUserProfile(
-            @PathVariable(name = "id") Long id,
-            @RequestParam(name = "requesterId") Long requesterId) {
+            @PathVariable(name = "id") String id,
+            @RequestParam(name = "requesterId") String requesterId) {
         return ResponseEntity.ok(userService.getUserProfile(id, requesterId));
     }
 
@@ -60,12 +60,12 @@ public class UserManagementController {
     @GetMapping("/role/{role}")
     public ResponseEntity<List<UserResponse>> getUsersByRole(
             @PathVariable(name = "role") Role role,
-            @RequestParam(name = "requesterId") Long requesterId) {
+            @RequestParam(name = "requesterId") String requesterId) {
         return ResponseEntity.ok(userService.getUsersByRole(role, requesterId));
     }
 
     @GetMapping("/subordinates")
-    public ResponseEntity<List<UserResponse>> getSubordinates(@RequestParam(name = "requesterId") Long requesterId) {
+    public ResponseEntity<List<UserResponse>> getSubordinates(@RequestParam(name = "requesterId") String requesterId) {
         return ResponseEntity.ok(userService.getSubordinates(requesterId));
     }
 }

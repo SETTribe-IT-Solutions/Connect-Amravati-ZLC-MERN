@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ public class ReportService {
     @Autowired
     private UserRepository userRepository;
 
-    public Map<String, Object> getGlobalStats(Long requesterId) {
+    public Map<String, Object> getGlobalStats(String requesterId) {
         checkAccess(requesterId);
         List<Task> allTasks = taskRepository.findAll();
 
@@ -46,19 +47,19 @@ public class ReportService {
         return stats;
     }
 
-    public List<Map<String, Object>> getPerformanceReport(Long requesterId) {
+    public List<Map<String, Object>> getPerformanceReport(String requesterId) {
         checkAccess(requesterId);
 
         List<Task> allTasks = taskRepository.findAll();
 
         // Group tasks by which user they are assigned to
-        Map<Long, List<Task>> tasksByUser = allTasks.stream()
+        Map<Object, List<Task>> tasksByUser = allTasks.stream()
                 .filter(t -> t.getAssignedTo() != null)
                 .collect(Collectors.groupingBy(t -> t.getAssignedTo().getUserID()));
 
         List<Map<String, Object>> performanceList = new ArrayList<>();
 
-        for (Map.Entry<Long, List<Task>> entry : tasksByUser.entrySet()) {
+        for (Entry<Object, List<Task>> entry : tasksByUser.entrySet()) {
             List<Task> userTasks = entry.getValue();
             User assignee = userTasks.get(0).getAssignedTo();
 
@@ -83,7 +84,7 @@ public class ReportService {
         return performanceList;
     }
 
-    private void checkAccess(Long requesterId) {
+    private void checkAccess(String requesterId) {
         User requester = userRepository.findByUserID(requesterId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + requesterId));
 

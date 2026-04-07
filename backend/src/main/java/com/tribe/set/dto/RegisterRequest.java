@@ -6,7 +6,7 @@ import jakarta.validation.constraints.*;
 
 public class RegisterRequest {
 
-	private Long userID;
+	private String userID;
 
 	@NotBlank(message = "Name cannot be empty")
 	private String name;
@@ -28,11 +28,11 @@ public class RegisterRequest {
 	@Pattern(regexp = "^\\d{10}$", message = "Phone number must be exactly 10 digits")
 	private String phone;
 
-	public Long getUserID() {
+	public String getUserID() {
 		return userID;
 	}
 
-	public void setUserID(Long userID) {
+	public void setUserID(String userID) {
 		this.userID = userID;
 	}
 

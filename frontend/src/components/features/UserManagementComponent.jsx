@@ -31,7 +31,8 @@ const UserManagementComponent = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const requesterId = localStorage.getItem('userID') ? Number(localStorage.getItem('userID')) : null;
+      // const requesterId = localStorage.getItem('userID') ? Number(localStorage.getItem('userID')) : null;
+      const requesterId = localStorage.getItem('userID') || null;
       const data = await getAllUsers(requesterId);
       const revRoleMap = {
         'COLLECTOR': 'Collector', 'ADDITIONAL_DEPUTY_COLLECTOR': 'Addl. Collector', 'SDO': 'SDO',
@@ -228,15 +229,20 @@ const UserModal = ({ user, roles, talukas, villages, fetchVillages, onClose, onC
   };
 
   // Initial village fetch if editing a user with an existing taluka
-  useEffect(() => {
-    if (user?.taluka) {
-      onFetchVillages(user.taluka);
-    }
-  }, [user, onFetchVillages]);
+useEffect(() => {
+  if (user?.taluka) {
+    fetchVillages(user.taluka);
+  }
+}, [user, fetchVillages]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
+      if (!formData.userID) {
+    newErrors.userID = "User ID is required";
+  } else if (!/^\d+$/.test(formData.userID)) {
+    newErrors.userID = "User ID must contain only digits";
+  }
     const phoneError = validatePhone(formData.phone);
     if (phoneError) newErrors.phone = phoneError;
     if ((!user && !isEditing) || (isEditing && formData.password)) {
@@ -246,7 +252,19 @@ const UserModal = ({ user, roles, talukas, villages, fetchVillages, onClose, onC
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     setErrors({});
     onSave(formData);
+
+if (!formData.userID) {
+  newErrors.userID = "User ID is required";
+} else if (!/^\d+$/.test(formData.userID)) {
+  newErrors.userID = "User ID must contain only digits";
+}
+
   };
+
+  // Added changes
+  {errors.userID && (
+  <p className="mt-1 text-xs text-red-500">⚠️ {errors.userID}</p>
+)}
 
   if (user && !isEditing) {
     return (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -293,8 +311,27 @@ const UserModal = ({ user, roles, talukas, villages, fetchVillages, onClose, onC
       <div className="p-5"><form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div><label className="block text-sm font-medium text-gray-700 mb-1">User ID (Number) <span className="text-red-500">*</span></label>
-          <input type="number" required disabled={user} value={formData.userID} onChange={(e) => setFormData({...formData, userID: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 text-sm" placeholder="Enter user ID (e.g., 12345)" /></div>
+          {/* <input type="number" required disabled={user} value={formData.userID} onChange={(e) => setFormData({...formData, userID: e.target.value})} */}
+
+          <input 
+  type="text"
+  inputMode="numeric"
+  pattern="[0-9]*"
+  required
+  disabled={user}
+  value={formData.userID}
+  onChange={(e) => {
+    const value = e.target.value;
+
+    // only digits allow
+    if (/^\d*$/.test(value)) {
+      setFormData({ ...formData, userID: value });
+    }
+  }}
+   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 text-sm"
+  placeholder="Enter user ID (digits only)"
+/>
+</div>
           <div><label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
           <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Enter full name" /></div>
