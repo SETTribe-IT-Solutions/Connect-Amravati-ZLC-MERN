@@ -25,7 +25,7 @@ public class DataSeeder implements CommandLineRunner {
             System.out.println("No users found in database. Seeding initial SYSTEM_ADMINISTRATOR...");
 
             User admin = new User();
-            admin.setUserID(1L); // Using 1 as initial ID
+            admin.setUserID("1"); // Using 1 as initial ID
             admin.setName("System Admin");
             admin.setEmail("admin@amravati.gov.in");
             admin.setPassword(passwordEncoder.encode("admin123"));

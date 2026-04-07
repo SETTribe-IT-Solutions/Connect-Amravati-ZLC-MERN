@@ -25,7 +25,12 @@ public class JwtResponse {
         this.message = message;
     }
 
-    public String getAccessToken() {
+    public JwtResponse(String jwt, String userID, String name2, String email2, String name3, String district2,
+			String taluka2, String village2, String message2) {
+		// TODO Auto-generated constructor stub
+	}
+
+	public String getAccessToken() {
         return accessToken;
     }
 

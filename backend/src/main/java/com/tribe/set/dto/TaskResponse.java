@@ -19,11 +19,11 @@ public class TaskResponse {
     private String location;
     private String attachment;
 
-    private Long createdById;
+    private String createdById;
     private String createdByName;
     private String createdByRole;
 
-    private Long assignedToId;
+    private String assignedToId;
     private String assignedToName;
     private String assignedToRole;
 
@@ -114,7 +114,7 @@ public class TaskResponse {
         return attachment;
     }
 
-    public Long getCreatedById() {
+    public String getCreatedById() {
         return createdById;
     }
 
@@ -126,7 +126,7 @@ public class TaskResponse {
         return createdByRole;
     }
 
-    public Long getAssignedToId() {
+    public String getAssignedToId() {
         return assignedToId;
     }
 

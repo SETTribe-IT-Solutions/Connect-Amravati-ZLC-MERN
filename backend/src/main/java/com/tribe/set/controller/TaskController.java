@@ -51,9 +51,9 @@ public class TaskController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<TaskResponse>> getTasks(
             Authentication authentication,
-            @RequestParam(name = "requesterId", required = false) Long requesterId) {
+            @RequestParam(name = "requesterId", required = false) String requesterId) {
         
-        Long finalUserId = (requesterId != null) ? requesterId : ((UserDetailsImpl) authentication.getPrincipal()).getId();
+        String finalUserId = (requesterId != null) ? requesterId : ((UserDetailsImpl) authentication.getPrincipal()).getId();
         return ResponseEntity.ok(taskService.getTasks(finalUserId));
     }
 
@@ -91,9 +91,9 @@ public class TaskController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<DashboardResponse> getDashboard(
             Authentication authentication,
-            @RequestParam(name = "requesterId", required = false) Long requesterId) {
+            @RequestParam(name = "requesterId", required = false) String requesterId) {
         
-        Long finalUserId = (requesterId != null) ? requesterId : ((UserDetailsImpl) authentication.getPrincipal()).getId();
+        String finalUserId = (requesterId != null) ? requesterId : ((UserDetailsImpl) authentication.getPrincipal()).getId();
         return ResponseEntity.ok(taskService.getDashboard(finalUserId));
     }
 

@@ -14,7 +14,7 @@ import com.tribe.set.entity.User;
 public class UserDetailsImpl implements UserDetails {
     private static final long serialVersionUID = 1L;
 
-    private Long id;
+    private String id;
     private String name;
     private String email;
 
@@ -23,9 +23,9 @@ public class UserDetailsImpl implements UserDetails {
 
     private GrantedAuthority authority;
 
-    public UserDetailsImpl(Long id, String name, String email, String password,
+    public UserDetailsImpl(String string, String name, String email, String password,
             GrantedAuthority authority) {
-        this.id = id;
+        this.id = string;
         this.name = name;
         this.email = email;
         this.password = password;
@@ -48,7 +48,7 @@ public class UserDetailsImpl implements UserDetails {
         return Collections.singletonList(authority);
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 

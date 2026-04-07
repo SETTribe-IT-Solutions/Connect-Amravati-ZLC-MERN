@@ -17,7 +17,7 @@ public class TaskRequest {
 	private String description; // optional
 
 	@NotNull(message = "RequesterId is required")
-	private Long requesterId;
+	private String requesterId;
 
 	@NotNull(message = "Priority is required")
 	private TaskPriority priority;
@@ -35,11 +35,11 @@ public class TaskRequest {
 	private Integer achievement;
 	private String location;
 
-	public Long getRequesterId() {
+	public String getRequesterId() {
 		return requesterId;
 	}
 
-	public void setRequesterId(Long requesterId) {
+	public void setRequesterId(@NotNull(message = "RequesterId is required") String requesterId) {
 		this.requesterId = requesterId;
 	}
 

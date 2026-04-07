@@ -6,10 +6,10 @@ import jakarta.validation.constraints.NotNull;
 public class AppreciationRequest {
 
     @NotNull(message = "Sender ID is required")
-    private Long fromUserId;
+    private String fromUserId;
 
     @NotNull(message = "Receiver ID is required")
-    private Long toUserId;
+    private String toUserId;
 
     @NotBlank(message = "Message is required")
     private String message;
@@ -19,19 +19,19 @@ public class AppreciationRequest {
     public AppreciationRequest() {
     }
 
-    public Long getFromUserId() {
+    public String getFromUserId() {
         return fromUserId;
     }
 
-    public void setFromUserId(Long fromUserId) {
+    public void setFromUserId(@NotNull(message = "Sender ID is required") String fromUserId) {
         this.fromUserId = fromUserId;
     }
 
-    public Long getToUserId() {
+    public String getToUserId() {
         return toUserId;
     }
 
-    public void setToUserId(Long toUserId) {
+    public void setToUserId(@NotNull(message = "Receiver ID is required") String toUserId) {
         this.toUserId = toUserId;
     }
 

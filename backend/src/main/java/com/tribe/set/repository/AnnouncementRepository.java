@@ -24,7 +24,7 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
                                   @Param("taluka") String taluka, 
                                   @Param("village") String village);
 
-    List<Announcement> findByCreatedBy_UserIDOrderByCreatedAtDesc(Long userId);
+    List<Announcement> findByCreatedBy_UserIDOrderByCreatedAtDesc(String userId);
 
     List<Announcement> findAllByOrderByCreatedAtDesc();
 }

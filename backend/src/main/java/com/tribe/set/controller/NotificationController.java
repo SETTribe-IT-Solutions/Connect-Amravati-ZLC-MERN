@@ -31,7 +31,7 @@ public class NotificationController {
      * Filtered by isRead=false to match the "remove from UI" requirement.
      */
     @GetMapping
-    public ResponseEntity<List<Notification>> getUnreadNotifications(@RequestParam Long userId) {
+    public ResponseEntity<List<Notification>> getUnreadNotifications(@RequestParam String userId) {
         List<Notification> notifications = notificationService.getUnreadNotifications(userId);
         return ResponseEntity.ok(notifications);
     }
@@ -47,7 +47,7 @@ public class NotificationController {
     }
 
     @PutMapping("/read-all")
-    public ResponseEntity<Void> markAllAsRead(@RequestParam Long userId) {
+    public ResponseEntity<Void> markAllAsRead(@RequestParam String userId) {
         notificationService.markAllAsRead(userId);
         return ResponseEntity.noContent().build();
     }

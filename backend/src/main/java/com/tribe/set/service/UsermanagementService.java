@@ -9,6 +9,8 @@ import com.tribe.set.dto.UserResponse;
 import com.tribe.set.repository.AppreciationRepository;
 import com.tribe.set.repository.TaskRepository;
 import com.tribe.set.repository.UserRepository;
+
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +40,7 @@ public class UsermanagementService {
     // ═══════════════════════════════════════════════════
  
     @Transactional
-    public UserResponse createUser(CreateuserRequest request, Long requesterId) {
+    public UserResponse createUser(CreateuserRequest request, String requesterId) {
  
         User requester = findUser(requesterId);
  
@@ -74,7 +76,7 @@ public class UsermanagementService {
     // GET ALL USERS
     // ═══════════════════════════════════════════════════
  
-    public List<UserResponse> getAllUsers(Long requesterId) {
+    public List<UserResponse> getAllUsers(String requesterId) {
         User requester = (requesterId != null) ? findUser(requesterId) : null;
  
         return userRepository.findAll()
@@ -93,7 +95,7 @@ public class UsermanagementService {
     // GET USERS BY ROLE
     // ═══════════════════════════════════════════════════
  
-    public List<UserResponse> getUsersByRole(Role role, Long requesterId) {
+    public List<UserResponse> getUsersByRole(Role role, String requesterId) {
         findUser(requesterId);
  
         return userRepository.findByRole(role)
@@ -107,7 +109,7 @@ public class UsermanagementService {
     // GET USER PROFILE
     // ═══════════════════════════════════════════════════
  
-    public UserResponse getUserProfile(Long targetUserId, Long requesterId) {
+    public UserResponse getUserProfile(String targetUserId, String requesterId) {
         findUser(requesterId);
         User target = findUser(targetUserId);
         return enrichWithStats(UserResponse.from(target));
@@ -120,7 +122,7 @@ public class UsermanagementService {
     // ═══════════════════════════════════════════════════
  
     @Transactional
-    public UserResponse setActiveStatus(Long targetUserId, Boolean active, Long requesterId) {
+    public UserResponse setActiveStatus(String targetUserId, Boolean active, String requesterId) {
         User requester = findUser(requesterId);
  
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
@@ -148,7 +150,7 @@ public class UsermanagementService {
     // ═══════════════════════════════════════════════════
  
     @Transactional
-    public UserResponse updateUserRole(Long targetUserId, Role newRole, Long requesterId) {
+    public UserResponse updateUserRole(String targetUserId, Role newRole, String requesterId) {
         User requester = findUser(requesterId);
  
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
@@ -167,7 +169,7 @@ public class UsermanagementService {
     // ═══════════════════════════════════════════════════
  
     @Transactional
-    public UserResponse updateUser(Long targetUserId, UpdateUserRequest request, Long requesterId) {
+    public UserResponse updateUser(String targetUserId, UpdateUserRequest request, String requesterId) {
         User requester = findUser(requesterId);
  
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR && !requester.getUserID().equals(targetUserId)) {
@@ -223,16 +225,16 @@ public class UsermanagementService {
     // ═══════════════════════════════════════════════════
  
     @Transactional
-    public void deleteUser(Long targetUserId, Long requesterId) {
-        User requester = findUser(requesterId);
+    public void deleteUser(String id, String long1) {
+        User requester = findUser(long1);
  
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
             throw new RuntimeException("Access Denied: Only System Administrator can delete users");
         }
  
-        User target = findUser(targetUserId);
+        User target = findUser(id);
  
-        if (target.getUserID().equals(requesterId)) {
+        if (target.getUserID().equals(long1)) {
             throw new RuntimeException("You cannot delete your own account");
         }
  
@@ -246,7 +248,7 @@ public class UsermanagementService {
     // ═══════════════════════════════════════════════════
     // GET SUBORDINATES
     // ═══════════════════════════════════════════════════
-    public List<UserResponse> getSubordinates(Long requesterId) {
+    public List<UserResponse> getSubordinates(String requesterId) {
         User requester = findUser(requesterId);
         int requesterLevel = requester.getRole().getLevel();
         
@@ -275,7 +277,7 @@ public class UsermanagementService {
                 .collect(Collectors.toList());
     }
 
-    private User findUser(Long userId) {
+    private User findUser(String userId) {
         return userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
     }
@@ -292,4 +294,8 @@ public class UsermanagementService {
         }
         return res;
     }
-}
+
+	
+	
+	}
+

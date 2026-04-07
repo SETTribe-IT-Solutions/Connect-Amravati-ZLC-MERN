@@ -2,14 +2,14 @@ package com.tribe.set.dto;
 
 public class UserRequest {
 
-    private Long userID;
+    private String userID;
     private String password;
 
-    public Long getUserID() {
+    public String getUserID() {
         return userID;
     }
 
-    public void setUserID(Long userID) {
+    public void setUserID(String userID) {
         this.userID = userID;
     }
 
