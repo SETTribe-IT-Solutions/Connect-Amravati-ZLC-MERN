@@ -96,19 +96,21 @@ const TaskDashboard = ({ user }) => {
     e.preventDefault();
     try {
       const userID = user?.userID || localStorage.getItem('userID');
-      const assignedToId = parseInt(newTask.assignedTo);
+      const assignedToId = newTask.assignedTo;
       
-      if (assignedToId === parseInt(userID)) {
+      if (assignedToId === userID) {
         showToast('You cannot assign a task to yourself', 'error');
         return;
       }
 
+      const targetValue = newTask.targetType === 'target' ? parseInt(newTask.targetValue) : null;
+      
       const taskData = {
         title: newTask.title, description: newTask.description, department: newTask.department,
-        priority: newTask.priority.toUpperCase(), assignedTo: parseInt(newTask.assignedTo),
+        priority: newTask.priority.toUpperCase(), assignedTo: newTask.assignedTo,
         requesterId: userID, 
         dueDate: newTask.dueDate ? new Date(newTask.dueDate.getTime() - newTask.dueDate.getTimezoneOffset() * 60000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        target: newTask.targetType === 'target' ? newTask.targetValue : 'NA', location: newTask.location, progress: 0
+        target: isNaN(targetValue) ? null : targetValue, location: newTask.location, progress: 0
       };
       const formData = new FormData();
       formData.append('task', new Blob([JSON.stringify(taskData)], { type: 'application/json' }));
@@ -176,7 +178,7 @@ const TaskDashboard = ({ user }) => {
     try {
       const userID = user?.userID || localStorage.getItem('userID');
       
-      if (parseInt(targetUserId) === parseInt(userID)) {
+      if (targetUserId === userID) {
         showToast('You cannot forward a task to yourself', 'error');
         return;
       }
@@ -569,7 +571,7 @@ const TaskDashboard = ({ user }) => {
               className="bg-white rounded-xl shadow-xl w-[500px] max-w-[90vw] max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 text-white rounded-t-xl sticky top-0">
                 <div className="flex justify-between"><h3 className="text-sm font-semibold">Task Details</h3><button onClick={() => setShowCloseConfirm(true)}><XMarkIcon className="h-4 w-4" /></button></div>
-                <div className="flex gap-2 text-xs mt-1"><div className="flex items-center gap-1"><UserIcon className="h-3 w-3" /> Created By: {selectedTask.createdBy || user?.name || 'Admin'}</div><div className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" /> Created on: {selectedTask.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]}</div></div>
+                <div className="flex gap-2 text-xs mt-1"><div className="flex items-center gap-1"><UserIcon className="h-3 w-3" /> Created By: {selectedTask.createdByName || 'Admin'}</div><div className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" /> Created on: {selectedTask.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]}</div></div>
               </div>
               <div className="p-4 space-y-3">
                 <div><p className="text-[11px] text-gray-500">Task Title</p><p className="text-sm font-semibold text-gray-800">{selectedTask.title}</p></div>
