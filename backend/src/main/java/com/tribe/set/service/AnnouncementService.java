@@ -139,7 +139,7 @@ public class AnnouncementService {
     }
 
     @Transactional
-    public Announcement updateAnnouncement(Long announcementId, Long userId, String title, String message) {
+    public Announcement updateAnnouncement(Long announcementId, String userId, String title, String message) {
         Announcement announcement = announcementRepository.findById(announcementId)
                 .orElseThrow(() -> new RuntimeException("Announcement not found"));
                 
@@ -153,7 +153,7 @@ public class AnnouncementService {
     }
 
     @Transactional
-    public void deleteAnnouncement(Long announcementId, Long userId) {
+    public void deleteAnnouncement(Long announcementId, String userId) {
         Announcement announcement = announcementRepository.findById(announcementId)
                 .orElseThrow(() -> new RuntimeException("Announcement not found"));
                 

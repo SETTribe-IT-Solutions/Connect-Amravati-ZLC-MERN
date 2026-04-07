@@ -69,7 +69,7 @@ public class AnnouncementController {
     @PutMapping("/{id}")
     public ResponseEntity<Announcement> updateAnnouncement(
             @PathVariable(name = "id") Long id,
-            @RequestParam(name = "userId") Long userId,
+            @RequestParam(name = "userId") String userId,
             @RequestBody UpdateRequest request) {
         return ResponseEntity.ok(announcementService.updateAnnouncement(id, userId, request.getTitle(), request.getMessage()));
     }
@@ -77,7 +77,7 @@ public class AnnouncementController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteAnnouncement(
             @PathVariable(name = "id") Long id,
-            @RequestParam(name = "userId") Long userId) {
+            @RequestParam(name = "userId") String userId) {
         announcementService.deleteAnnouncement(id, userId);
         return ResponseEntity.ok("Deleted successfully");
     }
