@@ -56,7 +56,7 @@ const UserManagementComponent = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get("http://localhost:8080/api/talukas", { headers: { Authorization: `Bearer ${token}` } });
-      setTalukas(response.data.map(t => t.taluka));
+      setTalukas(response.data.map(t => (t?.taluka ?? t)).filter(Boolean));
     } catch (error) { console.error("Fetch Talukas Error:", error); }
   };
 
@@ -64,8 +64,8 @@ const UserManagementComponent = () => {
     if (!talukaName) { setVillages([]); return; }
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`http://localhost:8080/api/villages/${talukaName}`, { headers: { Authorization: `Bearer ${token}` } });
-      setVillages(response.data.map(v => v.village));
+      const response = await axios.get(`http://localhost:8080/api/villages/${encodeURIComponent(talukaName)}`, { headers: { Authorization: `Bearer ${token}` } });
+      setVillages(response.data.map(v => (v?.village ?? v)).filter(Boolean));
     } catch (error) { console.error("Fetch Villages Error:", error); setVillages([]); }
   };
 
@@ -187,13 +187,23 @@ const UserManagementComponent = () => {
         onSave={async (userData) => {
           try {
             const roleMap = { 'Collector': 'COLLECTOR', 'Addl. Collector': 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO': 'SDO', 'Tehsildar': 'TEHSILDAR', 'BDO': 'BDO', 'Talathi': 'TALATHI', 'Gram Sevak': 'GRAMSEVAK', 'Admin': 'SYSTEM_ADMINISTRATOR' };
-            const payload = { ...userData, role: roleMap[userData.role] || userData.role, requesterId: localStorage.getItem('userID'), active: userData.status === 'Active' };
+            const payload = { ...userData, role: roleMap[userData.role] || userData.role, requesterId: localStorage.getItem('userID') || '', active: userData.status === 'Active' };
             delete payload.status;
-            if (selectedUser && !payload.password) delete payload.password;
-            selectedUser ? await updateUser(selectedUser.id, payload) : await addUser(payload);
+            
+            if (selectedUser) {
+              delete payload.userID; // NOT present in UpdateUserRequest DTO
+              if (!payload.password) delete payload.password;
+              await updateUser(selectedUser.id, payload);
+            } else {
+              await addUser(payload);
+            }
+            
             fetchUsers(); setIsModalOpen(false); setSelectedUser(null);
             showToast(selectedUser ? 'User Updated' : 'User Created', 'Successfully');
-          } catch (error) { showToast('Operation Failed', 'Please try again'); }
+          } catch (error) { 
+            console.error("Save Error:", error.response?.data || error.message);
+            showToast('Operation Failed', 'Please try again'); 
+          }
         }} />}</AnimatePresence>
 
       <AnimatePresence>{showCloseConfirm && <ConfirmPopup message="Do you want to close?" onConfirm={() => { setIsModalOpen(false); setSelectedUser(null); setVillages([]); setShowCloseConfirm(false); }} onCancel={() => setShowCloseConfirm(false)} />}</AnimatePresence>
@@ -353,8 +363,8 @@ if (!formData.userID) {
             {roles.map(role => <option key={role} value={role}>{role}</option>)}
           </select></div>
           <div><label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-          <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm">
+          <select disabled={!user} value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed">
             <option value="Active">Active</option><option value="Inactive">Inactive</option>
           </select></div>
         </div>
