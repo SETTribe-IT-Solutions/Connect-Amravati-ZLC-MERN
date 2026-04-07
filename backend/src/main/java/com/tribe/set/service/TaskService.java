@@ -134,12 +134,7 @@ public class TaskService {
     // REASSIGN TASK
     // ═══════════════════════════════════════════════════
 
-    private User findUser(Long assignedTo) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public TaskResponse reassignTask(Long taskId, Long newAssigneeId, Long requesterId) {
+	public TaskResponse reassignTask(Long taskId, String newAssigneeId, String requesterId) {
 
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
@@ -193,7 +188,7 @@ public class TaskService {
     // FORWARD TASK
     // ═══════════════════════════════════════════════════
 
-    public TaskResponse forwardTask(Long taskId, Long newAssigneeId, Long requesterId) {
+    public TaskResponse forwardTask(Long taskId, String newAssigneeId, String requesterId) {
 
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
@@ -287,7 +282,7 @@ public class TaskService {
     // GET SINGLE TASK
     // ═══════════════════════════════════════════════════
 
-    public TaskResponse getTaskById(Long taskId, Long requesterId) {
+    public TaskResponse getTaskById(Long taskId, String requesterId) {
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
 
@@ -305,7 +300,7 @@ public class TaskService {
     // UPDATE TASK STATUS
     // ═══════════════════════════════════════════════════
 
-    public TaskResponse updateTaskStatus(Long taskId, TaskStatus newStatus, Long requesterId) {
+    public TaskResponse updateTaskStatus(Long taskId, TaskStatus newStatus, String requesterId) {
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
 
@@ -346,7 +341,7 @@ public class TaskService {
     // UPDATE TASK PROGRESS
     // ═══════════════════════════════════════════════════
 
-    public TaskResponse updateTaskProgress(Long taskId, int achievedWork, Long requesterId) {
+    public TaskResponse updateTaskProgress(Long taskId, int achievedWork, String requesterId) {
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
 
@@ -437,7 +432,7 @@ public class TaskService {
     // ADD REMARK
     // ═══════════════════════════════════════════════════
 
-    public TaskRemark addRemark(Long taskId, String remarkText, Long requesterId) {
+    public TaskRemark addRemark(Long taskId, String remarkText, String requesterId) {
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
 
