@@ -236,6 +236,7 @@ useEffect(() => {
   }
 }, [user, fetchVillages]);
 
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
