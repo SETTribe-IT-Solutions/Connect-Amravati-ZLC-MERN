@@ -49,7 +49,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) =
 
       {/* Sidebar */}
       <div
-        className={`fixed lg:absolute left-0 top-0 lg:top-0 h-full lg:h-full bg-white border-r border-gray-100 z-[100] transition-all duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        className={`fixed lg:absolute left-0 top-0 lg:top-0 h-full lg:h-full bg-white border-r border-gray-100 z-[100] lg:z-30 transition-all duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           } ${sidebarWidth} w-64 flex flex-col`}
       >
         {/* Logo Section - Hidden on collapsed desktop, visible on mobile */}
