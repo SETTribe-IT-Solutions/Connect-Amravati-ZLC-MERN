@@ -28,7 +28,7 @@ public class DataSeeder implements CommandLineRunner {
             admin.setUserID("1"); // Using 1 as initial ID
             admin.setName("System Admin");
             admin.setEmail("admin@amravati.gov.in");
-            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setPassword(passwordEncoder.encode("Admin123"));
             admin.setRole(Role.SYSTEM_ADMINISTRATOR);
             admin.setActive(true);
             admin.setDistrict("Amravati");

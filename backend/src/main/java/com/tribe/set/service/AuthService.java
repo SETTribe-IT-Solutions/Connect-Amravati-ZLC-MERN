@@ -63,14 +63,36 @@ public class AuthService {
                 "Login successful");
     }
 
+//    public String register(RegisterRequest request) {
+//        if (userRepository.findByUserID(request.getUserID()).isPresent()) {
+//            throw new RuntimeException("User already exists");
+//        }
+
+//        User user = new User();
+//        user.setUserID(request.getUserID());
+//        // Encrypt the password before saving
+//        user.setPassword(passwordEncoder.encode(request.getPassword()));
+//        user.setName(request.getName());
+//        user.setEmail(request.getEmail());
+//        user.setDistrict(request.getDistrict());
+//        user.setTaluka(request.getTaluka());
+//        user.setVillage(request.getVillage());
+//        user.setRole(request.getRole());
+//        user.setActive(true);
+//
+//        userRepository.save(user);
+//
+//        return "User registered successfully";
+//    }
+        
     public String register(RegisterRequest request) {
+
         if (userRepository.findByUserID(request.getUserID()).isPresent()) {
             throw new RuntimeException("User already exists");
         }
 
         User user = new User();
         user.setUserID(request.getUserID());
-        // Encrypt the password before saving
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setName(request.getName());
         user.setEmail(request.getEmail());
@@ -79,6 +101,9 @@ public class AuthService {
         user.setVillage(request.getVillage());
         user.setRole(request.getRole());
         user.setActive(true);
+
+        // 🔥 MISSING LINE (THIS FIXES YOUR ERROR)
+        user.setPhone(request.getPhone());
 
         userRepository.save(user);
 
