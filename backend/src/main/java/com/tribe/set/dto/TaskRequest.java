@@ -23,7 +23,7 @@ public class TaskRequest {
 	private TaskPriority priority;
 
 	@NotNull(message = "AssignedTo userId is required")
-	private Long assignedTo; // userID of the person to assign to
+	private String assignedTo; // userID of the person to assign to
 
 
 	@FutureOrPresent(message = "Due date cannot be in the past")
@@ -67,11 +67,11 @@ public class TaskRequest {
 		this.priority = priority;
 	}
 
-	public Long getAssignedTo() {
+	public String getAssignedTo() {
 		return assignedTo;
 	}
 
-	public void setAssignedTo(Long assignedTo) {
+	public void setAssignedTo(String assignedTo) {
 		this.assignedTo = assignedTo;
 	}
 

@@ -7,16 +7,16 @@ import jakarta.validation.constraints.NotNull;
 public class RemarkRequest {
 
     @NotNull(message = "RequesterId is required")
-    private Long requesterId;
+    private String requesterId;
 
     @NotBlank(message = "Remark cannot be empty")
     private String remark;
 
-    public Long getRequesterId() {
+    public String getRequesterId() {
         return requesterId;
     }
 
-    public void setRequesterId(Long requesterId) {
+    public void setRequesterId(String requesterId) {
         this.requesterId = requesterId;
     }
 
