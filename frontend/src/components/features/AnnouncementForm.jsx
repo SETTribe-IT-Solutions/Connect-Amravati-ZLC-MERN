@@ -86,10 +86,24 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
   
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    if (selectedFile && selectedFile.size > 10 * 1024 * 1024) {
-      toast.error('File size must be less than 10MB');
+    if (!selectedFile) return;
+
+    const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'txt', 'jpg', 'jpeg', 'png'];
+    const fileExtension = selectedFile.name.split('.').pop().toLowerCase();
+    
+    if (!allowedExtensions.includes(fileExtension)) {
+      toast.error('Invalid file format. Allowed: pdf, doc, docx, xls, xlsx, csv, txt, jpg, jpeg, png');
+      // Reset the file input so the invalid file isn't kept
+      e.target.value = null;
       return;
     }
+
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      toast.error('File size must be less than 10MB');
+      e.target.value = null;
+      return;
+    }
+    
     setFile(selectedFile);
   };
 
@@ -140,8 +154,8 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
               <MegaphoneIcon className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">Send Communication</h2>
-              <p className="text-blue-100 text-sm">Target officials by role and area</p>
+              <h2 className="text-2xl font-bold text-white">Send Communications & Announcement</h2>
+              <p className="text-blue-100 text-sm">Target by role and area</p>
             </div>
           </div>
           <button
@@ -259,6 +273,7 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
                   type="file"
                   id="file-upload"
                   onChange={handleFileChange}
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png"
                   className="hidden"
                 />
                 <label 

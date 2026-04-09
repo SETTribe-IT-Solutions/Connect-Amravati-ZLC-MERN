@@ -78,7 +78,18 @@ public class AnnouncementService {
                 String originalFileName = file.getOriginalFilename();
                 String extension = "";
                 if (originalFileName != null && originalFileName.contains(".")) {
-                    extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+                    extension = originalFileName.substring(originalFileName.lastIndexOf(".")).toLowerCase();
+                }
+
+                // File format validation
+                java.util.List<String> allowedExtensions = java.util.Arrays.asList(".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv", ".txt", ".jpg", ".jpeg", ".png");
+                if (extension.isEmpty() || !allowedExtensions.contains(extension)) {
+                    throw new RuntimeException("Invalid file format. Allowed: pdf, doc, docx, xls, xlsx, csv, txt, jpg, jpeg, png");
+                }
+
+                // File size validation (10 MB)
+                if (file.getSize() > 10 * 1024 * 1024) {
+                    throw new RuntimeException("File size must be less than 10MB");
                 }
 
                 String uniqueFileName = UUID.randomUUID().toString() + extension;
