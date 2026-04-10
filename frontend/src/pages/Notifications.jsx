@@ -49,9 +49,9 @@ const Notifications = () => {
   };
 
   const handleViewDetails = (notification) => {
-    if (notification.task && (notification.task.id || notification.taskId)) {
-      const taskId = notification.task.id || notification.taskId;
-      navigate(`/tasks?taskId=${taskId}`);
+    const taskId = notification.taskId || notification.task?.id;
+    if (taskId) {
+      navigate(`/tasks?highlightId=${taskId}`);
     } else {
       toast.error('No task details available for this notification');
     }
@@ -301,10 +301,7 @@ const Notifications = () => {
                       <div className="flex flex-wrap items-center gap-2">
                         {(notification.task || notification.taskId) && (
                           <button
-                            onClick={() => {
-                                const tId = notification.taskId || (notification.task && notification.task.id);
-                                navigate(`/tasks?highlightId=${tId}`);
-                            }}
+                            onClick={() => handleViewDetails(notification)}
                             className="flex-1 sm:flex-initial inline-flex items-center justify-center px-3 py-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors font-bold shadow-sm"
                           >
                             <FaExternalLinkAlt className="mr-2 h-3 w-3" />

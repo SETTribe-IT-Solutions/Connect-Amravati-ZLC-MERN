@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { getTasks, createTask, updateTaskStatus, addTaskRemark, updateTaskProgressAPI, forwardTaskAPI } from '../../services/taskService';
 import { getAllUsers, getSubordinates } from '../../services/userService';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,6 +33,7 @@ const TaskDashboard = ({ user }) => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const location = useLocation();
   
   const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
   const [subordinates, setSubordinates] = useState([]);
@@ -91,6 +93,16 @@ const TaskDashboard = ({ user }) => {
     fetchTasks();
     if (canCreateTask) fetchStaff();
   }, [user]);
+
+  useEffect(() => {
+    const highlightId = new URLSearchParams(location.search).get('highlightId');
+    if (!highlightId || tasks.length === 0) return;
+    const targetTask = tasks.find(task => String(task.id) === highlightId);
+    if (targetTask) {
+      setSelectedTask(targetTask);
+      setShowDetailsModal(true);
+    }
+  }, [location.search, tasks]);
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
