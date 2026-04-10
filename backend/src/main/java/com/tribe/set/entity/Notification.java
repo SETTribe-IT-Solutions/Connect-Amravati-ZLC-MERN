@@ -41,6 +41,8 @@ public class Notification {
 
 	private LocalDateTime createdAt = LocalDateTime.now();
 
+	private LocalDateTime readAt; // timestamp when marked as read
+
 	public Long getId() {
 		return id;
 	}
@@ -105,4 +107,13 @@ public class Notification {
 		this.taskId = taskId;
 	}
 
+	public LocalDateTime getReadAt() {
+		return readAt;
+	}
+
+	public void setReadAt(LocalDateTime readAt) {
+		this.readAt = readAt;
+	}
+
 }
+

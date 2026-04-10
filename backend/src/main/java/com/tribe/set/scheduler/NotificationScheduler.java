@@ -11,6 +11,9 @@ public class NotificationScheduler {
     @Autowired
     private TaskService taskService;
 
+    @Autowired
+    private com.tribe.set.service.NotificationServices notificationService;
+
     /**
      * Runs every hour to check for overdue tasks and tasks due soon.
      * Cron: "0 0 * * * *" (top of every hour)
@@ -22,7 +25,10 @@ public class NotificationScheduler {
         // 1. Mark tasks as overdue and notify both assignee and assigner
         taskService.markOverdueTasks();
         
-        // 2. Send reminders for tasks due within the next 2 days
+        // 2. Send reminders for tasks due within the next 24 hours
         taskService.sendDueSoonNotifications();
+
+        // 3. Clean up notifications older than 7 days
+        notificationService.cleanupOldNotifications();
     }
 }
