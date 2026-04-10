@@ -502,19 +502,21 @@ public class TaskService {
             task.setStatus(TaskStatus.OVERDUE);
             taskRepository.save(task);
 
-            notificationService.send(
+            // Notify assignee
+            notificationService.sendUnique(
                     task.getAssignedTo(),
                     "Task Overdue",
                     "OVERDUE: Task '" + task.getTitle() + "' has passed its due date!",
-                    NotificationType.OVERDUE,
+                    NotificationType.TASK_OVERDUE,
                     task.getId());
 
-            notificationService.send(
+            // Notify creator
+            notificationService.sendUnique(
                     task.getCreatedBy(),
                     "Task Overdue Alert",
                     "Task is overdue: '" + task.getTitle() +
                             "' assigned to " + task.getAssignedTo().getName(),
-                    NotificationType.OVERDUE,
+                    NotificationType.TASK_OVERDUE,
                     task.getId());
         }
     }
@@ -524,17 +526,18 @@ public class TaskService {
     // ═══════════════════════════════════════════════════
 
     public void sendDueSoonNotifications() {
+        // Requirement: Due within next 24 hours (1 day)
         List<Task> dueSoon = taskRepository.findTasksDueSoon(
                 LocalDate.now(),
-                LocalDate.now().plusDays(2));
+                LocalDate.now().plusDays(1));
 
         for (Task task : dueSoon) {
-            notificationService.send(
+            notificationService.sendUnique(
                     task.getAssignedTo(),
                     "Upcoming Task Due Date",
                     "Reminder: Task '" + task.getTitle() +
                             "' is due on " + task.getDueDate(),
-                    NotificationType.REMINDER,
+                    NotificationType.TASK_DUE_SOON,
                     task.getId());
         }
     }

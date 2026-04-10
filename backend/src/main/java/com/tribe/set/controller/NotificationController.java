@@ -7,15 +7,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tribe.set.entity.Notification;
 import com.tribe.set.dto.NotificationRequest;
+import com.tribe.set.entity.Notification;
 import com.tribe.set.service.NotificationServices;
 
 @RestController
@@ -27,12 +27,12 @@ public class NotificationController {
     private NotificationServices notificationService;
 
     /**
-     * Fetch unread notifications for the specified user.
-     * Filtered by isRead=false to match the "remove from UI" requirement.
+     * Fetch active notifications for the specified user.
+     * Active = unread + read within 15 days
      */
     @GetMapping
-    public ResponseEntity<List<Notification>> getUnreadNotifications(@RequestParam String userId) {
-        List<Notification> notifications = notificationService.getUnreadNotifications(userId);
+    public ResponseEntity<List<Notification>> getActiveNotifications(@RequestParam String userId) {
+        List<Notification> notifications = notificationService.getActiveNotifications(userId);
         return ResponseEntity.ok(notifications);
     }
 
@@ -41,7 +41,7 @@ public class NotificationController {
      * This updates the isRead flag in the database.
      */
     @PutMapping("/{id}/read")
-    public ResponseEntity<Notification> markAsRead(@PathVariable Long id, @RequestParam Long userId) {
+    public ResponseEntity<Notification> markAsRead(@PathVariable Long id, @RequestParam String userId) {
         Notification notification = notificationService.markOneAsRead(id, userId);
         return ResponseEntity.ok(notification);
     }

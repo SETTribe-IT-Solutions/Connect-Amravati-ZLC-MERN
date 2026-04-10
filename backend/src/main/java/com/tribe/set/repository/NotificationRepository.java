@@ -1,5 +1,6 @@
 package com.tribe.set.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,8 +23,18 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     long countByUserAndIsRead(User user, Boolean isRead);
 
+    @Query("SELECT n FROM Notification n WHERE n.user = :user AND (n.isRead = false OR (n.isRead = true AND n.readAt >= :expiryDate)) ORDER BY n.createdAt DESC")
+    List<Notification> findActiveNotificationsForUser(@Param("user") User user, @Param("expiryDate") LocalDateTime expiryDate);
+
+    boolean existsByUserAndTypeAndTaskId(User user, com.tribe.set.entity.NotificationType type, Long taskId);
+
     @Modifying
     @Transactional
-    @Query("UPDATE Notification n SET n.isRead = true WHERE n.user = :user AND n.isRead = false")
+    @Query("DELETE FROM Notification n WHERE n.createdAt < :expiryDate")
+    void deleteByCreatedAtBefore(@Param("expiryDate") LocalDateTime expiryDate);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Notification n SET n.isRead = true, n.readAt = CURRENT_TIMESTAMP WHERE n.user = :user AND n.isRead = false")
     void markAllAsReadForUser(@Param("user") User user);
 }
