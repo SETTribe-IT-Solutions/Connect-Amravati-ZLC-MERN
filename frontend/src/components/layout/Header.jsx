@@ -57,7 +57,10 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
       window.removeEventListener('notificationsUpdated', handleUpdate);
     };
   }, [userID]);
-
+  // Close dropdown when route changes so it returns to its original position
+  useEffect(() => {
+    setShowDropdown(false);
+  }, [location.pathname]);
   // Click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -223,14 +226,12 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
                         )}
                       </div>
 
-                      {notifications.length > 0 && (
-                        <button 
-                          onClick={() => navigate('/notifications')}
-                          className="w-full py-3 text-center text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors border-t border-gray-50"
-                        >
-                          {t('notifications.seeAll')}
-                        </button>
-                      )}
+                      <button 
+                        onClick={() => navigate('/notifications')}
+                        className="w-full py-3 text-center text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors border-t border-gray-50"
+                      >
+                        {t('notifications.seeAll')}
+                      </button>
                     </motion.div>
                   )}
                 </AnimatePresence>

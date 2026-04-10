@@ -182,16 +182,14 @@ const NotificationBell = () => {
             </div>
           )}
 
-          {notifications.length > 0 && (
-            <div className="p-3 border-t border-gray-200 bg-gray-50 rounded-b-xl">
-              <button
-                onClick={handleViewAll}
-                className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-              >
-                View All Notifications
-              </button>
-            </div>
-          )}
+          <div className="p-3 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+            <button
+              onClick={handleViewAll}
+              className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              View All Notifications
+            </button>
+          </div>
         </motion.div>
       )}
     </div>
