@@ -3,6 +3,9 @@ package com.tribe.set.dto;
 import com.tribe.set.entity.Task;
 import com.tribe.set.entity.TaskPriority;
 import com.tribe.set.entity.TaskStatus;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class TaskResponse {
 
@@ -29,6 +32,8 @@ public class TaskResponse {
 
     private String createdAt;
     private String updatedAt;
+    
+    private List<String> remarks;
 
     // ─── Static factory method ───
     public static TaskResponse from(Task task) {
@@ -59,6 +64,15 @@ public class TaskResponse {
             res.assignedToId = task.getAssignedTo().getUserID();
             res.assignedToName = task.getAssignedTo().getName();
             res.assignedToRole = task.getAssignedTo().getRole().name();
+        }
+
+        if (task.getRemarks() != null && !task.getRemarks().isEmpty()) {
+            res.remarks = task.getRemarks().stream().map(r -> {
+                String addedBy = r.getAddedBy() != null ? r.getAddedBy().getName() + " (" + r.getAddedBy().getRole() + ")" : "System";
+                return addedBy + ": " + r.getRemark();
+            }).collect(Collectors.toList());
+        } else {
+            res.remarks = new ArrayList<>();
         }
 
         return res;
@@ -144,5 +158,9 @@ public class TaskResponse {
 
     public String getUpdatedAt() {
         return updatedAt;
+    }
+
+    public List<String> getRemarks() {
+        return remarks;
     }
 }

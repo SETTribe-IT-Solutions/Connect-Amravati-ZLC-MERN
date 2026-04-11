@@ -90,16 +90,21 @@ public class TaskService {
 
         // Handle file upload
         if (file != null && !file.isEmpty()) {
+            String originalFileName = file.getOriginalFilename();
+            String extension = "";
+            if (originalFileName != null && originalFileName.contains(".")) {
+                extension = originalFileName.substring(originalFileName.lastIndexOf(".")).toLowerCase();
+            }
+
+            // Backend validation
+            if (!extension.matches("^\\.(jpg|jpeg|png|gif|pdf|doc|docx)$")) {
+                throw new RuntimeException("Validation Error: Invalid file type. Only JPG, JPEG, PNG, GIF, PDF, DOC, and DOCX are allowed.");
+            }
+
             try {
                 Path uploadPath = Paths.get(uploadDir);
                 if (!Files.exists(uploadPath)) {
                     Files.createDirectories(uploadPath);
-                }
-
-                String originalFileName = file.getOriginalFilename();
-                String extension = "";
-                if (originalFileName != null && originalFileName.contains(".")) {
-                    extension = originalFileName.substring(originalFileName.lastIndexOf("."));
                 }
 
                 String uniqueFileName = UUID.randomUUID().toString() + extension;
