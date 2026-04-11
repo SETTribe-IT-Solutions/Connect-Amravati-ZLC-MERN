@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { getTasks, createTask, updateTaskStatus, addTaskRemark, updateTaskProgressAPI, forwardTaskAPI } from '../../services/taskService';
 import { getAllUsers, getSubordinates } from '../../services/userService';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
   PlusCircleIcon, ArrowPathIcon, ClockIcon, MagnifyingGlassIcon, FunnelIcon,
   CalendarIcon, UserIcon, PaperClipIcon, ChatBubbleLeftRightIcon, PaperAirplaneIcon,
   XMarkIcon, CheckCircleIcon, FlagIcon, EyeIcon, BuildingOfficeIcon, UsersIcon,
@@ -21,12 +21,11 @@ const TaskDashboard = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedDepartment, setSelectedDepartment] = useState('all');
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [toast, setToast] = useState(null);
   const [pendingSearchTerm, setPendingSearchTerm] = useState('');
   const [pendingStatusFilter, setPendingStatusFilter] = useState('all');
   const fileInputRef = useRef(null);
-  
+
   const [tasks, setTasks] = useState([]);
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,16 +33,24 @@ const TaskDashboard = ({ user }) => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const location = useLocation();
-  
+
   const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
   const [subordinates, setSubordinates] = useState([]);
   const [forwardLoading, setForwardLoading] = useState(false);
   const [selectedTaskForForward, setSelectedTaskForForward] = useState(null);
-  
+
+  const [isRemarkModalOpen, setIsRemarkModalOpen] = useState(false);
+  const [remarkTask, setRemarkTask] = useState(null);
+  const [remarkText, setRemarkText] = useState('');
+
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [updateTaskObj, setUpdateTaskObj] = useState(null);
+  const [updateAchievementValue, setUpdateAchievementValue] = useState('');
+
   const [newTask, setNewTask] = useState({
     title: '', description: '', department: 'Revenue', priority: 'Medium',
     assignedType: 'role', assignedTo: '', dueDate: null, targetType: 'target',
-    targetValue: '', location: '', attachments: [], selectedVillage: '', otherAssignedTo: ''
+    targetValue: '', location: '', attachments: [], selectedVillage: '', selectedRole: '', otherAssignedTo: ''
   });
 
   const showToast = (title, value) => {
@@ -108,30 +115,59 @@ const TaskDashboard = ({ user }) => {
     e.preventDefault();
     try {
       const userID = user?.userID || localStorage.getItem('userID');
-      const assignedToId = newTask.assignedTo;
-      
-      if (assignedToId === userID) {
-        showToast('You cannot assign a task to yourself', 'error');
-        return;
-      }
-
       const targetValue = newTask.targetType === 'target' ? parseInt(newTask.targetValue) : null;
-      
-      const taskData = {
+
+      const baseTaskData = {
         title: newTask.title, description: newTask.description, department: newTask.department,
-        priority: newTask.priority.toUpperCase(), assignedTo: newTask.assignedTo,
-        requesterId: userID, 
+        priority: newTask.priority.toUpperCase(), requesterId: userID,
         dueDate: newTask.dueDate ? new Date(newTask.dueDate.getTime() - newTask.dueDate.getTimezoneOffset() * 60000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         target: isNaN(targetValue) ? null : targetValue, location: newTask.location, progress: 0
       };
-      const formData = new FormData();
-      formData.append('task', new Blob([JSON.stringify(taskData)], { type: 'application/json' }));
-      if (newTask.attachments?.[0]?.file) formData.append('file', newTask.attachments[0].file);
-      await createTask(formData);
+
+      if (newTask.assignedType === 'role') {
+        const roleUsers = staff.filter(u => u.role === newTask.selectedRole);
+        if (roleUsers.length === 0) {
+          showToast(`No users found with role ${newTask.selectedRole.replace(/_/g, ' ')}`, 'error');
+          return;
+        }
+
+        const promises = roleUsers.filter(u => u.userID.toString() !== userID.toString()).map(roleUser => {
+          const taskData = { ...baseTaskData, assignedTo: roleUser.userID };
+          const formData = new FormData();
+          formData.append('task', new Blob([JSON.stringify(taskData)], { type: 'application/json' }));
+          if (newTask.attachments?.[0]?.file) formData.append('file', newTask.attachments[0].file);
+          return createTask(formData);
+        });
+
+        if (promises.length === 0) {
+          showToast('Cannot assign tasks solely to yourself', 'error');
+          return;
+        }
+
+        const results = await Promise.allSettled(promises);
+        const successCount = results.filter(r => r.status === 'fulfilled').length;
+        showToast(`Task assigned to ${successCount} user(s) successfully!`, 'success');
+      } else {
+        const assignedToId = newTask.assignedTo;
+        if (!assignedToId) {
+          showToast('Please select a recipient', 'error');
+          return;
+        }
+        if (assignedToId.toString() === userID.toString()) {
+          showToast('You cannot assign a task to yourself', 'error');
+          return;
+        }
+        const taskData = { ...baseTaskData, assignedTo: assignedToId };
+        const formData = new FormData();
+        formData.append('task', new Blob([JSON.stringify(taskData)], { type: 'application/json' }));
+        if (newTask.attachments?.[0]?.file) formData.append('file', newTask.attachments[0].file);
+        await createTask(formData);
+        showToast('Task created successfully!', 'success');
+      }
+
       fetchTasks();
-      setNewTask({ title: '', description: '', department: 'Revenue', priority: 'Medium', assignedType: 'role', assignedTo: '', dueDate: null, targetType: 'target', targetValue: '', location: '', attachments: [], selectedVillage: '', otherAssignedTo: '' });
-      setShowCreateForm(false);
-      showToast('Task created successfully!', 'success');
+      setNewTask({ title: '', description: '', department: 'Revenue', priority: 'Medium', assignedType: 'role', assignedTo: '', dueDate: null, targetType: 'target', targetValue: '', location: '', attachments: [], selectedVillage: '', selectedRole: '', otherAssignedTo: '' });
+      setActiveTab('tracking');
     } catch (error) {
       console.error("Create Task Error:", error);
       const msg = error.response?.data?.message || error.message || 'Failed to create task';
@@ -141,14 +177,37 @@ const TaskDashboard = ({ user }) => {
 
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
-    const newAttachments = files.map(file => ({
+    const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx'];
+    const validFiles = [];
+    let hasInvalid = false;
+
+    files.forEach(file => {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (validExtensions.includes(ext)) {
+        validFiles.push(file);
+      } else {
+        hasInvalid = true;
+      }
+    });
+
+    if (hasInvalid) {
+      showToast('Only Image, PDF, and DOC files are allowed', 'error');
+    }
+
+    if (validFiles.length === 0) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    const newAttachments = validFiles.map(file => ({
       name: file.name,
       url: URL.createObjectURL(file),
       size: (file.size / 1024).toFixed(1) + ' KB',
       file: file
     }));
     setNewTask({ ...newTask, attachments: [...newTask.attachments, ...newAttachments] });
-    showToast(`${files.length} file(s) uploaded successfully!`, 'success');
+    showToast(`${validFiles.length} file(s) attached successfully!`, 'success');
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleRemoveAttachment = (index) => {
@@ -157,13 +216,15 @@ const TaskDashboard = ({ user }) => {
     showToast('Attachment removed', 'info');
   };
 
-  const handleAddRemark = async (taskId, remarkText) => {
-    if (!remarkText?.trim()) return showToast('Please enter a remark', 'error');
+  const handleAddRemark = async (taskId, text) => {
+    if (!text?.trim()) return showToast('Please enter a remark', 'error');
     try {
       const userID = user?.userID || localStorage.getItem('userID');
-      await addTaskRemark(taskId, remarkText, userID);
+      await addTaskRemark(taskId, text, userID);
       await fetchTasks();
       showToast('Remark added successfully!', 'success');
+      setIsRemarkModalOpen(false);
+      setRemarkText('');
     } catch (error) {
       showToast('Failed to add remark', 'error');
     }
@@ -189,7 +250,7 @@ const TaskDashboard = ({ user }) => {
   const handleConfirmForward = async (targetUserId) => {
     try {
       const userID = user?.userID || localStorage.getItem('userID');
-      
+
       if (targetUserId === userID) {
         showToast('You cannot forward a task to yourself', 'error');
         return;
@@ -210,20 +271,21 @@ const TaskDashboard = ({ user }) => {
       await updateTaskProgressAPI(taskId, parseInt(achieved), userID);
       fetchTasks();
       showToast(`Achievement updated to ${achieved}`, 'success');
+      setIsUpdateModalOpen(false);
     } catch (error) {
       showToast('Failed to update progress', 'error');
     }
   };
 
-  const tabs = canCreateTask 
-    ? [{ id: 'create', name: 'Create Task', icon: PlusCircleIcon }, 
-       { id: 'tracking', name: 'Task Tracking', icon: ArrowPathIcon }, 
-       { id: 'pending', name: 'Pending Report', icon: ClockIcon }]
-    : [{ id: 'tracking', name: 'Task Tracking', icon: ArrowPathIcon }, 
-       { id: 'pending', name: 'Pending Report', icon: ClockIcon }];
+  const tabs = canCreateTask
+    ? [{ id: 'create', name: 'Create Task', icon: PlusCircleIcon },
+    { id: 'tracking', name: 'Task Tracking', icon: ArrowPathIcon },
+    { id: 'pending', name: 'Pending Report', icon: ClockIcon }]
+    : [{ id: 'tracking', name: 'Task Tracking', icon: ArrowPathIcon },
+    { id: 'pending', name: 'Pending Report', icon: ClockIcon }];
 
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = searchTerm === '' || 
+    const matchesSearch = searchTerm === '' ||
       task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       task.assignedTo.toLowerCase().includes(searchTerm.toLowerCase());
@@ -313,10 +375,9 @@ const TaskDashboard = ({ user }) => {
         {/* Tab Navigation */}
         <div className="bg-white rounded-xl shadow-sm p-1.5 mb-6 inline-flex flex-wrap gap-1">
           {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => { setActiveTab(tab.id); if (tab.id === 'create') setShowCreateForm(false); }}
-              className={`flex items-center px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === tab.id ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'
-              }`}>
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'
+                }`}>
               <tab.icon className="h-4 w-4 mr-2" /> {tab.name}
             </button>
           ))}
@@ -327,164 +388,168 @@ const TaskDashboard = ({ user }) => {
           {activeTab === 'create' && (
             <motion.div key="create" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
               className="bg-white rounded-xl shadow-sm overflow-hidden">
-              {!showCreateForm ? (
-                <div className="text-center py-16" onClick={() => setShowCreateForm(true)}>
-                  <div className="inline-flex flex-col items-center cursor-pointer">
-                    <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md mb-4">
-                      <PlusCircleIcon className="h-10 w-10 text-white" />
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-3"><h2 className="text-lg font-bold text-white">Create New Task</h2></div>
+              <form onSubmit={handleCreateTask} className="p-5 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">Task Title *</label>
+                    <input type="text" value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required /></div>
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+                    <select value={newTask.department} onChange={(e) => setNewTask({ ...newTask, department: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg"><option>Revenue</option><option>Finance</option><option>Administration</option><option>Development</option><option>Infrastructure</option></select></div>
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">Priority *</label>
+                    <select value={newTask.priority} onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg"><option>High</option><option>Medium</option><option>Low</option></select></div>
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
+                    <DatePicker selected={newTask.dueDate} onChange={(date) => setNewTask({ ...newTask, dueDate: date })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholderText="Select due date"
+                      minDate={new Date()} required /></div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <div className="relative">
+                      <MapPinIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                      <input type="text" value={newTask.location} onChange={(e) => setNewTask({ ...newTask, location: e.target.value })}
+                        className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter location" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-1">Click to create new task</h3>
-                    <p className="text-sm text-gray-500">Create and manage your tasks efficiently</p>
                   </div>
                 </div>
-              ) : (
-                <>
-                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-3"><h2 className="text-lg font-bold text-white">Create New Task</h2></div>
-                  <form onSubmit={handleCreateTask} className="p-5 space-y-5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Task Title *</label>
-                        <input type="text" value={newTask.title} onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required /></div>
-                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Department *</label>
-                        <select value={newTask.department} onChange={(e) => setNewTask({...newTask, department: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg"><option>Revenue</option><option>Finance</option><option>Administration</option><option>Development</option><option>Infrastructure</option></select></div>
-                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Priority *</label>
-                        <select value={newTask.priority} onChange={(e) => setNewTask({...newTask, priority: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg"><option>High</option><option>Medium</option><option>Low</option></select></div>
-                      <div><label className="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
-                        <DatePicker selected={newTask.dueDate} onChange={(date) => setNewTask({...newTask, dueDate: date})}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholderText="Select due date" 
-                          minDate={new Date()} required /></div>
-                      
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                        <div className="relative">
-                          <MapPinIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                          <input type="text" value={newTask.location} onChange={(e) => setNewTask({...newTask, location: e.target.value})}
-                            className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter location" />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Allocate To Section */}
-                    <div className="border-t border-gray-200 pt-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-3">Allocate To *</label>
-                      <div className="flex flex-wrap gap-6 mb-4">
-                        {['role', 'employee', 'village', 'other'].map((type) => (
-                          <label key={type} className="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="assignedType" value={type} checked={newTask.assignedType === type}
-                              onChange={(e) => setNewTask({...newTask, assignedType: e.target.value, assignedTo: ''})}
-                              className="w-4 h-4 text-blue-600" />
-                            <span className="text-sm font-medium text-gray-700 capitalize">{type === 'other' ? 'Other' : type}</span>
-                          </label>
-                        ))}
-                      </div>
-                      
-                      {newTask.assignedType === 'role' && (
-                        <select value={newTask.assignedTo} onChange={(e) => setNewTask({...newTask, assignedTo: e.target.value})}
+
+                {/* Allocate To Section */}
+                <div className="border-t border-gray-200 pt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Allocate To *</label>
+                  <div className="flex flex-wrap gap-6 mb-4">
+                    {['role', 'employee', 'village', 'other'].map((type) => (
+                      <label key={type} className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="assignedType" value={type} checked={newTask.assignedType === type}
+                          onChange={(e) => setNewTask({ ...newTask, assignedType: e.target.value, assignedTo: '' })}
+                          className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-medium text-gray-700 capitalize">{type === 'other' ? 'Other' : type}</span>
+                      </label>
+                    ))}
+                  </div>
+
+                  {newTask.assignedType === 'role' && (() => {
+                    const roleRanks = { 'collector': 1, 'additional_deputy_collector': 2, 'sdo': 3, 'tehsildar': 4, 'bdo': 5, 'talathi': 6, 'gramsevak': 7, 'gram_sevak': 7 };
+                    const userRank = roleLower.includes('admin') ? 0 : (roleRanks[roleLower] || 99);
+                    const allowedRoles = [...new Set(staff.map(u => u.role).filter(r => r && r !== 'SYSTEM_ADMINISTRATOR'))]
+                      .filter(r => (roleRanks[r.toLowerCase()] || 99) > userRank);
+
+                    return (
+                      <div className="space-y-3">
+                        <select value={newTask.selectedRole || ''} onChange={(e) => setNewTask({ ...newTask, selectedRole: e.target.value, assignedTo: '' })}
                           className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                          <option value="">Select Staff Member</option>
-                          {staff.filter(u => u.role !== 'SYSTEM_ADMINISTRATOR').map(u => (
-                            <option key={u.userID} value={u.userID}>{u.name} ({u.role?.replace(/_/g, ' ')})</option>
+                          <option value="">Select Role</option>
+                          {allowedRoles.map(r => <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>)}
+                        </select>
+                        {newTask.selectedRole && (
+                          <div className="px-4 py-3 bg-blue-50/50 border border-blue-100 text-blue-700 text-sm rounded-lg flex items-center gap-3">
+                            <UsersIcon className="h-5 w-5 text-blue-500" />
+                            <span>
+                              This task will be automatically assigned to <strong>all {staff.filter(u => u.role === newTask.selectedRole).length}</strong> users holding the role of <strong>{newTask.selectedRole.replace(/_/g, ' ')}</strong>.
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {newTask.assignedType === 'employee' && (
+                    <select value={newTask.assignedTo} onChange={(e) => setNewTask({ ...newTask, assignedTo: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                      <option value="">Select Specific Officer</option>
+                      {staff.map(u => <option key={u.userID} value={u.userID}>{u.name} - {u.role?.replace(/_/g, ' ')}</option>)}
+                    </select>
+                  )}
+
+                  {newTask.assignedType === 'village' && (
+                    <div className="space-y-3">
+                      <select value={newTask.selectedVillage} onChange={(e) => setNewTask({ ...newTask, selectedVillage: e.target.value, assignedTo: '' })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        <option value="">Select Village</option>
+                        {[...new Set(staff.map(u => u.village).filter(Boolean))].map(v => <option key={v} value={v}>{v}</option>)}
+                      </select>
+                      {newTask.selectedVillage && (
+                        <select value={newTask.assignedTo} onChange={(e) => setNewTask({ ...newTask, assignedTo: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                          <option value="">Select Officer in {newTask.selectedVillage}</option>
+                          {staff.filter(u => u.village === newTask.selectedVillage).map(u => (
+                            <option key={u.userID} value={u.userID}>{u.name} - {u.role?.replace(/_/g, ' ')}</option>
                           ))}
                         </select>
                       )}
-                      
-                      {newTask.assignedType === 'employee' && (
-                        <select value={newTask.assignedTo} onChange={(e) => setNewTask({...newTask, assignedTo: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                          <option value="">Select Specific Officer</option>
-                          {staff.map(u => <option key={u.userID} value={u.userID}>{u.name} - {u.role?.replace(/_/g, ' ')}</option>)}
-                        </select>
-                      )}
+                    </div>
+                  )}
 
-                      {newTask.assignedType === 'village' && (
-                        <div className="space-y-3">
-                          <select value={newTask.selectedVillage} onChange={(e) => setNewTask({...newTask, selectedVillage: e.target.value, assignedTo: ''})}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                            <option value="">Select Village</option>
-                            {[...new Set(staff.map(u => u.village).filter(Boolean))].map(v => <option key={v} value={v}>{v}</option>)}
-                          </select>
-                          {newTask.selectedVillage && (
-                            <select value={newTask.assignedTo} onChange={(e) => setNewTask({...newTask, assignedTo: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                              <option value="">Select Officer in {newTask.selectedVillage}</option>
-                              {staff.filter(u => u.village === newTask.selectedVillage).map(u => (
-                                <option key={u.userID} value={u.userID}>{u.name} - {u.role?.replace(/_/g, ' ')}</option>
-                              ))}
-                            </select>
-                          )}
-                        </div>
-                      )}
+                  {newTask.assignedType === 'other' && (
+                    <div className="space-y-3">
+                      <input type="text" value={newTask.otherAssignedTo} onChange={(e) => {
+                        const val = e.target.value;
+                        const found = staff.find(u => u.name.toLowerCase() === val.toLowerCase());
+                        setNewTask({ ...newTask, otherAssignedTo: val, assignedTo: found ? found.userID : val });
+                      }} className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter name or ID manually..." required />
+                    </div>
+                  )}
+                </div>
 
-                      {newTask.assignedType === 'other' && (
-                        <div className="space-y-3">
-                          <input type="text" value={newTask.otherAssignedTo} onChange={(e) => {
-                            const val = e.target.value;
-                            const found = staff.find(u => u.name.toLowerCase() === val.toLowerCase());
-                            setNewTask({...newTask, otherAssignedTo: val, assignedTo: found ? found.userID : val});
-                          }} className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter name or ID manually..." required />
-                        </div>
-                      )}
+                {/* Target Section */}
+                <div className="border-t border-gray-200 pt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Target *</label>
+                  <div className="flex gap-6 mb-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="targetType" value="target" checked={newTask.targetType === 'target'}
+                        onChange={(e) => setNewTask({ ...newTask, targetType: e.target.value })} className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-gray-700">Target</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="targetType" value="na" checked={newTask.targetType === 'na'}
+                        onChange={(e) => setNewTask({ ...newTask, targetType: e.target.value, targetValue: 'NA' })} className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-gray-700">NA</span>
+                    </label>
+                  </div>
+                  {newTask.targetType === 'target' && (
+                    <input type="text" value={newTask.targetValue} onChange={(e) => setNewTask({ ...newTask, targetValue: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Enter target value" required />
+                  )}
+                  {newTask.targetType === 'na' && (
+                    <div className="px-3 py-2 bg-gray-50 rounded-lg text-gray-500 text-sm">Target set to NA</div>
+                  )}
+                </div>
+
+                {/* Description - Last */}
+                <div className="border-t border-gray-200 pt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                  <textarea rows="3" value={newTask.description} onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required />
+                </div>
+
+                {/* Attachments */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Attachments</label>
+                  <input type="file" ref={fileInputRef} onChange={handleFileUpload} multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" className="hidden" />
+                  <button type="button" onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center justify-center w-full p-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50">
+                    <PaperClipIcon className="h-5 w-5 mr-2 text-gray-400" />
+                    <span className="text-sm text-gray-500">Click to upload files</span>
+                  </button>
+                  {newTask.attachments.length > 0 && newTask.attachments.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-2 mt-2">
+                      <div className="flex items-center gap-2"><PaperClipIcon className="h-4 w-4 text-gray-500" /><span className="text-sm text-gray-600">{file.name}</span><span className="text-xs text-gray-400">({file.size})</span></div>
+                      <button type="button" onClick={() => handleRemoveAttachment(index)} className="text-red-500 hover:text-red-700"><TrashIcon className="h-4 w-4" /></button>
                     </div>
-                    
-                    {/* Target Section */}
-                    <div className="border-t border-gray-200 pt-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Target *</label>
-                      <div className="flex gap-6 mb-3">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="targetType" value="target" checked={newTask.targetType === 'target'}
-                            onChange={(e) => setNewTask({...newTask, targetType: e.target.value})} className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm font-medium text-gray-700">Target</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="targetType" value="na" checked={newTask.targetType === 'na'}
-                            onChange={(e) => setNewTask({...newTask, targetType: e.target.value, targetValue: 'NA'})} className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm font-medium text-gray-700">NA</span>
-                        </label>
-                      </div>
-                      {newTask.targetType === 'target' && (
-                        <input type="text" value={newTask.targetValue} onChange={(e) => setNewTask({...newTask, targetValue: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Enter target value" required />
-                      )}
-                      {newTask.targetType === 'na' && (
-                        <div className="px-3 py-2 bg-gray-50 rounded-lg text-gray-500 text-sm">Target set to NA</div>
-                      )}
-                    </div>
-                    
-                    {/* Description - Last */}
-                    <div className="border-t border-gray-200 pt-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
-                      <textarea rows="3" value={newTask.description} onChange={(e) => setNewTask({...newTask, description: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required />
-                    </div>
-                    
-                    {/* Attachments */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Attachments</label>
-                      <input type="file" ref={fileInputRef} onChange={handleFileUpload} multiple className="hidden" />
-                      <button type="button" onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center justify-center w-full p-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50">
-                        <PaperClipIcon className="h-5 w-5 mr-2 text-gray-400" />
-                        <span className="text-sm text-gray-500">Click to upload files</span>
-                      </button>
-                      {newTask.attachments.length > 0 && newTask.attachments.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-2 mt-2">
-                          <div className="flex items-center gap-2"><PaperClipIcon className="h-4 w-4 text-gray-500" /><span className="text-sm text-gray-600">{file.name}</span><span className="text-xs text-gray-400">({file.size})</span></div>
-                          <button type="button" onClick={() => handleRemoveAttachment(index)} className="text-red-500 hover:text-red-700"><TrashIcon className="h-4 w-4" /></button>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div className="flex justify-end gap-3">
-                      <button type="button" onClick={() => setShowCreateForm(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
-                      <button type="submit" className="px-5 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md hover:shadow-lg">Create Task</button>
-                    </div>
-                  </form>
-                </>
-              )}
+                  ))}
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button type="button" onClick={() => {
+                    setNewTask({ title: '', description: '', department: 'Revenue', priority: 'Medium', assignedType: 'role', assignedTo: '', dueDate: null, targetType: 'target', targetValue: '', location: '', attachments: [], selectedVillage: '', selectedRole: '', otherAssignedTo: '' });
+                    setActiveTab('tracking');
+                  }} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+                  <button type="submit" className="px-5 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md hover:shadow-lg">Create Task</button>
+                </div>
+              </form>
             </motion.div>
           )}
 
@@ -517,12 +582,30 @@ const TaskDashboard = ({ user }) => {
                         <td className="px-3 py-2"><div>{task.achievement || 0}</div><div className="text-[10px] text-blue-500">{task.progress || 0}%</div></td>
                         <td className="px-3 py-2">{task.attachments.length > 0 ? <a href={task.attachments[0].url} target="_blank" className="text-blue-600"><PaperClipIcon className="h-4 w-4" /></a> : '-'}</td>
                         <td className="px-3 py-2">{task.remarks?.length > 0 ? <span className="text-xs text-gray-500">{task.remarks.length} remark(s)</span> : '-'}</td>
-                        <td className="px-3 py-2"><div className="flex gap-2">
-                          <button onClick={() => { setSelectedTask(task); setShowDetailsModal(true); }} className="p-1 text-blue-600 hover:bg-blue-50 rounded"><EyeIcon className="h-4 w-4" /></button>
-                          <button onClick={() => { const remark = prompt('Enter remark:'); if (remark) handleAddRemark(task.id, remark); }} className="p-1 text-green-600 hover:bg-green-50 rounded"><ChatBubbleLeftRightIcon className="h-4 w-4" /></button>
-                          <button onClick={() => handleOpenForwardModal(task)} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded"><PaperAirplaneIcon className="h-4 w-4" /></button>
-                          <button onClick={() => { const val = prompt(`Update Achievement:`, task.achievement || 0); if (val) handleUpdateProgress(task.id, val); }} className="p-1 text-purple-600 hover:bg-purple-50 rounded"><ArrowPathIcon className="h-4 w-4" /></button>
-                        </div></td>
+                        <td className="px-3 py-2">
+                          <div className="flex gap-4">
+                            <button onClick={() => { setSelectedTask(task); setShowDetailsModal(true); }} className="flex flex-col items-center justify-center text-blue-600 hover:text-blue-800 group transition-colors">
+                              <div className="p-1 rounded group-hover:bg-blue-50"><EyeIcon className="h-4 w-4" /></div>
+                              <span className="text-[9px] font-medium mt-0.5">View</span>
+                            </button>
+                            <button onClick={() => { setRemarkTask(task); setRemarkText(''); setIsRemarkModalOpen(true); }} className="flex flex-col items-center justify-center text-green-600 hover:text-green-800 group transition-colors">
+                              <div className="p-1 rounded group-hover:bg-green-50"><ChatBubbleLeftRightIcon className="h-4 w-4" /></div>
+                              <span className="text-[9px] font-medium mt-0.5">Remark</span>
+                            </button>
+                            {!canCreateTask && !roleLower.includes('gramsevak') && !roleLower.includes('gram_sevak') && (
+                              <button onClick={() => handleOpenForwardModal(task)} className="flex flex-col items-center justify-center text-emerald-600 hover:text-emerald-800 group transition-colors">
+                                <div className="p-1 rounded group-hover:bg-emerald-50"><PaperAirplaneIcon className="h-4 w-4" /></div>
+                                <span className="text-[9px] font-medium mt-0.5">Forward</span>
+                              </button>
+                            )}
+                            {!canCreateTask && (
+                              <button onClick={() => { setUpdateTaskObj(task); setUpdateAchievementValue(task.achievement || 0); setIsUpdateModalOpen(true); }} className="flex flex-col items-center justify-center text-purple-600 hover:text-purple-800 group transition-colors">
+                                <div className="p-1 rounded group-hover:bg-purple-50"><ArrowPathIcon className="h-4 w-4" /></div>
+                                <span className="text-[9px] font-medium mt-0.5">Update</span>
+                              </button>
+                            )}
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -544,7 +627,7 @@ const TaskDashboard = ({ user }) => {
                   <p className="text-sm">Overdue</p><p className="text-xl font-bold">{tasks.filter(t => t.status === 'OVERDUE').length}</p>
                 </div>
               </div>
-              
+
               <div className="flex gap-3 mb-4">
                 <div className="relative flex-1"><MagnifyingGlassIcon className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
                   <input type="text" placeholder="Search pending tasks..." className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg" value={pendingSearchTerm} onChange={(e) => setPendingSearchTerm(e.target.value)} /></div>
@@ -564,7 +647,12 @@ const TaskDashboard = ({ user }) => {
                         <td className="px-3 py-2 text-sm text-gray-600">{new Date(task.dueDate).toLocaleDateString()}</td>
                         <td className="px-3 py-2 text-sm text-gray-600">{task.assignedTo}</td>
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 text-xs rounded-full ${getStatusColor(task.status)}`}>{task.status}</span></td>
-                        <td className="px-3 py-2"><button onClick={() => { setSelectedTask(task); setShowDetailsModal(true); }} className="p-1 text-blue-600 hover:bg-blue-50 rounded"><EyeIcon className="h-4 w-4" /></button></td>
+                        <td className="px-3 py-2">
+                          <button onClick={() => { setSelectedTask(task); setShowDetailsModal(true); }} className="flex flex-col items-center justify-center text-blue-600 hover:text-blue-800 group transition-colors">
+                            <div className="p-1 rounded group-hover:bg-blue-50"><EyeIcon className="h-4 w-4" /></div>
+                            <span className="text-[9px] font-medium mt-0.5">View</span>
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -583,33 +671,50 @@ const TaskDashboard = ({ user }) => {
               className="bg-white rounded-xl shadow-xl w-[500px] max-w-[90vw] max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 text-white rounded-t-xl sticky top-0">
                 <div className="flex justify-between"><h3 className="text-sm font-semibold">Task Details</h3><button onClick={() => setShowCloseConfirm(true)}><XMarkIcon className="h-4 w-4" /></button></div>
-                <div className="flex gap-2 text-xs mt-1"><div className="flex items-center gap-1"><UserIcon className="h-3 w-3" /> Created By: {selectedTask.createdByName || 'Admin'}</div><div className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" /> Created on: {selectedTask.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]}</div></div>
+                <div className="flex gap-2 text-xs mt-1"><div className="flex items-center gap-1"><UserIcon className="h-3 w-3" /> Created By: {selectedTask.createdByName || 'Admin'} {selectedTask.createdByRole && `(${selectedTask.createdByRole.replace(/_/g, ' ')})`}</div><div className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" /> Created on: {selectedTask.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]}</div></div>
               </div>
               <div className="p-4 space-y-3">
                 <div><p className="text-[11px] text-gray-500">Task Title</p><p className="text-sm font-semibold text-gray-800">{selectedTask.title}</p></div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500">Assigned To</p><p className="text-xs font-medium">{selectedTask.assignedToName || 'Admin'}</p></div>
+                  <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500">Assigned To</p><p className="text-xs font-medium">{selectedTask.assignedToName || 'Admin'} {selectedTask.assignedToRole && <span className="text-[10px] text-gray-400 font-normal">({selectedTask.assignedToRole.replace(/_/g, ' ')})</span>}</p></div>
                   <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500">Priority</p><p className={`text-xs font-semibold ${selectedTask.priority === 'HIGH' ? 'text-red-600' : selectedTask.priority === 'MEDIUM' ? 'text-amber-600' : 'text-green-600'}`}>{selectedTask.priority || 'MEDIUM'}</p></div>
                   <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500">Due Date</p><p className="text-xs font-medium">{selectedTask.dueDate || 'Not set'}</p></div>
                   <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500">Status</p><p className={`text-xs font-semibold ${selectedTask.status === 'COMPLETED' ? 'text-green-600' : selectedTask.status === 'IN_PROGRESS' ? 'text-gray-600' : 'text-amber-600'}`}>{selectedTask.status || 'PENDING'}</p></div>
                 </div>
                 {selectedTask.description && <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500">Description</p><p className="text-xs text-gray-600">{selectedTask.description}</p></div>}
                 {selectedTask.location && <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500">Location</p><p className="text-xs text-gray-600">{selectedTask.location}</p></div>}
-                
+
                 <div className="bg-gray-50 p-2 rounded">
                   <p className="text-[10px] text-gray-500">Attachments</p>
                   {selectedTask.attachments?.length > 0 ? selectedTask.attachments.map((att, idx) => (
                     <a key={idx} href={att.url} target="_blank" className="text-xs text-blue-600 flex items-center gap-1"><PaperClipIcon className="h-3 w-3" /> {att.name}</a>
                   )) : <p className="text-xs text-gray-400">No attachments</p>}
                 </div>
-                
+
                 <div className="bg-gray-50 p-2 rounded">
-                  <p className="text-[10px] text-gray-500">Remarks</p>
-                  {selectedTask.remarks?.length > 0 ? selectedTask.remarks.map((remark, idx) => (
-                    <div key={idx} className="text-xs text-gray-600 bg-white p-1.5 rounded border mt-1">{remark.remark || remark}</div>
-                  )) : <p className="text-xs text-gray-400">No remarks</p>}
+                  <p className="text-[10px] text-gray-500 mb-2">Remark History</p>
+                  {selectedTask.remarks?.length > 0 ? (
+                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                      {selectedTask.remarks.filter(r => {
+                           const remarkStr = r.remark || r;
+                           const senderStr = remarkStr.split(': ')[0] || '';
+                           return senderStr.includes(selectedTask.createdByName) || senderStr.includes(selectedTask.assignedToName);
+                      }).map((r, idx) => {
+                         const remarkStr = r.remark || r;
+                         const splitIndex = remarkStr.indexOf(': ');
+                         const sender = splitIndex > -1 ? remarkStr.substring(0, splitIndex) : 'System';
+                         const text = splitIndex > -1 ? remarkStr.substring(splitIndex + 2) : remarkStr;
+                         return (
+                            <div key={idx} className="bg-white p-2 rounded border border-gray-100 flex flex-col gap-1">
+                               <span className="text-[9px] font-bold text-gray-500">{sender}</span>
+                               <p className="text-xs text-gray-700">{text}</p>
+                            </div>
+                         );
+                      })}
+                    </div>
+                  ) : <p className="text-xs text-gray-400">No remarks on this task yet.</p>}
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-2">
                   <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500">Target</p><p className="text-xs font-medium">{selectedTask.target || '100'}%</p></div>
                   <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500">Progress</p><div className="flex items-center gap-1"><div className="flex-1 h-1 bg-gray-200 rounded-full"><div className="h-1 bg-green-500 rounded-full" style={{ width: `${selectedTask.progress || 0}%` }}></div></div><span className="text-[11px] font-medium">{selectedTask.progress || 0}%</span></div></div>
@@ -659,6 +764,112 @@ const TaskDashboard = ({ user }) => {
                 </div>
               </div>
               <div className="bg-gray-50 p-3 border-t flex justify-end"><button onClick={() => setIsForwardModalOpen(false)} className="px-4 py-1.5 text-xs text-gray-600">Cancel</button></div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Remark Modal */}
+      <AnimatePresence>
+        {isRemarkModalOpen && remarkTask && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[210] p-4" onClick={() => setIsRemarkModalOpen(false)}>
+            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} transition={{ type: "spring", duration: 0.5 }}
+              className="bg-white rounded-2xl shadow-2xl w-[450px] max-w-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-5 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm"><ChatBubbleLeftRightIcon className="h-6 w-6 text-white" /></div>
+                    <div>
+                      <h3 className="text-lg font-bold">Add Remark</h3>
+                      <p className="text-emerald-100 text-xs mt-0.5">Share your feedback or update on this task</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsRemarkModalOpen(false)} className="bg-white/20 hover:bg-white/30 transition-colors p-1.5 rounded-full"><XMarkIcon className="h-4 w-4" /></button>
+                </div>
+              </div>
+              <div className="p-5">
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Task Context</p>
+                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                    <p className="text-sm font-bold text-gray-800 break-words">{remarkTask.title}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-medium">Assigned to: {remarkTask.assignedToName || remarkTask.assignedTo} {remarkTask.assignedToRole && `(${remarkTask.assignedToRole.replace(/_/g, ' ')})`}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getStatusColor(remarkTask.status)}`}>{remarkTask.status}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-gray-700">Your Message <span className="text-red-500">*</span></label>
+                  <textarea rows="4" value={remarkText} onChange={(e) => setRemarkText(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm resize-none"
+                    placeholder="Type your remark clearly..."
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAddRemark(remarkTask.id, remarkText); } }}
+                    autoFocus
+                  />
+                  <p className="text-[10px] text-gray-400 text-right">Press Enter to submit, Shift+Enter for new line</p>
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 border-t border-gray-100 flex justify-end gap-3">
+                <button onClick={() => setIsRemarkModalOpen(false)} className="px-5 py-2 hover:bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl transition-all">Cancel</button>
+                <button onClick={() => handleAddRemark(remarkTask.id, remarkText)} disabled={!remarkText.trim()} className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-semibold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all">Submit Remark</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Update Progress Modal */}
+      <AnimatePresence>
+        {isUpdateModalOpen && updateTaskObj && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[210] p-4" onClick={() => setIsUpdateModalOpen(false)}>
+            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} transition={{ type: "spring", duration: 0.5 }}
+              className="bg-white rounded-2xl shadow-2xl w-[400px] max-w-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-5 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm"><ArrowPathIcon className="h-6 w-6 text-white" /></div>
+                    <div>
+                      <h3 className="text-lg font-bold">Update Progress</h3>
+                      <p className="text-purple-100 text-xs mt-0.5">Record your achievement for this task</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsUpdateModalOpen(false)} className="bg-white/20 hover:bg-white/30 transition-colors p-1.5 rounded-full"><XMarkIcon className="h-4 w-4" /></button>
+                </div>
+              </div>
+              <div className="p-5">
+                <div className="mb-4">
+                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                    <p className="text-sm font-bold text-gray-800 break-words line-clamp-2">{updateTaskObj.title}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-medium">Target: {updateTaskObj.target || 'NA'}</span>
+                      <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">Current Achievement: {updateTaskObj.achievement || 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-gray-700">New Achievement Value <span className="text-red-500">*</span></label>
+                  <input type="number" min={updateTaskObj.achievement || 0} max={updateTaskObj.target || ''}
+                    value={updateAchievementValue} onChange={(e) => setUpdateAchievementValue(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-lg font-semibold"
+                    placeholder="Enter numerical value"
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateProgress(updateTaskObj.id, updateAchievementValue); }}
+                    autoFocus
+                  />
+                  {updateTaskObj.achievement > parseInt(updateAchievementValue || 0) && (
+                    <p className="text-[10px] text-red-500 mt-1 flex items-center gap-1"><ExclamationTriangleIcon className="h-3 w-3" /> Cannot decrease achievement value.</p>
+                  )}
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 border-t border-gray-100 flex justify-end gap-3">
+                <button onClick={() => setIsUpdateModalOpen(false)} className="px-4 py-2 hover:bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl transition-all">Cancel</button>
+                <button onClick={() => handleUpdateProgress(updateTaskObj.id, updateAchievementValue)}
+                  disabled={updateAchievementValue === '' || parseInt(updateAchievementValue) < (updateTaskObj.achievement || 0) || (updateTaskObj.target && parseInt(updateAchievementValue) > updateTaskObj.target)}
+                  className="px-5 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-semibold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                  Save Update
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
