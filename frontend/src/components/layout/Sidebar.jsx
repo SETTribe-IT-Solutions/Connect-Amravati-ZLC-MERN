@@ -125,17 +125,27 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) =
         </nav>
 
         {/* User Info */}
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
           <div className={`flex items-center ${isCollapsed ? 'lg:justify-center' : ''}`}>
             <div className="flex-shrink-0">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white font-semibold shadow-md">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md ring-2 ring-white">
                 {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'CO'}
               </div>
             </div>
             {!isCollapsed && (
-              <div className="ml-3 overflow-hidden">
-                <p className="text-sm font-medium text-gray-700 truncate">{user?.name || t('dashboard.collectorOffice') || 'Collector Office'}</p>
-                <p className="text-xs text-gray-500 truncate">{user?.department || 'Amravati'}</p>
+              <div className="ml-3 overflow-hidden flex flex-col">
+                <p className="text-sm font-bold text-gray-900 truncate">
+                  {user?.name || t('dashboard.collectorOffice') || 'Collector Office'}
+                </p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-md truncate uppercase tracking-wider">
+                    {user?.role ? user.role.replace(/_/g, ' ') : 'USER'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-500 font-medium truncate flex items-center gap-1 mt-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                  {user?.village && user.village !== 'ALL VILLAGES' ? user.village + ', ' : ''}{user?.taluka && user.taluka !== 'ALL TALUKAS' ? user.taluka : (user?.district || 'Amravati')}
+                </p>
               </div>
             )}
           </div>

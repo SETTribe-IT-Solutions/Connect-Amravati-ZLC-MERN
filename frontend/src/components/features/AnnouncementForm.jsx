@@ -26,6 +26,7 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
   const [villages, setVillages] = useState([]);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [formErrors, setFormErrors] = useState({ title: '', message: '' });
 
   const roleLevels = {
     'COLLECTOR': 1,
@@ -109,6 +110,26 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    let errors = { title: '', message: '' };
+    let hasError = false;
+
+    if (!formData.title || !formData.title.trim()) {
+      errors.title = 'Subject / Title must not be empty.';
+      hasError = true;
+    }
+
+    if (!formData.message || !formData.message.trim()) {
+      errors.message = 'Content must not be empty.';
+      hasError = true;
+    }
+
+    if (hasError) {
+      setFormErrors(errors);
+      return;
+    }
+
+    setFormErrors({ title: '', message: '' });
     setLoading(true);
     try {
       const payload = {
@@ -126,7 +147,19 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
       onSuccess();
     } catch (error) {
       console.error("Error sending announcement:", error);
-      toast.error(error.response?.data || 'Failed to send message');
+      const errorData = error.response?.data;
+      if (typeof errorData === 'object' && errorData !== null) {
+        // Extract validation errors if present
+        setFormErrors({
+          title: errorData.title || '',
+          message: errorData.message || (errorData.title ? '' : 'Validation failed')
+        });
+        if (!errorData.title && !errorData.message) {
+            toast.error(errorData.message_error || 'Validation failed');
+        }
+      } else {
+        toast.error(errorData || 'Failed to send message');
+      }
     } finally {
       setLoading(false);
     }
@@ -174,25 +207,31 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
               <label className="block text-sm font-semibold text-gray-700 mb-2">Subject / Title</label>
               <input
                 type="text"
-                required
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-5 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50 transition-all"
+                onChange={(e) => {
+                  setFormData({ ...formData, title: e.target.value });
+                  if (formErrors.title) setFormErrors({ ...formErrors, title: '' });
+                }}
+                className={`w-full px-5 py-3.5 border ${formErrors.title ? 'border-red-500 focus:ring-red-500 bg-red-50/50' : 'border-gray-200 focus:ring-indigo-500 bg-gray-50'} rounded-2xl focus:ring-2 focus:border-transparent transition-all`}
                 placeholder="Enter message title..."
               />
+              {formErrors.title && <p className="text-sm font-medium text-red-500 mt-1.5">{formErrors.title}</p>}
             </div>
 
             {/* Message */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Content</label>
               <textarea
-                required
                 rows={4}
                 value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                className="w-full px-5 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50 transition-all resize-none"
+                onChange={(e) => {
+                  setFormData({ ...formData, message: e.target.value });
+                  if (formErrors.message) setFormErrors({ ...formErrors, message: '' });
+                }}
+                className={`w-full px-5 py-3.5 border ${formErrors.message && formErrors.message !== 'Validation failed' ? 'border-red-500 focus:ring-red-500 bg-red-50/50' : 'border-gray-200 focus:ring-indigo-500 bg-gray-50'} rounded-2xl focus:ring-2 focus:border-transparent transition-all resize-none`}
                 placeholder="Type your official communication here..."
               />
+              {formErrors.message && formErrors.message !== 'Validation failed' && <p className="text-sm font-medium text-red-500 mt-1.5">{formErrors.message}</p>}
             </div>
 
             {/* Target Settings */}
