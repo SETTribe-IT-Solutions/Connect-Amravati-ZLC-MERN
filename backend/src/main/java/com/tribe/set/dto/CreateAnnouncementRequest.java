@@ -6,10 +6,10 @@ import jakarta.validation.constraints.NotNull;
 
 public class CreateAnnouncementRequest {
 
-    @NotBlank(message = "Title is required")
+    @NotBlank(message = "Subject/Title must not be empty.")
     private String title;
 
-    @NotBlank(message = "Message is required")
+    @NotBlank(message = "Content must not be empty.")
     private String message;
 
     private Role targetRole; // null means all roles

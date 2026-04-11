@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
         ex.getBindingResult().getFieldErrors()
                 .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
         errors.put("status", "error");
-        errors.put("message", "Validation failed");
+        errors.putIfAbsent("message", "Validation failed");
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 

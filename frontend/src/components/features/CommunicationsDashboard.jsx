@@ -48,6 +48,8 @@ const CommunicationsDashboard = ({ user }) => {
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
   const [editForm, setEditForm] = useState({ title: '', message: '' });
   const [updating, setUpdating] = useState(false);
+  const [deletingAnnouncementId, setDeletingAnnouncementId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const roleLevels = {
     'COLLECTOR': 1,
@@ -113,14 +115,22 @@ const CommunicationsDashboard = ({ user }) => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this communication? This will also remove it from recipients' inboxes.")) return;
+  const confirmDelete = (id) => {
+    setDeletingAnnouncementId(id);
+  };
+
+  const executeDelete = async () => {
+    if (!deletingAnnouncementId) return;
+    setIsDeleting(true);
     try {
-      await deleteAnnouncement(id, user?.userID);
+      await deleteAnnouncement(deletingAnnouncementId, user?.userID);
       toast.success("Message deleted successfully");
       fetchAnnouncements();
+      setDeletingAnnouncementId(null);
     } catch (error) {
       toast.error("Failed to delete message");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -489,7 +499,7 @@ const CommunicationsDashboard = ({ user }) => {
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={() => handleDelete(item.id)}
+                          onClick={() => confirmDelete(item.id)}
                           className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-bold flex items-center gap-2 transition-colors text-sm"
                         >
                           <TrashIcon className="h-4 w-4" />
@@ -685,6 +695,63 @@ const CommunicationsDashboard = ({ user }) => {
                   className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-colors text-sm"
                 >
                   Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deletingAnnouncementId && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isDeleting && setDeletingAnnouncementId(null)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-red-100"
+            >
+              <div className="p-8 pb-6 flex flex-col items-center text-center">
+                 <div className="h-20 w-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6 shadow-inner border border-red-100">
+                    <TrashIcon className="h-10 w-10" />
+                 </div>
+                 <h2 className="text-2xl font-bold text-gray-900 mb-3 font-outfit">Delete Communication</h2>
+                 <p className="text-gray-500 font-medium">
+                   Are you sure you want to delete this communication? This will also remove it from recipients' inboxes. 
+                   <span className="block mt-2 text-red-500 font-bold">This action cannot be undone.</span>
+                 </p>
+              </div>
+              <div className="p-6 pt-4 bg-gray-50 border-t border-gray-100 flex justify-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setDeletingAnnouncementId(null)}
+                  disabled={isDeleting}
+                  className="flex-1 py-3 border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 hover:text-gray-900 rounded-xl font-bold transition-all disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={executeDelete}
+                  disabled={isDeleting}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:translate-y-0 hover:-translate-y-0.5"
+                >
+                  {isDeleting ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <TrashIcon className="h-5 w-5" />
+                      Yes, Delete
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>
