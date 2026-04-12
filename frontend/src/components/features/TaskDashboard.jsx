@@ -70,6 +70,7 @@ const TaskDashboard = ({ user }) => {
           ...t,
           description: t.description || '',
           assignedTo: t.assignedToName || 'N/A',
+          assignedBy: t.createdByName || 'Admin',
           status: t.status ? t.status.toString().toUpperCase() : 'PENDING',
           priority: t.priority ? t.priority.toString().toUpperCase() : 'MEDIUM',
           attachments: t.attachment ? [{ name: t.attachment, url: `${serverURL}/uploads/${t.attachment}` }] : [],
@@ -568,7 +569,18 @@ const TaskDashboard = ({ user }) => {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50">
-                    <tr><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">TASK</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">PRIORITY</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">STATUS</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">ASSIGNED TO</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">DUE DATE</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">TARGET</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">ACHIEVEMENT</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">ATTACHMENTS</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">REMARKS</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">ACTIONS</th></tr>
+                    <tr><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">TASK</th
+                    ><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">PRIORITY</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">STATUS</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">ASSIGNED TO</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">ASSIGNED BY</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">DUE DATE</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">TARGET</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">ACHIEVEMENT</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">ATTACHMENTS</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">REMARKS</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">ACTIONS</th>
+                    </tr>
                   </thead>
                   <tbody>
                     {filteredTasks.map((task) => (
@@ -577,6 +589,7 @@ const TaskDashboard = ({ user }) => {
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 text-xs rounded-full ${getPriorityColor(task.priority)}`}>{task.priority}</span></td>
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 text-xs rounded-full ${getStatusColor(task.status)}`}>{task.status}</span></td>
                         <td className="px-3 py-2 text-sm text-gray-600">{task.assignedTo}</td>
+                        <td className="px-3 py-2 text-sm text-gray-600">{task.assignedBy}</td>
                         <td className="px-3 py-2 text-sm text-gray-600">{new Date(task.dueDate).toLocaleDateString()}</td>
                         <td className="px-3 py-2 text-sm text-gray-600">{task.target || 'NA'}</td>
                         <td className="px-3 py-2"><div>{task.achievement || 0}</div><div className="text-[10px] text-blue-500">{task.progress || 0}%</div></td>
