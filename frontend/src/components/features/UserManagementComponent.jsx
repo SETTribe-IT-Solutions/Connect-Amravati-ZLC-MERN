@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getAllUsers, addUser, updateUser, deleteUser } from '../../services/userService';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from "axios";
@@ -28,10 +28,9 @@ const UserManagementComponent = () => {
     setTimeout(() => setShowTooltip({ visible: false, message: '', x: 0, y: 0 }), 1500);
   };
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      // const requesterId = localStorage.getItem('userID') ? Number(localStorage.getItem('userID')) : null;
       const requesterId = localStorage.getItem('userID') || null;
       const data = await getAllUsers(requesterId);
       const revRoleMap = {
@@ -48,26 +47,28 @@ const UserManagementComponent = () => {
       }));
       setUsers(mapped.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) { console.error("Fetch Users Error:", error); } finally { setLoading(false); }
-  };
+  }, []);
 
-  useEffect(() => { fetchUsers(); fetchTalukas(); }, []);
 
-  const fetchTalukas = async () => {
+
+  const fetchTalukas = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get("http://localhost:8080/api/talukas", { headers: { Authorization: `Bearer ${token}` } });
       setTalukas(response.data.map(t => (t?.taluka ?? t)).filter(Boolean));
     } catch (error) { console.error("Fetch Talukas Error:", error); }
-  };
+  }, []);
 
-  const fetchVillages = async (talukaName) => {
+  useEffect(() => { fetchUsers(); fetchTalukas(); }, [fetchUsers, fetchTalukas]);
+
+  const fetchVillages = useCallback(async (talukaName) => {
     if (!talukaName) { setVillages([]); return; }
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(`http://localhost:8080/api/villages/${encodeURIComponent(talukaName)}`, { headers: { Authorization: `Bearer ${token}` } });
       setVillages(response.data.map(v => (v?.village ?? v)).filter(Boolean));
     } catch (error) { console.error("Fetch Villages Error:", error); setVillages([]); }
-  };
+  }, []);
 
   const roles = ['Collector', 'Addl. Collector', 'SDO', 'Tehsildar', 'BDO', 'Talathi', 'Gram Sevak', 'Admin'];
   const stats = [
@@ -155,6 +156,7 @@ const UserManagementComponent = () => {
             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">User</th>
             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Role</th>
             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Contact</th>
+             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Contact</th>
             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Jurisdiction</th>
             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Status</th>
             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Actions</th>
@@ -165,9 +167,12 @@ const UserManagementComponent = () => {
               <p className="font-medium text-gray-800 text-sm">{user.name}</p>
             </div></td>
             <td className="py-3 px-4"><span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getRoleColor(user.role)}`}>{user.role}</span></td>
-            <td className="py-3 px-4"><p className="text-sm text-gray-600 truncate max-w-[180px]">{user.email}</p><p className="text-xs text-gray-500">{user.phone}</p></td>
+            <td className="py-3 px-4"><p className="text-sm text-gray-600 truncate max-w-[180px]">{user.email}</p>
+            <p className="text-xs text-gray-500"></p></td>
+             <td className="py-3 px-4"><p className="text-sm text-gray-600 truncate max-w-[180px]"></p>
+            <p className="text-xs text-gray-500">{user.phone}</p></td>
             <td className="py-3 px-4 text-sm text-gray-600 truncate max-w-[150px]">{user.jurisdiction}</td>
-            <td className="py-3 px-4"><span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+            <td className="py-3  px-3"><span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
               <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.status === 'Active' ? 'bg-green-500' : 'bg-gray-500'}`}></span>{user.status}
             </span></td>
             <td className="py-3 px-4"><div className="flex gap-2">
@@ -264,19 +269,7 @@ useEffect(() => {
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     setErrors({});
     onSave(formData);
-
-if (!formData.userID) {
-  newErrors.userID = "User ID is required";
-} else if (!/^\d+$/.test(formData.userID)) {
-  newErrors.userID = "User ID must contain only digits";
-}
-
   };
-
-  // Added changes
-  {errors.userID && (
-  <p className="mt-1 text-xs text-red-500">⚠️ {errors.userID}</p>
-)}
 
   if (user && !isEditing) {
     return (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -343,6 +336,7 @@ if (!formData.userID) {
    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 text-sm"
   placeholder="Enter user ID (digits only)"
 />
+{errors.userID && <p className="mt-1 text-xs text-red-500">⚠️ {errors.userID}</p>}
 </div>
           <div><label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
           <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}

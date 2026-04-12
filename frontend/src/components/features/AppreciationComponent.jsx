@@ -188,12 +188,15 @@ const AppreciationComponent = ({ user }) => {
 
     try {
       const fromUserId = localStorage.getItem('userID');
-      await sendAppreciation({
+      const payload = {
         fromUserId,
         toUserId: targetUser.userID,
         message: formData.message,
         badge: formData.badge
-      });
+      };
+      console.log("Sending appreciation payload:", payload);
+      
+      await sendAppreciation(payload);
       
       toast.success(`Appreciation sent to ${targetUser.name}!`);
       
@@ -201,8 +204,14 @@ const AppreciationComponent = ({ user }) => {
       fetchAppreciations();
       fetchStaff();
     } catch (error) {
-      console.error("Send Appreciation Error:", error);
-      toast.error(error.response?.data?.message || "Failed to send appreciation");
+      console.error("Send Appreciation Full Error:", error);
+      console.error("Response Data:", error.response?.data);
+      console.error("Response Status:", error.response?.status);
+      toast.error(
+        typeof error.response?.data === 'object' 
+          ? JSON.stringify(error.response.data) 
+          : (error.response?.data?.message || "Failed to send appreciation")
+      );
       setFormStates(prev => ({
         ...prev,
         [targetUser.userID]: { ...formData, isSubmitting: false }
@@ -427,6 +436,7 @@ const AppreciationComponent = ({ user }) => {
                     <div>
                       <p className="text-[10px] text-gray-500 font-medium">From</p>
                       <p className="font-bold text-gray-900 text-xs sm:text-sm">{apt.from}</p>
+                      <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{apt.fromRole}</p>
                     </div>
                   </div>
                   
@@ -443,6 +453,7 @@ const AppreciationComponent = ({ user }) => {
                     <div>
                       <p className="text-[10px] text-gray-500 font-medium">To</p>
                       <p className="font-bold text-emerald-700 text-xs sm:text-sm">{apt.to}</p>
+                      <p className="text-[10px] text-emerald-600/70 font-medium uppercase tracking-wider">{apt.toRole}</p>
                     </div>
                   </div>
                 </div>

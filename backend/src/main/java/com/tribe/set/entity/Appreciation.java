@@ -29,6 +29,7 @@ public class Appreciation {
 
     private String message;
     private String badge; // e.g., "Excellence Award"
+    private Integer likes = 0;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -81,5 +82,13 @@ public class Appreciation {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Integer getLikes() {
+        return likes;
+    }
+
+    public void setLikes(Integer likes) {
+        this.likes = likes;
     }
 }

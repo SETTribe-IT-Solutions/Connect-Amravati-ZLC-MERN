@@ -38,4 +38,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     @Query("SELECT DISTINCT u FROM User u JOIN u.assignedTasks t WHERE u.isAppreciated = false AND t.status = com.tribe.set.entity.TaskStatus.COMPLETED")
     List<User> findEligibleForAppreciation();
+
+    @Modifying
+    @Query("UPDATE User u SET u.isAppreciated = true, u.everAppreciated = true WHERE u.userID = :userId")
+    void markUserAsAppreciated(@Param("userId") String userId);
 }

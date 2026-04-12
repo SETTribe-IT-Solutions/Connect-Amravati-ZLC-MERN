@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.tribe.set.entity.Appreciation;
 import com.tribe.set.entity.User;
+import com.tribe.set.entity.NotificationType;
 import com.tribe.set.dto.AppreciationRequest;
 import com.tribe.set.dto.AppreciationResponse;
 import com.tribe.set.repository.AppreciationRepository;
@@ -22,6 +23,9 @@ public class AppreciationService {
 
         @Autowired
         private UserRepository userRepository;
+
+        @Autowired
+        private NotificationServices notificationServices;
 
         @org.springframework.transaction.annotation.Transactional
         public AppreciationResponse sendAppreciation(AppreciationRequest request) {
@@ -40,10 +44,13 @@ public class AppreciationService {
                 app.setBadge(request.getBadge());
                 app.setCreatedAt(LocalDateTime.now());
 
-                // Update user appreciation status
-                toUser.setIsAppreciated(true);
-                toUser.setEverAppreciated(true);
-                userRepository.save(toUser);
+                // Update user appreciation status bypass validation by directly querying.
+                userRepository.markUserAsAppreciated(toUser.getUserID());
+
+                // Send notification including sender's Role
+                String roleName = fromUser.getRole() != null ? fromUser.getRole().name() : "Member";
+                String message = "You received a '" + request.getBadge() + "' appreciation from " + fromUser.getName() + " (" + roleName + ")";
+                notificationServices.send(toUser, "New Appreciation", message, NotificationType.APPRECIATION, null);
 
                 return AppreciationResponse.from(appreciationRepository.save(app));
         }
