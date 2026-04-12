@@ -43,8 +43,10 @@ const UserManagementComponent = () => {
         district: u.district || '', jurisdiction: u.village ? `${u.village}, ${u.taluka}` : (u.taluka || u.district || 'Amravati'),
         status: u.active ? 'Active' : 'Inactive', avatar: (u.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2),
         joinDate: u.createdAt ? u.createdAt.toString().split('T')[0] : 'N/A',
-        createdAt: u.createdAt || new Date().toISOString()
+        createdAt: u.createdAt || new Date().toISOString(),
+        _rawActive: u.active
       }));
+      console.log('Mapped users:', mapped.map(u => ({ id: u.id, role: u.role, status: u.status, rawActive: u._rawActive })));
       setUsers(mapped.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) { console.error("Fetch Users Error:", error); } finally { setLoading(false); }
   }, []);
@@ -184,7 +186,7 @@ const UserManagementComponent = () => {
         </table></div>
       </div>}
 
-      <AnimatePresence>{isModalOpen && <UserModal user={selectedUser} roles={roles} talukas={talukas} villages={villages}
+      <AnimatePresence>{isModalOpen && <UserModal user={selectedUser} allUsers={users} roles={roles} talukas={talukas} villages={villages}
         fetchVillages={fetchVillages} showIconTooltip={showIconTooltip}
         onClose={() => { setShowCloseConfirm(true); }}
         onConfirmClose={() => { setIsModalOpen(false); setSelectedUser(null); setVillages([]); setShowCloseConfirm(false); }}
@@ -216,10 +218,28 @@ const UserManagementComponent = () => {
   );
 };
 
-const UserModal = ({ user, roles, talukas, villages, fetchVillages, onClose, onConfirmClose, onCancelClose, onSave, showIconTooltip }) => {
+const UserModal = ({ user, allUsers, roles, talukas, villages, fetchVillages, onClose, onConfirmClose, onCancelClose, onSave, showIconTooltip }) => {
+  const roleLimits = {
+    'Collector': 1,
+    'Addl. Collector': 8,
+    'SDO': 6,
+    'Tehsildar': 30,
+    'BDO': 14,
+    'Talathi': 600,
+    'Gram Sevak': 900,
+    'Admin': Infinity
+  };
+
+  const availableRoles = roles.filter(role => {
+    if (user && user.role === role) return true;
+    const count = allUsers ? allUsers.filter(u => u.role === role && u.status === 'Active').length : 0;
+    if (role === 'Collector') console.log("Collector limit check:", { count, limit: roleLimits[role], activeCollectors: allUsers?.filter(u => u.role === 'Collector' && u.status === 'Active') });
+    return count < (roleLimits[role] || Infinity);
+  });
+
   const [formData, setFormData] = useState({
     userID: user?.id || '', name: user?.name || '', email: user?.email || '',
-    phone: (user?.phone || '').replace(/\D/g, '').slice(0, 10), role: user?.role || roles[0],
+    phone: (user?.phone || '').replace(/\D/g, '').slice(0, 10), role: user?.role || availableRoles[0] || roles[0],
     district: user?.district || 'Amravati', taluka: user?.taluka || '', village: user?.village || '',
     status: user?.status || 'Active', password: ''
   });
@@ -267,6 +287,21 @@ useEffect(() => {
       if (passwordError) newErrors.password = passwordError;
     }
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
+
+    // Enforce Capacity Limits
+    const selectedRole = formData.role;
+    const isBecomingActive = formData.status === 'Active';
+    const isCurrentlyActive = user && user.status === 'Active';
+    
+    if (isBecomingActive && (!user || (user && !isCurrentlyActive) || (user && user.role !== selectedRole))) {
+      // Activating an inactive user, creating a new user, or changing to a new role while active
+      const count = allUsers ? allUsers.filter(u => u.role === selectedRole && u.status === 'Active').length : 0;
+      if (count >= (roleLimits[selectedRole] || Infinity)) {
+        setErrors({...newErrors, role: `Limit reached! The system already has ${count} Active ${selectedRole}(s).`});
+        return;
+      }
+    }
+
     setErrors({});
     onSave(formData);
   };
@@ -354,9 +389,10 @@ useEffect(() => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div><label className="block text-sm font-medium text-gray-700 mb-1">Role <span className="text-red-500">*</span></label>
           <select required value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm">
-            {roles.map(role => <option key={role} value={role}>{role}</option>)}
-          </select></div>
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm ${errors.role ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
+            {availableRoles.map(role => <option key={role} value={role}>{role}</option>)}
+          </select>
+          {errors.role && <p className="mt-1 text-xs text-red-500">⚠️ {errors.role}</p>}</div>
           <div><label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
           <select disabled={!user} value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})}
             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed">
