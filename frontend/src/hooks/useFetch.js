@@ -7,7 +7,7 @@ const useFetch = (url) => {
 
   useEffect(() => {
     // Placeholder logic for generic fetch hook
-    setLoading(true);
+    Promise.resolve().then(() => setLoading(true));
     fetch(url)
       .then((res) => res.json())
       .then((data) => {

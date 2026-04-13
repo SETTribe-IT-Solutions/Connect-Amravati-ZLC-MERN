@@ -1,11 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 
 // Create a simple dummy reducer to avoid the warning
-const dummyReducer = (state = {}, action) => {
+const dummyReducer = (state = {}) => {
   return state;
 };
 // Create a simple reducer to avoid the warning
-const rootReducer = (state = { version: '1.0' }, action) => {
+const rootReducer = (state = { version: '1.0' }) => {
   return state;
 };
 

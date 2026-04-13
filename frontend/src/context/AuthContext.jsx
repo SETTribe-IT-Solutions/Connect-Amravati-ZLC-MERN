@@ -1,17 +1,12 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState } from 'react';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // Check local storage for existing session
+  const [user, setUser] = useState(() => {
     const role = localStorage.getItem('role');
-    if (role) {
-      setUser({ role });
-    }
-  }, []);
+    return role ? { role } : null;
+  });
 
   const login = (role) => {
     localStorage.setItem('role', role);

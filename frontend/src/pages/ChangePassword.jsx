@@ -131,14 +131,7 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
     }
   };
 
-  // Handle final step
-  const handleDone = () => {
-    if (onClose) {
-      onClose();
-    } else {
-      navigate('/dashboard');
-    }
-  };
+
 
   const strength = getStrengthText();
 
@@ -256,7 +249,7 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
                   </div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-6"> 
                   {/* New Password */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">

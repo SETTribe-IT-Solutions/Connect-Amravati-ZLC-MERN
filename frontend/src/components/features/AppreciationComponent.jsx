@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAllAppreciations, sendAppreciation, getEligibleUsers } from '../../services/appreciationService';
-import { getAllUsers } from '../../services/userService';
 import { toast } from 'react-hot-toast';
 import {
   HeartIcon,
@@ -24,13 +23,10 @@ const AppreciationComponent = ({ user }) => {
   const [formStates, setFormStates] = useState({}); // Tracking message/badge for each user
 
   const [appreciations, setAppreciations] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [staff, setStaff] = useState([]);
 
   // Use props user id if available, fallback to localStorage
   const currentUserID = user?.userID || localStorage.getItem('userID');
-  const currentUserRole = user?.role || localStorage.getItem('role');
-
   const fetchAppreciations = async () => {
     try {
       const data = await getAllAppreciations();
@@ -56,7 +52,7 @@ const AppreciationComponent = ({ user }) => {
       console.error("Fetch Appreciations Error:", error);
       toast.error("Failed to load appreciations");
     } finally {
-      setLoading(false);
+      // intentionally empty
     }
   };
 

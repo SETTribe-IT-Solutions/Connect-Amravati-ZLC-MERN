@@ -1,0 +1,203 @@
+﻿
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\App.jsx
+   38:9   error  Error: Cannot access variable before it is declared
+
+`handleLogout` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  36 |       // Safeguard: Clear old dummy tokens
+  37 |       if (token && token.startsWith('sess_')) {
+> 38 |         handleLogout();
+     |         ^^^^^^^^^^^^ `handleLogout` accessed before it is declared
+  39 |         return;
+  40 |       }
+  41 |
+
+   93 |
+   94 |   // Handle logout
+>  95 |   const handleLogout = () => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  96 |     setIsAuthenticated(false);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  97 |     setUser(null);
+      ΓÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 106 |     window.location.href = '/login';
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 107 |   };
+      | ^^^^^ `handleLogout` is declared here
+  108 |
+  109 |   // Handle password verification (for step 1)
+  110 |   const handleVerifyPassword = async (currentPassword) => {  react-hooks/immutability
+  115:14  error  'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\components\common\LanguageSwitcher.jsx
+   3:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            no-unused-vars
+  11:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   9 |
+  10 |   useEffect(() => {
+> 11 |     setCurrentLanguage(getCurrentLanguage() || 'en');
+     |     ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  12 |   }, []);
+  13 |
+  14 |   const languages = [  react-hooks/set-state-in-effect
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\components\common\NotificationBell.jsx
+   4:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-unused-vars
+  43:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  41 |
+  42 |   useEffect(() => {
+> 43 |     loadNotifications();
+     |     ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  44 |     
+  45 |     // Listen for manual sync events from other components
+  46 |     const handleSync = () => loadNotifications();  react-hooks/set-state-in-effect
+  56:6   warning  React Hook useEffect has a missing dependency: 'loadNotifications'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\components\common\ToastNotification.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\components\features\AnnouncementForm.jsx
+  4:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\components\features\AppreciationComponent.jsx
+   2:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                             no-unused-vars
+   4:10  error    'getAllUsers' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                        no-unused-vars
+  27:10  error    'loading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                   no-unused-vars
+  32:9   error    'currentUserRole' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                           no-unused-vars
+  88:6   warning  React Hook useEffect has missing dependencies: 'fetchAppreciations' and 'fetchStaff'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\components\features\CommunicationsDashboard.jsx
+    2:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                          no-unused-vars
+   90:6   warning  React Hook useEffect has a missing dependency: 'fetchAnnouncements'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   97:14  error    'error' is defined but never used                                                                                      no-unused-vars
+  130:14  error    'error' is defined but never used                                                                                      no-unused-vars
+  150:14  error    'error' is defined but never used                                                                                      no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\components\features\ReportsDashboard.jsx
+    2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  169:14  error  'error' is defined but never used                                              no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\components\features\TaskDashboard.jsx
+    3:32  error    'updateTaskStatus' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                              no-unused-vars
+    5:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                        no-unused-vars
+   23:30  error    'setSelectedDepartment' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                no-unused-vars
+   31:10  error    'loading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                              no-unused-vars
+  103:6   warning  React Hook useEffect has missing dependencies: 'canCreateTask' and 'fetchTasks'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  229:14  error    'error' is defined but never used                                                                                                    no-unused-vars
+  244:14  error    'error' is defined but never used                                                                                                    no-unused-vars
+  264:14  error    'error' is defined but never used                                                                                                    no-unused-vars
+  276:14  error    'error' is defined but never used                                                                                                    no-unused-vars
+  325:9   error    'getAssignedIcon' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                      no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\components\features\UserManagementComponent.jsx
+    2:44   error  'deleteUser' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+    3:10   error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u      no-unused-vars
+  181:95   error  'e' is defined but never used                                                      no-unused-vars
+  221:88   error  'onConfirmClose' is defined but never used                                         no-unused-vars
+  221:104  error  'onCancelClose' is defined but never used                                          no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\components\landing\CulturalSection.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\components\landing\WelcomeOverlay.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\components\layout\Footer.jsx
+  4:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\components\layout\Header.jsx
+   5:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                         no-unused-vars
+  59:6   warning  React Hook useEffect has a missing dependency: 'loadNotifications'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  75:9   error    'handleMarkAsRead' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                      no-unused-vars
+  91:9   error    'handleViewDetails' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                     no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\context\AuthContext.jsx
+   3:14  error  Fast refresh only works when a file only exports components. Move your React context(s) to a separate file                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-refresh/only-export-components
+  12:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  10 |     const role = localStorage.getItem('role');
+  11 |     if (role) {
+> 12 |       setUser({ role });
+     |       ^^^^^^^ Avoid calling setState() directly within an effect
+  13 |     }
+  14 |   }, []);
+  15 |  react-hooks/set-state-in-effect
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\context\LanguageContext.jsx
+  34:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\hooks\useFetch.js
+  10:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   8 |   useEffect(() => {
+   9 |     // Placeholder logic for generic fetch hook
+> 10 |     setLoading(true);
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  11 |     fetch(url)
+  12 |       .then((res) => res.json())
+  13 |       .then((data) => {  react-hooks/set-state-in-effect
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\pages\ChangePassword.jsx
+    2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u               no-unused-vars
+  135:9   error  'handleDone' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\pages\Dashboard.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\pages\LanguageSettings.jsx
+   2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+  10:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   8 |
+   9 |   useEffect(() => {
+> 10 |     setCurrentLang(getCurrentLanguage() || 'en');
+     |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  11 |   }, []);
+  12 |
+  13 |   const languages = [  react-hooks/set-state-in-effect
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\pages\Login.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\pages\Notifications.jsx
+   2:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                         no-unused-vars
+  32:6   warning  React Hook useEffect has a missing dependency: 'loadNotifications'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Aditya Patil\Documents\GitHub\Connect-Amravati-ZLC-MERN\frontend\src\store\index.js
+  4:35  error  'action' is defined but never used  no-unused-vars
+  8:50  error  'action' is defined but never used  no-unused-vars
+
+Γ£û 57 problems (51 errors, 6 warnings)
+
