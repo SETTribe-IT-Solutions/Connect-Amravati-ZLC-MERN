@@ -1,22 +1,25 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from 'react';
 import { FaLanguage } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { changeGoogleLanguage, getCurrentLanguage } from '../../utils/translate';
 
 const LanguageSwitcher = () => {
-  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState('en');
+
+  useEffect(() => {
+    setCurrentLanguage(getCurrentLanguage() || 'en');
+  }, []);
 
   const languages = [
-    { code: 'en', name: t('language.english'), flag: '🇬🇧' },
-    { code: 'mr', name: t('language.marathi'), flag: '🇮🇳' },
-    { code: 'hi', name: t('language.hindi'), flag: '🇮🇳' }
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'hi', name: 'Hindi', flag: '🇮🇳' },
+    { code: 'mr', name: 'Marathi', flag: '🇮🇳' }
   ];
 
-  const currentLanguage = i18n.language || 'en';
-
   const changeLanguage = (code) => {
-    i18n.changeLanguage(code);
+    changeGoogleLanguage(code);
+    setCurrentLanguage(code);
     setIsOpen(false);
   };
 
@@ -30,7 +33,7 @@ const LanguageSwitcher = () => {
       >
         <FaLanguage className="text-orange-600" />
         <span className="text-sm font-medium text-orange-700">
-          {languages.find(l => l.code === currentLanguage.split('-')[0])?.name || 'English'}
+          {languages.find(l => l.code === currentLanguage)?.name || 'English'}
         </span>
       </motion.button>
 
@@ -48,12 +51,12 @@ const LanguageSwitcher = () => {
                 whileHover={{ backgroundColor: '#f3f4f6' }}
                 onClick={() => changeLanguage(lang.code)}
                 className={`w-full px-4 py-3 text-left flex items-center space-x-3 ${
-                  currentLanguage.split('-')[0] === lang.code ? 'bg-blue-50 text-blue-700' : ''
+                  currentLanguage === lang.code ? 'bg-blue-50 text-blue-700' : ''
                 }`}
               >
                 <span className="text-xl">{lang.flag}</span>
                 <span className="font-medium">{lang.name}</span>
-                {currentLanguage.split('-')[0] === lang.code && (
+                {currentLanguage === lang.code && (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}

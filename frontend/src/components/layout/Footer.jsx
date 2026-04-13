@@ -1,11 +1,9 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+
 import { GiPeaceDove } from 'react-icons/gi';
 import { motion } from 'framer-motion';
 
 const Footer = () => {
-  const { t } = useTranslation();
-
   return (
     <motion.footer
       initial={{ y: 100 }}

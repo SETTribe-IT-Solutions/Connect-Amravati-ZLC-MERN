@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+
 import { NavLink } from 'react-router-dom';
 import {
   HomeIcon,
@@ -13,17 +13,17 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) => {
-  const { t } = useTranslation();
+
   const role = user?.role || localStorage.getItem('role') || 'user';
   const roleLower = role.toLowerCase();
 
   const allNavItems = [
-    { name: t('navigation.dashboard') || 'Dashboard', href: '/dashboard', icon: HomeIcon, color: 'from-blue-500 to-blue-600' },
-    { name: t('navigation.tasks') || 'Tasks', href: '/tasks', icon: ClipboardDocumentListIcon, color: 'from-blue-500 to-blue-600' },
-    { name: t('navigation.communications') || 'Communications', href: '/communications', icon: ChatBubbleLeftRightIcon, color: 'from-blue-500 to-blue-600' },
-    { name: t('navigation.reports') || 'Reports', href: '/reports', icon: ChartBarIcon, color: 'from-blue-500 to-blue-600' },
-    { name: t('navigation.users') || 'Users', href: '/users', icon: UserGroupIcon, color: 'from-blue-500 to-blue-600' },
-    { name: t('navigation.appreciation') || 'Appreciation', href: '/appreciation', icon: HeartIcon, color: 'from-blue-500 to-blue-600' },
+    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, color: 'from-blue-500 to-blue-600' },
+    { name: 'Tasks', href: '/tasks', icon: ClipboardDocumentListIcon, color: 'from-blue-500 to-blue-600' },
+    { name: 'Communications', href: '/communications', icon: ChatBubbleLeftRightIcon, color: 'from-blue-500 to-blue-600' },
+    { name: 'Reports', href: '/reports', icon: ChartBarIcon, color: 'from-blue-500 to-blue-600' },
+    { name: 'Users', href: '/users', icon: UserGroupIcon, color: 'from-blue-500 to-blue-600' },
+    { name: 'Appreciation', href: '/appreciation', icon: HeartIcon, color: 'from-blue-500 to-blue-600' },
   ];
 
   let navigation = [];
@@ -54,7 +54,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) =
       >
         {/* Logo Section - Hidden on collapsed desktop, visible on mobile */}
         <div className={`h-16 flex items-center justify-center border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-600 lg:hidden`}>
-          <h1 className="text-xl font-bold text-white">{t('app.name') || 'Amravati Connect'}</h1>
+          <h1 className="text-xl font-bold text-white">Amravati Connect</h1>
         </div>
 
         {/* Navigation */}
@@ -135,7 +135,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) =
             {!isCollapsed && (
               <div className="ml-3 overflow-hidden flex flex-col">
                 <p className="text-sm font-bold text-gray-900 truncate">
-                  {user?.name || t('dashboard.collectorOffice') || 'Collector Office'}
+                  {user?.name || 'Collector Office'}
                 </p>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-md truncate uppercase tracking-wider">

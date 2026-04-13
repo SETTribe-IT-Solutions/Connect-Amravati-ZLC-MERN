@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import { FaMapMarkerAlt, FaBell } from 'react-icons/fa';
 import { GiIndiaGate } from 'react-icons/gi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,7 +9,7 @@ import { Bars3Icon, BellIcon, CheckCircleIcon, EyeIcon, XMarkIcon, InformationCi
 import * as notificationService from '../../services/notificationService';
 
 const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
-  const { t } = useTranslation();
+
   const location = useLocation();
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
@@ -136,11 +136,11 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
             </motion.div>
             <div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-orange-600 via-blue-700 to-green-600 bg-clip-text text-transparent leading-tight lowercase">
-                <span className="capitalize">{t('DISTRICT CONNECT') || 'Amravati Connect'}</span>
+                <span className="capitalize">Amravati Connect</span>
               </h1>
               <p className="text-[10px] sm:text-xs lg:text-sm text-gray-600 flex items-center">
                 <FaMapMarkerAlt className="mr-1 text-blue-600" />
-                {t('app.subtitle') || 'Collector Office, Amravati'}
+                Collector Office, Amravati
               </p>
             </div>
           </div>
@@ -172,9 +172,9 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
                       className="fixed inset-x-4 md:absolute md:inset-x-auto md:right-0 mt-3 w-auto md:w-80 lg:w-96 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[60]"
                     >
                       <div className="p-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
-                        <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wider">{t('notifications.title')}</h3>
+                        <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wider">Notifications</h3>
                         <span className="text-[10px] font-bold px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                          {unreadCount} {t('notifications.new')}
+                          {unreadCount} New
                         </span>
                       </div>
 
@@ -184,7 +184,7 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
                             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                               <BellIcon className="h-8 w-8 text-gray-300" />
                             </div>
-                            <p className="text-gray-400 text-sm">{t('notifications.noNew')}</p>
+                            <p className="text-gray-400 text-sm">No new notifications</p>
                           </div>
                         ) : (
                           notifications.slice(0, 2).map((notif) => (
@@ -216,7 +216,7 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
                                       className="flex items-center space-x-1 text-[10px] font-bold text-blue-600 hover:text-blue-800 transition-colors bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100/50"
                                     >
                                       <EyeIcon className="h-3 w-3" />
-                                      <span>{t('notifications.viewDetails')}</span>
+                                      <span>View Details</span>
                                     </button>
                                   </div>
                                 </div>
@@ -230,7 +230,7 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
                         onClick={() => navigate('/notifications')}
                         className="w-full py-3 text-center text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors border-t border-gray-50"
                       >
-                        {t('notifications.seeAll')}
+                        See All Notifications
                       </button>
                     </motion.div>
                   )}

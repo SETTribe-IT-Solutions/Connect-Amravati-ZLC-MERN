@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaUser, FaLock, FaArrowRight, FaBell, FaShieldAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+
 import { loginUser } from '../services/authService';
 import { toast } from 'react-hot-toast';
 
@@ -13,7 +13,7 @@ import WelcomeOverlay from '../components/landing/WelcomeOverlay';
 import CulturalSection from '../components/landing/CulturalSection';
 
 const LoginPage = ({ onLogin }) => {
-  const { t } = useTranslation();
+
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ username: '', password: '' });
@@ -26,7 +26,7 @@ const LoginPage = ({ onLogin }) => {
     e.preventDefault();
 
     if (!formData.username || !formData.password) {
-      toast.error(t('Please fill in all fields') || 'Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
@@ -40,14 +40,14 @@ const LoginPage = ({ onLogin }) => {
         if (onLogin) {
           const success = onLogin(data);
           if (success) {
-            toast.success(t('Login successful') || 'Login successful');
+            toast.success('Login successful');
             setLoading(false);
             navigate("/dashboard");
             return;
           }
         }
       } else {
-        toast.error(t('Invalid credentials') || data.message || 'Invalid credentials');
+        toast.error(data.message || 'Invalid credentials');
         setLoading(false);
       }
     } catch (error) {
@@ -85,10 +85,10 @@ const LoginPage = ({ onLogin }) => {
                 <div className="max-w-md mx-auto">
                   <h2 className="text-4xl font-bold text-gray-800 mb-2 flex items-center">
                     <FaShieldAlt className="mr-3 text-blue-600" />
-                    {t('Login') || 'Login'}
+                    Login
                   </h2>
                   <p className="text-gray-600 mb-8 pl-12">
-                    {t('Access your dashboard securely') || 'Access your dashboard securely'}
+                    Access your dashboard securely
                   </p>
 
                   <form onSubmit={handleSubmit} className="space-y-6">
@@ -105,7 +105,7 @@ const LoginPage = ({ onLogin }) => {
                         placeholder=" "
                       />
                       <label className={`floating-label ${focusedField === 'username' || formData.username ? 'active' : ''}`}>
-                        {t('UserID') || 'UserID'}
+                        UserID
                       </label>
                     </div>
 
@@ -122,7 +122,7 @@ const LoginPage = ({ onLogin }) => {
                         placeholder=" "
                       />
                       <label className={`floating-label ${focusedField === 'password' || formData.password ? 'active' : ''}`}>
-                        {t('Password') || 'Password'}
+                        Password
                       </label>
                       {/* Eye Icon */}
                       <button
@@ -145,11 +145,11 @@ const LoginPage = ({ onLogin }) => {
                       {loading ? (
                         <>
                           <div className="spinner" />
-                          <span>{t('Logging in...') || 'Logging in...'}</span>
+                          <span>Logging in...</span>
                         </>
                       ) : (
                         <>
-                          <span>{t('login') || 'Login'}</span>
+                          <span>Login</span>
                           <FaArrowRight />
                         </>
                       )}
@@ -160,7 +160,7 @@ const LoginPage = ({ onLogin }) => {
                     {/* Security Notice */}
                     <p className="text-xs text-gray-500 text-center mt-6 flex items-center justify-center">
                       <FaShieldAlt className="mr-1" />
-                      {t('This is a secure government portal. Unauthorized access is prohibited.') || 'This is a secure government portal. Unauthorized access is prohibited.'}
+                      This is a secure government portal. Unauthorized access is prohibited.
                     </p>
                   </form>
                 </div>
