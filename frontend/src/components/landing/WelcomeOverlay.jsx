@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GiIndiaGate } from 'react-icons/gi';
-import { useTranslation } from 'react-i18next';
+
 
 const WelcomeOverlay = ({ onComplete }) => {
-  const { t } = useTranslation();
   const [showWelcome, setShowWelcome] = useState(true);
 
   useEffect(() => {
@@ -38,8 +37,8 @@ const WelcomeOverlay = ({ onComplete }) => {
             >
               <GiIndiaGate className="text-8xl mx-auto" />
             </motion.div>
-            <h1 className="text-4xl font-bold mb-4">{t('welcome') || 'WELCOME'}</h1>
-            <p className="text-xl opacity-90">{t('to Connect Amravati Portal') || 'to Connect Amravati Portal'}</p>
+            <h1 className="text-4xl font-bold mb-4">WELCOME</h1>
+            <p className="text-xl opacity-90">to Connect Amravati Portal</p>
           </motion.div>
         </motion.div>
       )}

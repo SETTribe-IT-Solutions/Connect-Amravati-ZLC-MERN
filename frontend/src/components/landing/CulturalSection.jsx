@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { GiIndiaGate } from 'react-icons/gi';
-import { useTranslation } from 'react-i18next';
+
 
 const CulturalSection = () => {
-  const { t } = useTranslation();
+
 
   return (
     <motion.div
@@ -52,13 +52,13 @@ const CulturalSection = () => {
           transition={{ duration: 3, repeat: Infinity }}
           className="text-5xl font-bold mb-6"
         >
-          {t('DISTRICT CONNECT') || 'DISTRICT CONNECT'}
+          DISTRICT CONNECT
         </motion.h2>
 
         <div className="h-1 w-24 bg-gradient-to-r from-orange-400 via-white to-green-400 mx-auto mb-6" />
 
         <p className="text-xl text-blue-100 mb-4">
-          {t('District Administration Communication Portal') || 'District Administration Communication Portal'}
+          District Administration Communication Portal
         </p>
 
         <div className="flex justify-center space-x-4 mt-8">
@@ -71,7 +71,7 @@ const CulturalSection = () => {
               }`}
             >
               <span className={`font-bold text-xl ${index === 1 ? 'text-blue-900' : 'text-white'}`}>
-                {t(`cultural.${item}`)}
+                {item.toUpperCase()}
               </span>
             </motion.div>
           ))}
