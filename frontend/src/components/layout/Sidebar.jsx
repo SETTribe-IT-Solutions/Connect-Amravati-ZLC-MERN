@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { NavLink } from 'react-router-dom';
 import {
@@ -9,10 +9,12 @@ import {
   UserGroupIcon,
   HeartIcon,
   KeyIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) => {
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const role = user?.role || localStorage.getItem('role') || 'user';
   const roleLower = role.toLowerCase();
@@ -110,7 +112,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) =
               <button
                 onClick={() => {
                   setSidebarOpen(false);
-                  if (onLogout) onLogout();
+                  setShowLogoutModal(true);
                 }}
                 className={`w-full flex items-center ${isCollapsed ? 'lg:justify-center' : ''} px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group text-red-600 hover:bg-red-50`}
                 title={isCollapsed ? 'Logout' : ''}
@@ -151,6 +153,40 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) =
           </div>
         </div>
       </div>
+
+      {/* Custom Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 transform transition-all scale-100">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-red-100 p-3 rounded-full mb-4">
+                <ExclamationTriangleIcon className="h-8 w-8 text-red-600" />
+              </div>
+              <p className="text-sm text-gray-500 mb-6">
+                Are you sure you want to logout ?
+              </p>
+              <div className="flex w-full space-x-3">
+                <button
+                  onClick={() => setShowLogoutModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-semibold rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLogoutModal(false);
+                    if (onLogout) onLogout();
+                  }}
+                  className="flex-1 flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors"
+                >
+                  <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
