@@ -239,7 +239,7 @@ const UserModal = ({ user, allUsers, roles, talukas, villages, fetchVillages, on
 
   const [formData, setFormData] = useState({
     userID: user?.id || '', name: user?.name || '', email: user?.email || '',
-    phone: (user?.phone || '').replace(/\D/g, '').slice(0, 10), role: user?.role || availableRoles[0] || roles[0],
+    phone: (user?.phone || '').replace(/\D/g, '').slice(0, 10), role: user?.role || '',
     district: user?.district || 'Amravati', taluka: user?.taluka || '', village: user?.village || '',
     status: user?.status || 'Active', password: ''
   });
@@ -390,6 +390,7 @@ useEffect(() => {
           <div><label className="block text-sm font-medium text-gray-700 mb-1">Role <span className="text-red-500">*</span></label>
           <select required value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm ${errors.role ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
+            <option value="">Select Role</option>
             {availableRoles.map(role => <option key={role} value={role}>{role}</option>)}
           </select>
           {errors.role && <p className="mt-1 text-xs text-red-500">⚠️ {errors.role}</p>}</div>

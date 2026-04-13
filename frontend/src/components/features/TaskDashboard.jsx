@@ -48,7 +48,7 @@ const TaskDashboard = ({ user }) => {
   const [updateAchievementValue, setUpdateAchievementValue] = useState('');
 
   const [newTask, setNewTask] = useState({
-    title: '', description: '', department: 'Revenue', priority: 'Medium',
+    title: '', description: '', department: '', priority: '',
     assignedType: 'role', assignedTo: '', dueDate: null, targetType: 'target',
     targetValue: '', location: '', attachments: [], selectedVillage: '', selectedRole: '', otherAssignedTo: ''
   });
@@ -167,7 +167,7 @@ const TaskDashboard = ({ user }) => {
       }
 
       fetchTasks();
-      setNewTask({ title: '', description: '', department: 'Revenue', priority: 'Medium', assignedType: 'role', assignedTo: '', dueDate: null, targetType: 'target', targetValue: '', location: '', attachments: [], selectedVillage: '', selectedRole: '', otherAssignedTo: '' });
+      setNewTask({ title: '', description: '', department: '', priority: '', assignedType: 'role', assignedTo: '', dueDate: null, targetType: 'target', targetValue: '', location: '', attachments: [], selectedVillage: '', selectedRole: '', otherAssignedTo: '' });
       setActiveTab('tracking');
     } catch (error) {
       console.error("Create Task Error:", error);
@@ -397,12 +397,25 @@ const TaskDashboard = ({ user }) => {
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required /></div>
                   <div><label className="block text-sm font-medium text-gray-700 mb-1">Department *</label>
                     <select value={newTask.department} onChange={(e) => setNewTask({ ...newTask, department: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg"><option>Revenue</option><option>Finance</option><option>Administration</option><option>Development</option><option>Infrastructure</option></select></div>
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg" required>
+                      <option value="">Select Department</option>
+                      <option value="Revenue">Revenue</option>
+                      <option value="Finance">Finance</option>
+                      <option value="Administration">Administration</option>
+                      <option value="Development">Development</option>
+                      <option value="Infrastructure">Infrastructure</option>
+                    </select></div>
                   <div><label className="block text-sm font-medium text-gray-700 mb-1">Priority *</label>
                     <select value={newTask.priority} onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg"><option>High</option><option>Medium</option><option>Low</option></select></div>
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg" required>
+                      <option value="">Select Priority</option>
+                      <option value="High">High</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Low">Low</option>
+                    </select></div>
                   <div><label className="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
                     <DatePicker selected={newTask.dueDate} onChange={(date) => setNewTask({ ...newTask, dueDate: date })}
+                      dateFormat="dd/MM/yyyy"
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholderText="Select due date"
                       minDate={new Date()} required /></div>
 
@@ -545,7 +558,7 @@ const TaskDashboard = ({ user }) => {
 
                 <div className="flex justify-end gap-3">
                   <button type="button" onClick={() => {
-                    setNewTask({ title: '', description: '', department: 'Revenue', priority: 'Medium', assignedType: 'role', assignedTo: '', dueDate: null, targetType: 'target', targetValue: '', location: '', attachments: [], selectedVillage: '', selectedRole: '', otherAssignedTo: '' });
+                    setNewTask({ title: '', description: '', department: '', priority: '', assignedType: 'role', assignedTo: '', dueDate: null, targetType: 'target', targetValue: '', location: '', attachments: [], selectedVillage: '', selectedRole: '', otherAssignedTo: '' });
                     setActiveTab('tracking');
                   }} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
                   <button type="submit" className="px-5 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md hover:shadow-lg">Create Task</button>
@@ -590,7 +603,7 @@ const TaskDashboard = ({ user }) => {
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 text-xs rounded-full ${getStatusColor(task.status)}`}>{task.status}</span></td>
                         <td className="px-3 py-2 text-sm text-gray-600">{task.assignedTo}</td>
                         <td className="px-3 py-2 text-sm text-gray-600">{task.assignedBy}</td>
-                        <td className="px-3 py-2 text-sm text-gray-600">{new Date(task.dueDate).toLocaleDateString()}</td>
+                        <td className="px-3 py-2 text-sm text-gray-600">{new Date(task.dueDate).toLocaleDateString('en-GB')}</td>
                         <td className="px-3 py-2 text-sm text-gray-600">{task.target || 'NA'}</td>
                         <td className="px-3 py-2"><div>{task.achievement || 0}</div><div className="text-[10px] text-blue-500">{task.progress || 0}%</div></td>
                         <td className="px-3 py-2">{task.attachments.length > 0 ? <a href={task.attachments[0].url} target="_blank" className="text-blue-600"><PaperClipIcon className="h-4 w-4" /></a> : '-'}</td>
@@ -657,7 +670,7 @@ const TaskDashboard = ({ user }) => {
                       <tr key={task.id} className="hover:bg-gray-50">
                         <td className="px-3 py-2"><p className="font-semibold text-gray-800 text-sm">{task.title}</p></td>
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 text-xs rounded-full ${getPriorityColor(task.priority)}`}>{task.priority}</span></td>
-                        <td className="px-3 py-2 text-sm text-gray-600">{new Date(task.dueDate).toLocaleDateString()}</td>
+                        <td className="px-3 py-2 text-sm text-gray-600">{new Date(task.dueDate).toLocaleDateString('en-GB')}</td>
                         <td className="px-3 py-2 text-sm text-gray-600">{task.assignedTo}</td>
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 text-xs rounded-full ${getStatusColor(task.status)}`}>{task.status}</span></td>
                         <td className="px-3 py-2">
