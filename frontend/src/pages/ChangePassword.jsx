@@ -140,26 +140,16 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
     }
   };
 
-  const strength = getStrengthText();
-
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+    <div className="flex items-center justify-center h-full w-full">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md relative"
+        className="w-full max-w-md"
       >
 
         {/* Header */}
         <div className="mb-8 text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="inline-block p-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg mb-4"
-          >
-            <KeyIcon className="h-10 w-10 text-white" />
-          </motion.div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Change Password</h1>
           <p className="text-gray-600">Reset your password</p>
         </div>
