@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { getTasks, createTask, updateTaskStatus, addTaskRemark, updateTaskProgressAPI, forwardTaskAPI } from '../../services/taskService';
+import { getTasks, createTask, addTaskRemark, updateTaskProgressAPI, forwardTaskAPI } from '../../services/taskService';
 import { getAllUsers, getSubordinates } from '../../services/userService';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -20,7 +20,7 @@ const TaskDashboard = ({ user }) => {
   const [activeTab, setActiveTab] = useState(canCreateTask ? 'create' : 'tracking');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const [selectedDepartment] = useState('all');
   const [toast, setToast] = useState(null);
   const [pendingSearchTerm, setPendingSearchTerm] = useState('');
   const [pendingStatusFilter, setPendingStatusFilter] = useState('all');
@@ -28,7 +28,7 @@ const TaskDashboard = ({ user }) => {
 
   const [tasks, setTasks] = useState([]);
   const [staff, setStaff] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Loading state managed silently
   const [selectedTask, setSelectedTask] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
@@ -62,7 +62,6 @@ const TaskDashboard = ({ user }) => {
     try {
       const userID = user?.userID || localStorage.getItem('userID');
       if (userID) {
-        setLoading(true);
         const data = await getTasks(userID);
         const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
         const serverURL = baseURL.replace('/api', '');
@@ -81,7 +80,7 @@ const TaskDashboard = ({ user }) => {
     } catch (error) {
       console.error("Fetch Tasks Error:", error);
     } finally {
-      setLoading(false);
+      // Intentionally empty block
     }
   };
 
@@ -226,7 +225,7 @@ const TaskDashboard = ({ user }) => {
       showToast('Remark added successfully!', 'success');
       setIsRemarkModalOpen(false);
       setRemarkText('');
-    } catch (error) {
+    } catch (_error) {
       showToast('Failed to add remark', 'error');
     }
   };
@@ -241,7 +240,7 @@ const TaskDashboard = ({ user }) => {
       setSubordinates(filteredSubordinates);
       setSelectedTaskForForward(task);
       setIsForwardModalOpen(true);
-    } catch (error) {
+    } catch (_error) {
       showToast('Failed to fetch subordinates', 'error');
     } finally {
       setForwardLoading(false);
@@ -261,7 +260,7 @@ const TaskDashboard = ({ user }) => {
       setIsForwardModalOpen(false);
       fetchTasks();
       showToast('Task forwarded successfully!', 'success');
-    } catch (error) {
+    } catch (_error) {
       showToast('Failed to forward task', 'error');
     }
   };
@@ -273,7 +272,7 @@ const TaskDashboard = ({ user }) => {
       fetchTasks();
       showToast(`Achievement updated to ${achieved}`, 'success');
       setIsUpdateModalOpen(false);
-    } catch (error) {
+    } catch (_error) {
       showToast('Failed to update progress', 'error');
     }
   };
@@ -281,9 +280,9 @@ const TaskDashboard = ({ user }) => {
   const tabs = canCreateTask
     ? [{ id: 'create', name: 'Create Task', icon: PlusCircleIcon },
     { id: 'tracking', name: 'Task Tracking', icon: ArrowPathIcon },
-    { id: 'pending', name: 'Pending Report', icon: ClockIcon }]
+    { id: 'pending', name: 'Pending & Overdue', icon: ClockIcon }]
     : [{ id: 'tracking', name: 'Task Tracking', icon: ArrowPathIcon },
-    { id: 'pending', name: 'Pending Report', icon: ClockIcon }];
+    { id: 'pending', name: 'Pending & Overdue', icon: ClockIcon }];
 
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = searchTerm === '' ||
@@ -322,12 +321,6 @@ const TaskDashboard = ({ user }) => {
     return 'bg-gray-100 text-gray-700';
   };
 
-  const getAssignedIcon = (type) => {
-    if (type === 'role') return <UsersIcon className="h-4 w-4" />;
-    if (type === 'employee') return <UserIcon className="h-4 w-4" />;
-    if (type === 'village') return <MapPinIcon className="h-4 w-4" />;
-    return <BuildingOfficeIcon className="h-4 w-4" />;
-  };
 
   const stats = [
     { name: 'Total Tasks', value: tasks.length, icon: DocumentTextIcon, bgColor: 'bg-blue-50', textColor: 'text-blue-600' },
@@ -651,7 +644,13 @@ const TaskDashboard = ({ user }) => {
 
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50"><tr><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Task</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Priority</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Due Date</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Assigned To</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Status</th><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Actions</th></tr></thead>
+                  <thead className="bg-gray-50"><tr><th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Task</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Priority</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Due Date</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Assigned To</th>
+                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Assigned BY</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Status</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Actions</th></tr></thead>
                   <tbody>
                     {filteredPendingTasks.map((task) => (
                       <tr key={task.id} className="hover:bg-gray-50">
@@ -659,6 +658,8 @@ const TaskDashboard = ({ user }) => {
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 text-xs rounded-full ${getPriorityColor(task.priority)}`}>{task.priority}</span></td>
                         <td className="px-3 py-2 text-sm text-gray-600">{new Date(task.dueDate).toLocaleDateString()}</td>
                         <td className="px-3 py-2 text-sm text-gray-600">{task.assignedTo}</td>
+                        <td className="px-3 py-2 text-sm text-gray-600">{task.createdBy}</td>
+
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 text-xs rounded-full ${getStatusColor(task.status)}`}>{task.status}</span></td>
                         <td className="px-3 py-2">
                           <button onClick={() => { setSelectedTask(task); setShowDetailsModal(true); }} className="flex flex-col items-center justify-center text-blue-600 hover:text-blue-800 group transition-colors">

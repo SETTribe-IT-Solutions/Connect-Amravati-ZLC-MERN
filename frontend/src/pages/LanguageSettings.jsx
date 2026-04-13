@@ -1,14 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 import { changeGoogleLanguage, getCurrentLanguage } from '../utils/translate';
 
 const LanguageSettings = () => {
-  const [currentLang, setCurrentLang] = useState('en');
-
-  useEffect(() => {
-    setCurrentLang(getCurrentLanguage() || 'en');
-  }, []);
+  const [currentLang, setCurrentLang] = useState(() => getCurrentLanguage() || 'en');
 
   const languages = [
     { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },

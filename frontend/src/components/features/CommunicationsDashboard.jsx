@@ -94,7 +94,7 @@ const CommunicationsDashboard = ({ user }) => {
       await acknowledgeAnnouncement(id, user?.userID);
       toast.success("Message acknowledged");
       fetchAnnouncements(); // Refresh list
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to acknowledge");
     }
   };
@@ -127,7 +127,7 @@ const CommunicationsDashboard = ({ user }) => {
       toast.success("Message deleted successfully");
       fetchAnnouncements();
       setDeletingAnnouncementId(null);
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to delete message");
     } finally {
       setIsDeleting(false);
@@ -147,7 +147,7 @@ const CommunicationsDashboard = ({ user }) => {
       toast.success('Message updated successfully');
       setEditingAnnouncement(null);
       fetchAnnouncements();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to update message");
     } finally {
       setUpdating(false);

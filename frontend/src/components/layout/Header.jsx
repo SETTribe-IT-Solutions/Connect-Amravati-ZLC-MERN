@@ -72,31 +72,7 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleMarkAsRead = async (id, e) => {
-    e.stopPropagation();
-    try {
-      // Instantly remove from UI as requested
-      setNotifications(prev => prev.filter(n => n.id !== id));
-      setUnreadCount(prev => Math.max(0, prev - 1));
-      
-      // Perform API call in background
-      await notificationService.markAsRead(id, userID);
-    } catch (error) {
-      console.error("Failed to mark as read:", error);
-      // Refresh to sync if it fails
-      loadNotifications();
-    }
-  };
 
-  const handleViewDetails = (taskId) => {
-    setShowDropdown(false);
-    if (taskId) {
-      // Navigate to tasks and pass taskId as query param
-      navigate(`/tasks?highlightId=${taskId}`);
-    } else {
-      navigate('/tasks');
-    }
-  };
 
   return (
     <motion.header

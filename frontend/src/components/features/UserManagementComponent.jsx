@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getAllUsers, addUser, updateUser, deleteUser } from '../../services/userService';
+import { getAllUsers, addUser, updateUser } from '../../services/userService';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from "axios";
 import {
@@ -143,7 +143,7 @@ const UserManagementComponent = () => {
             className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
             <option value="all">All Roles</option>{roles.map(role => <option key={role} value={role}>{role}</option>)}
           </select>
-          <button className="p-3 border border-gray-200 rounded-xl hover:bg-gray-50" onMouseEnter={(e) => showIconTooltip('Filter Users', e)}><FunnelIcon className="h-5 w-5 text-gray-600" /></button>
+
         </div>
       </div>
 
@@ -157,7 +157,7 @@ const UserManagementComponent = () => {
           <thead className="bg-gray-50 border-b border-gray-200"><tr>
             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">User</th>
             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Role</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Contact</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Email</th>
              <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Contact</th>
             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Jurisdiction</th>
             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Status</th>
@@ -178,7 +178,7 @@ const UserManagementComponent = () => {
               <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.status === 'Active' ? 'bg-green-500' : 'bg-gray-500'}`}></span>{user.status}
             </span></td>
             <td className="py-3 px-4"><div className="flex gap-2">
-              <button onMouseEnter={(e) => showIconTooltip('View User Details', e)} onClick={(e) => { setSelectedUser(user); setIsModalOpen(true); }} className="p-1.5 hover:bg-blue-50 rounded-lg">
+              <button onMouseEnter={(e) => showIconTooltip('View User Details', e)} onClick={() => { setSelectedUser(user); setIsModalOpen(true); }} className="p-1.5 hover:bg-blue-50 rounded-lg">
                 <EyeIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
               </button>
             </div></td>
@@ -218,7 +218,7 @@ const UserManagementComponent = () => {
   );
 };
 
-const UserModal = ({ user, allUsers, roles, talukas, villages, fetchVillages, onClose, onConfirmClose, onCancelClose, onSave, showIconTooltip }) => {
+const UserModal = ({ user, allUsers, roles, talukas, villages, fetchVillages, onClose, onSave, showIconTooltip }) => {
   const roleLimits = {
     'Collector': 1,
     'Addl. Collector': 8,

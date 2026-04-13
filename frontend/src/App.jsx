@@ -26,6 +26,21 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Handle logout
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setUser(null);
+    
+    // Clear all storage
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('user');
+    localStorage.removeItem('sessionToken');
+    sessionStorage.clear();
+    
+    // Redirect to login
+    window.location.href = '/login';
+  };
+
   // Check for existing session on load
   useEffect(() => {
     const checkAuth = () => {
@@ -90,22 +105,6 @@ function App() {
     }
     return false;
   };
-
-  // Handle logout
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setUser(null);
-    
-    // Clear all storage
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('user');
-    localStorage.removeItem('sessionToken');
-    sessionStorage.clear();
-    
-    // Redirect to login
-    window.location.href = '/login';
-  };
-
   // Handle password verification (for step 1)
   const handleVerifyPassword = async (currentPassword) => {
     try {

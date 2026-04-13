@@ -166,7 +166,7 @@ const ReportsDashboard = () => {
       const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
       saveAs(new Blob([excelBuffer]), `Report_${new Date().toISOString().split('T')[0]}.xlsx`);
       showToast('Report exported', 'success');
-    } catch (error) {
+    } catch (_error) {
       showToast('Export failed', 'error');
     }
   };
