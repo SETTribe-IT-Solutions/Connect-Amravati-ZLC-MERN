@@ -385,10 +385,10 @@ const TaskDashboard = ({ user }) => {
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-3"><h2 className="text-lg font-bold text-white">Create New Task</h2></div>
               <form onSubmit={handleCreateTask} className="p-5 space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div><label className="block text-sm font-medium text-gray-700 mb-1">Task Title *</label>
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">Task Title <span className="text-red-500">*</span></label>
                     <input type="text" value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required /></div>
-                  <div><label className="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">Department <span className="text-red-500">*</span></label>
                     <select value={newTask.department} onChange={(e) => setNewTask({ ...newTask, department: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg" required>
                       <option value="">Select Department</option>
@@ -398,7 +398,7 @@ const TaskDashboard = ({ user }) => {
                       <option value="Development">Development</option>
                       <option value="Infrastructure">Infrastructure</option>
                     </select></div>
-                  <div><label className="block text-sm font-medium text-gray-700 mb-1">Priority *</label>
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">Priority <span className="text-red-500">*</span></label>
                     <select value={newTask.priority} onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg" required>
                       <option value="">Select Priority</option>
@@ -406,7 +406,7 @@ const TaskDashboard = ({ user }) => {
                       <option value="Medium">Medium</option>
                       <option value="Low">Low</option>
                     </select></div>
-                  <div><label className="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
+                  <div><label className="block text-sm font-medium text-gray-700 mb-1">Due Date <span className="text-red-500">*</span></label>
                     <DatePicker selected={newTask.dueDate} onChange={(date) => setNewTask({ ...newTask, dueDate: date })}
                       dateFormat="dd/MM/yyyy"
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholderText="Select due date"
@@ -425,7 +425,7 @@ const TaskDashboard = ({ user }) => {
 
                 {/* Allocate To Section */}
                 <div className="border-t border-gray-200 pt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Allocate To *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Allocate To <span className="text-red-500">*</span></label>
                   <div className="flex flex-wrap gap-6 mb-4">
                     {['role', 'employee', 'village', 'other'].map((type) => (
                       <label key={type} className="flex items-center gap-2 cursor-pointer">
@@ -503,7 +503,7 @@ const TaskDashboard = ({ user }) => {
 
                 {/* Target Section */}
                 <div className="border-t border-gray-200 pt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Target *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Target <span className="text-red-500">*</span></label>
                   <div className="flex gap-6 mb-3">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="radio" name="targetType" value="target" checked={newTask.targetType === 'target'}
@@ -527,7 +527,7 @@ const TaskDashboard = ({ user }) => {
 
                 {/* Description - Last */}
                 <div className="border-t border-gray-200 pt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description <span className="text-red-500">*</span></label>
                   <textarea rows="3" value={newTask.description} onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required />
                 </div>
@@ -594,8 +594,14 @@ const TaskDashboard = ({ user }) => {
                         <td className="px-3 py-2"><p className="font-semibold text-gray-800 text-sm">{task.title}</p></td>
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 text-xs rounded-full ${getPriorityColor(task.priority)}`}>{task.priority}</span></td>
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 text-xs rounded-full ${getStatusColor(task.status)}`}>{task.status}</span></td>
-                        <td className="px-3 py-2 text-sm text-gray-600">{task.assignedTo}</td>
-                        <td className="px-3 py-2 text-sm text-gray-600">{task.assignedBy}</td>
+                        <td className="px-3 py-2">
+                          <p className="text-sm text-gray-700">{task.assignedTo}</p>
+                          {task.assignedToRole && <p className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[120px]">{task.assignedToRole.replace(/_/g, ' ')}</p>}
+                        </td>
+                        <td className="px-3 py-2">
+                          <p className="text-sm text-gray-700">{task.assignedBy}</p>
+                          {task.createdByRole && <p className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[120px]">{task.createdByRole.replace(/_/g, ' ')}</p>}
+                        </td>
                         <td className="px-3 py-2 text-sm text-gray-600">{new Date(task.dueDate).toLocaleDateString('en-GB')}</td>
                         <td className="px-3 py-2 text-sm text-gray-600">{task.target || 'NA'}</td>
                         <td className="px-3 py-2"><div>{task.achievement || 0}</div><div className="text-[10px] text-blue-500">{task.progress || 0}%</div></td>
@@ -670,8 +676,14 @@ const TaskDashboard = ({ user }) => {
                         <td className="px-3 py-2"><p className="font-semibold text-gray-800 text-sm">{task.title}</p></td>
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 text-xs rounded-full ${getPriorityColor(task.priority)}`}>{task.priority}</span></td>
                         <td className="px-3 py-2 text-sm text-gray-600">{new Date(task.dueDate).toLocaleDateString('en-GB')}</td>
-                        <td className="px-3 py-2 text-sm text-gray-600">{task.assignedTo}</td>
-                        <td className="px-3 py-2 text-sm text-gray-600">{task.createdBy}</td>
+                        <td className="px-3 py-2">
+                          <p className="text-sm text-gray-700">{task.assignedTo}</p>
+                          {task.assignedToRole && <p className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[120px]">{task.assignedToRole.replace(/_/g, ' ')}</p>}
+                        </td>
+                        <td className="px-3 py-2">
+                          <p className="text-sm text-gray-700">{task.assignedBy}</p>
+                          {task.createdByRole && <p className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[120px]">{task.createdByRole.replace(/_/g, ' ')}</p>}
+                        </td>
 
                         <td className="px-3 py-2"><span className={`px-2 py-0.5 text-xs rounded-full ${getStatusColor(task.status)}`}>{task.status}</span></td>
                         <td className="px-3 py-2">
@@ -877,11 +889,14 @@ const TaskDashboard = ({ user }) => {
 
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-gray-700">New Achievement Value <span className="text-red-500">*</span></label>
-                  <input type="number" min={updateTaskObj.achievement || 0} max={updateTaskObj.target || ''}
-                    value={updateAchievementValue} onChange={(e) => setUpdateAchievementValue(e.target.value)}
+                  <input type="number" min={updateTaskObj.achievement || 0} max={updateTaskObj.target || ''} step="1"
+                    value={updateAchievementValue} onChange={(e) => setUpdateAchievementValue(e.target.value.replace(/\D/g, ''))}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-lg font-semibold"
                     placeholder="Enter numerical value"
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateProgress(updateTaskObj.id, updateAchievementValue); }}
+                    onKeyDown={(e) => { 
+                      if (['.', 'e', 'E', '-', '+'].includes(e.key)) e.preventDefault();
+                      if (e.key === 'Enter') handleUpdateProgress(updateTaskObj.id, updateAchievementValue); 
+                    }}
                     autoFocus
                   />
                   {updateTaskObj.achievement > parseInt(updateAchievementValue || 0) && (
