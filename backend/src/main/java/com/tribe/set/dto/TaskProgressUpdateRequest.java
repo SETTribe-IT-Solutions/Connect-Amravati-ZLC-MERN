@@ -8,7 +8,7 @@ public class TaskProgressUpdateRequest {
     private String requesterId;
 
     @NotNull(message = "Achieved units are required")
-    private Integer achieved;
+    private Double achieved;
 
     public String getRequesterId() {
         return requesterId;
@@ -18,11 +18,11 @@ public class TaskProgressUpdateRequest {
         this.requesterId = requesterId;
     }
 
-    public Integer getAchieved() {
+    public Double getAchieved() {
         return achieved;
     }
 
-    public void setAchieved(Integer achieved) {
+    public void setAchieved(Double achieved) {
         this.achieved = achieved;
     }
 }
