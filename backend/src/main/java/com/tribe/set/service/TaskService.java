@@ -346,9 +346,17 @@ public class TaskService {
     // UPDATE TASK PROGRESS
     // ═══════════════════════════════════════════════════
 
-    public TaskResponse updateTaskProgress(Long taskId, int achievedWork, String requesterId) {
+    public TaskResponse updateTaskProgress(Long taskId, Double achievedWorkInput, String requesterId) {
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
+
+        if (achievedWorkInput == null) {
+            throw new RuntimeException("Achievement value is required.");
+        }
+        if (achievedWorkInput % 1 != 0) {
+            throw new RuntimeException("Validation Error: Decimal values are not allowed for achievement updates.");
+        }
+        int achievedWork = achievedWorkInput.intValue();
 
         boolean isAssignedTo = task.getAssignedTo().getUserID().equals(requesterId);
         boolean isCreatedBy = task.getCreatedBy().getUserID().equals(requesterId);
