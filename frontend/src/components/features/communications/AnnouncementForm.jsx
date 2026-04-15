@@ -10,7 +10,7 @@ import {
   UserGroupIcon,
   PaperClipIcon
 } from '@heroicons/react/24/outline';
-import { createAnnouncement } from '../../services/announcementService';
+import { createAnnouncement } from '../../../services/communications/announcementService';
 
 const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
   const [formData, setFormData] = useState({

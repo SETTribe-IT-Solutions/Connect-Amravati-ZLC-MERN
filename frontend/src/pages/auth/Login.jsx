@@ -3,14 +3,14 @@ import { motion } from 'framer-motion';
 import { FaUser, FaLock, FaArrowRight, FaBell, FaShieldAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-import { loginUser } from '../services/authService';
+import { loginUser } from '../../services/auth/authService';
 import { toast } from 'react-hot-toast';
 
-import Header from '../components/layout/Header';
-import Footer from '../components/layout/Footer';
-import AnimatedBackground from '../components/landing/AnimatedBackground';
-import WelcomeOverlay from '../components/landing/WelcomeOverlay';
-import CulturalSection from '../components/landing/CulturalSection';
+import Header from '../../components/layout/Header';
+import Footer from '../../components/layout/Footer';
+import AnimatedBackground from '../../components/landing/AnimatedBackground';
+import WelcomeOverlay from '../../components/landing/WelcomeOverlay';
+import CulturalSection from '../../components/landing/CulturalSection';
 
 const LoginPage = ({ onLogin }) => {
 

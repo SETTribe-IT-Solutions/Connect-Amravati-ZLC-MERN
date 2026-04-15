@@ -1,5 +1,5 @@
 import React from 'react';
-import ReportsDashboard from '../components/features/ReportsDashboard';
+import ReportsDashboard from '../../components/features/reports/ReportsDashboard';
 
 const Reports = () => {
   return <ReportsDashboard />;

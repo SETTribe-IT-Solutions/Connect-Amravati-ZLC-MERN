@@ -1,4 +1,4 @@
-import axiosInstance from "../config/axiosConfig";
+import axiosInstance from "../../config/axiosConfig";
 
 export const getPerformanceReport = async (requesterId) => {
   const response = await axiosInstance.get("/reports/performance", {

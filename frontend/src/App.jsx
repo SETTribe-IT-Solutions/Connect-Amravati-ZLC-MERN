@@ -10,16 +10,16 @@ import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 // Pages
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Tasks from './pages/Tasks';
-import Communications from './pages/Communications';
-import Reports from './pages/Reports';
-import UserManagement from './pages/UserManagement';
-import Appreciation from './pages/Appreciation';
-import Notifications from './pages/Notifications';
-import ChangePassword from './pages/ChangePassword';
-import { changePassword, loginUser } from './services/authService';
+import Login from './pages/auth/Login';
+import Dashboard from './pages/dashboard/Dashboard';
+import Tasks from './pages/tasks/Tasks';
+import Communications from './pages/communications/Communications';
+import Reports from './pages/reports/Reports';
+import UserManagement from './pages/users/UserManagement';
+import Appreciation from './pages/appreciation/Appreciation';
+import Notifications from './pages/notifications/Notifications';
+import ChangePassword from './pages/auth/ChangePassword';
+import { changePassword, loginUser } from './services/auth/authService';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
