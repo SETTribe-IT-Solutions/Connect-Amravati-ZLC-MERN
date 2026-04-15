@@ -404,13 +404,13 @@ useEffect(() => {
           <div><label className="block text-sm font-medium text-gray-700 mb-1">District <span className="text-red-500">*</span></label>
           <input type="text" required value={formData.district} onChange={(e) => setFormData({...formData, district: e.target.value})}
             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Enter district" /></div>
-          <div className="grid grid-cols-2 gap-2"><div><label className="block text-sm font-medium text-gray-700 mb-1">Taluka</label>
-          <select value={formData.taluka} onChange={(e) => { setFormData({...formData, taluka: e.target.value, village: ''}); if(e.target.value) fetchVillages(e.target.value); }}
+          <div className="grid grid-cols-2 gap-2"><div><label className="block text-sm font-medium text-gray-700 mb-1">Taluka {formData.role !== 'Collector' && formData.role !== 'Admin' && <span className="text-red-500">*</span>}</label>
+          <select required={formData.role !== 'Collector' && formData.role !== 'Admin'} value={formData.taluka} onChange={(e) => { setFormData({...formData, taluka: e.target.value, village: ''}); if(e.target.value) fetchVillages(e.target.value); }}
             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
             <option value="">Select Taluka</option>{talukas.map((t, idx) => <option key={idx} value={t}>{t}</option>)}
           </select></div>
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">Village</label>
-          <select value={formData.village} onChange={(e) => setFormData({...formData, village: e.target.value})} disabled={!formData.taluka}
+          <div><label className="block text-sm font-medium text-gray-700 mb-1">Village {formData.role !== 'Collector' && formData.role !== 'Admin' && <span className="text-red-500">*</span>}</label>
+          <select required={formData.role !== 'Collector' && formData.role !== 'Admin'} value={formData.village} onChange={(e) => setFormData({...formData, village: e.target.value})} disabled={!formData.taluka && (formData.role !== 'Collector' && formData.role !== 'Admin')}
             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
             <option value="">Select Village</option>{villages.map((v, idx) => <option key={idx} value={v}>{v}</option>)}
           </select></div></div>
