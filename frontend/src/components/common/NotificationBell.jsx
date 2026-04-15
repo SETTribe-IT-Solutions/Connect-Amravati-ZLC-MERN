@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaBell, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { fetchNotifications, markAsRead } from '../../services/notificationService';
+import { fetchNotifications, markAsRead } from '../../services/notifications/notificationService';
 import { toast } from 'react-hot-toast';
 
 const NotificationBell = () => {

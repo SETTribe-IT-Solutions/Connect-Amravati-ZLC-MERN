@@ -1,4 +1,4 @@
-import axiosInstance from "../config/axiosConfig";
+import axiosInstance from "../../config/axiosConfig";
 
 /**
  * Fetch unread notifications for the logged-in user.

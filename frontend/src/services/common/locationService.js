@@ -1,4 +1,4 @@
-import axiosInstance from "../config/axiosConfig";
+import axiosInstance from "../../config/axiosConfig";
 
 /**
  * Fetches all talukas or talukas filtered by role.

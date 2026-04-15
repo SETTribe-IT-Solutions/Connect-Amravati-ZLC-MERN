@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAllAppreciations, sendAppreciation, getEligibleUsers } from '../../services/appreciationService';
+import { getAllAppreciations, sendAppreciation, getEligibleUsers } from '../../../services/appreciation/appreciationService';
 import { toast } from 'react-hot-toast';
 import {
   HeartIcon,
@@ -16,11 +16,20 @@ import {
   ClockIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import Pagination from '../../common/Pagination';
 
 const AppreciationComponent = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
   const [formStates, setFormStates] = useState({}); // Tracking message/badge for each user
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(6);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filter]);
 
   const [appreciations, setAppreciations] = useState([]);
   const [staff, setStaff] = useState([]);
@@ -411,9 +420,10 @@ const AppreciationComponent = ({ user }) => {
         </div>
       </motion.div>
 
-      {/* Appreciations Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
-        {filteredAppreciations.map((apt, index) => (
+        {filteredAppreciations
+          .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+          .map((apt, index) => (
           <motion.div
             key={apt.id}
             initial={{ opacity: 0, scale: 0.9 }}
@@ -491,6 +501,13 @@ const AppreciationComponent = ({ user }) => {
           </motion.div>
         ))}
       </div>
+      
+      <Pagination 
+        totalItems={filteredAppreciations.length}
+        itemsPerPage={itemsPerPage}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

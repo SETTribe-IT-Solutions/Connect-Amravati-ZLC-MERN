@@ -9,9 +9,10 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, Legend, LineChart, Line
 } from 'recharts';
-import { getPerformanceReport, getGlobalStats } from '../../services/reportService';
+import { getPerformanceReport, getGlobalStats } from '../../../services/reports/reportService';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import Pagination from '../../common/Pagination';
 
 const ReportsDashboard = () => {
   const [dateRange, setDateRange] = useState('month');
@@ -21,6 +22,13 @@ const ReportsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [selectedDept, setSelectedDept] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  // Reset pagination when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedDept]);
 
   const showToast = (title, value) => {
     setToast({ title, value });
@@ -319,7 +327,9 @@ const ReportsDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {filteredDeptData.map((d) => (
+                  {filteredDeptData
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((d) => (
                     <tr key={d.srNo} className="hover:bg-gray-50">
                       <td className="px-3 py-2 text-sm text-gray-600">{d.srNo}</td>
                       <td className="px-3 py-2 text-sm text-gray-800">{d.name}</td>
@@ -334,6 +344,12 @@ const ReportsDashboard = () => {
                 </tbody>
               </table>
             </div>
+            <Pagination 
+              totalItems={filteredDeptData.length}
+              itemsPerPage={itemsPerPage}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
           </div>
         </div>
       )}
@@ -404,7 +420,9 @@ const ReportsDashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {deptData.map((d) => (
+                {deptData
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((d) => (
                   <tr key={d.srNo} className="hover:bg-gray-50">
                     <td className="px-3 py-2 text-sm text-gray-600">{d.srNo}</td>
                     <td className="px-3 py-2 text-sm text-gray-800">{d.name}</td>
@@ -419,6 +437,12 @@ const ReportsDashboard = () => {
               </tbody>
             </table>
           </div>
+          <Pagination 
+            totalItems={deptData.length}
+            itemsPerPage={itemsPerPage}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
     </div>

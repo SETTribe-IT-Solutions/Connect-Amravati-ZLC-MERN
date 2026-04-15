@@ -1,4 +1,5 @@
 import axios from 'axios';
+import axiosInstance from "../../config/axiosConfig";
 
 const API_URL = 'http://localhost:8080/api/announcements';
 

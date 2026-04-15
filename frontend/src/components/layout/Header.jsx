@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bars3Icon, BellIcon, CheckCircleIcon, EyeIcon, XMarkIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
-import * as notificationService from '../../services/notificationService';
+import * as notificationService from '../../services/notifications/notificationService';
 
 const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
 

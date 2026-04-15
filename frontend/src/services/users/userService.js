@@ -1,4 +1,4 @@
-import axiosInstance from "../config/axiosConfig";
+import axiosInstance from "../../config/axiosConfig";
 
 export const getAllUsers = async (requesterId) => {
   const response = await axiosInstance.get("/users/all", {

@@ -27,9 +27,10 @@ import {
   getAnnouncementAcknowledgments,
   updateAnnouncement,
   deleteAnnouncement
-} from '../../services/announcementService';
+} from '../../../services/communications/announcementService';
 import AnnouncementForm from './AnnouncementForm';
 import { toast } from 'react-hot-toast';
+import Pagination from '../../common/Pagination';
 
 const CommunicationsDashboard = ({ user }) => {
   const [announcements, setAnnouncements] = useState([]);
@@ -50,6 +51,13 @@ const CommunicationsDashboard = ({ user }) => {
   const [updating, setUpdating] = useState(false);
   const [deletingAnnouncementId, setDeletingAnnouncementId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
+
+  // Reset pagination when tab or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, filters]);
 
   const roleLevels = {
     'COLLECTOR': 1,
@@ -345,7 +353,9 @@ const CommunicationsDashboard = ({ user }) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
-          {currentDisplayList.map((item, index) => (
+          {currentDisplayList
+            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+            .map((item, index) => (
             <motion.div
               key={`${activeTab}-${item.id}`}
               initial={{ opacity: 0, y: 20 }}
@@ -512,6 +522,13 @@ const CommunicationsDashboard = ({ user }) => {
               </div>
             </motion.div>
           ))}
+          
+          <Pagination 
+            totalItems={currentDisplayList.length}
+            itemsPerPage={itemsPerPage}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
 

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaBell, FaCheck, FaTimes, FaFilter, FaExternalLinkAlt } from 'react-icons/fa';
-import { fetchNotifications, markAsRead } from '../services/notificationService';
+import { fetchNotifications, markAsRead } from '../../services/notifications/notificationService';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import Pagination from '../../components/common/Pagination';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -13,6 +14,13 @@ const Notifications = () => {
 
   const userId = localStorage.getItem('userID');
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  // Reset pagination when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
 
   const loadNotifications = async () => {
     if (!userId) return;
@@ -268,7 +276,9 @@ const Notifications = () => {
             </p>
           </motion.div>
         ) : (
-          filteredNotifications.map((notification, index) => (
+          filteredNotifications
+            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+            .map((notification, index) => (
             <motion.div
               key={notification.id}
               initial={{ opacity: 0, y: 20 }}
@@ -334,6 +344,13 @@ const Notifications = () => {
           ))
         )}
       </div>
+      
+      <Pagination 
+        totalItems={filteredNotifications.length}
+        itemsPerPage={itemsPerPage}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+      />
     </motion.div>
   );
 };
