@@ -16,7 +16,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
         ex.printStackTrace(); // Log stack trace
         Map<String, String> error = new HashMap<>();
-        error.put("message", ex.getMessage());
+        String message = ex.getMessage();
+        if ("Bad credentials".equals(message)) {
+            message = "Invalid credentials";
+        }
+        error.put("message", message);
         error.put("status", "error");
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
@@ -36,8 +40,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleGeneralException(Exception ex) {
         ex.printStackTrace(); // Log stack trace severely to console but not client
         Map<String, String> error = new HashMap<>();
-        // Avoid exposing direct raw exceptions to client as it may reveal internal implementations
-        error.put("message", "A processing error occurred on the server."); 
+        // Avoid exposing direct raw exceptions to client as it may reveal internal
+        // implementations
+        error.put("message", "A processing error occurred on the server.");
         error.put("status", "error");
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
