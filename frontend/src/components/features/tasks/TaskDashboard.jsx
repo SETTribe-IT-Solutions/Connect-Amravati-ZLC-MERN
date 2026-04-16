@@ -14,7 +14,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Pagination from '../../common/Pagination';
 
 const TaskDashboard = ({ user }) => {
-  const role = user?.role || localStorage.getItem('role') || 'user';
+  const role = user?.role || 'user';
   const roleLower = role.toLowerCase();
   const canCreateTask = ['collector', 'additional collector', 'sdo', 'tehsildar', 'admin'].some(r => roleLower.includes(r));
 
@@ -75,7 +75,7 @@ const TaskDashboard = ({ user }) => {
 
   const fetchTasks = async () => {
     try {
-      const userID = user?.userID || localStorage.getItem('userID');
+      const userID = user?.userID;
       if (userID) {
         const data = await getTasks(userID);
         const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
@@ -101,10 +101,11 @@ const TaskDashboard = ({ user }) => {
 
   const fetchStaff = async () => {
     try {
-      const requesterId = localStorage.getItem('userID');
+      const requesterId = user?.userID;
+      if (!requesterId) return;
       const data = await getAllUsers(requesterId);
       // Filter out self
-      const filteredStaff = (data || []).filter(u => u.userID.toString() !== requesterId.toString());
+      const filteredStaff = (data || []).filter(u => u.userID?.toString() !== requesterId.toString());
       setStaff(filteredStaff);
     } catch (error) {
       console.error("Fetch Staff Error:", error);
@@ -129,7 +130,7 @@ const TaskDashboard = ({ user }) => {
   const handleCreateTask = async (e) => {
     e.preventDefault();
     try {
-      const userID = user?.userID || localStorage.getItem('userID');
+      const userID = user?.userID;
       const targetValue = newTask.targetType === 'target' ? parseInt(newTask.targetValue) : null;
 
       const baseTaskData = {
@@ -234,7 +235,7 @@ const TaskDashboard = ({ user }) => {
   const handleAddRemark = async (taskId, text) => {
     if (!text?.trim()) return showToast('Please enter a remark', 'error');
     try {
-      const userID = user?.userID || localStorage.getItem('userID');
+      const userID = user?.userID;
       await addTaskRemark(taskId, text, userID);
       await fetchTasks();
       showToast('Remark added successfully!', 'success');
@@ -247,7 +248,7 @@ const TaskDashboard = ({ user }) => {
 
   const handleOpenForwardModal = async (task) => {
     try {
-      const userID = user?.userID || localStorage.getItem('userID');
+      const userID = user?.userID;
       setForwardLoading(true);
       const data = await getSubordinates(userID);
       // Filter out self
@@ -264,7 +265,7 @@ const TaskDashboard = ({ user }) => {
 
   const handleConfirmForward = async (targetUserId) => {
     try {
-      const userID = user?.userID || localStorage.getItem('userID');
+      const userID = user?.userID;
 
       if (targetUserId === userID) {
         showToast('You cannot forward a task to yourself', 'error');
@@ -282,7 +283,7 @@ const TaskDashboard = ({ user }) => {
 
   const handleUpdateProgress = async (taskId, achieved) => {
     try {
-      const userID = user?.userID || localStorage.getItem('userID');
+      const userID = user?.userID;
       await updateTaskProgressAPI(taskId, parseInt(achieved), userID);
       fetchTasks();
       showToast(`Achievement updated to ${achieved}`, 'success');

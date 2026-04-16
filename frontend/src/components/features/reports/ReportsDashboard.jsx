@@ -14,7 +14,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import Pagination from '../../common/Pagination';
 
-const ReportsDashboard = () => {
+const ReportsDashboard = ({ user }) => {
   const [dateRange, setDateRange] = useState('month');
   const [reportType, setReportType] = useState('overview');
   const [performanceData, setPerformanceData] = useState([]);
@@ -38,7 +38,7 @@ const ReportsDashboard = () => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const requesterId = localStorage.getItem('userID');
+        const requesterId = user?.userID;
         if (requesterId) {
           const [perf, global] = await Promise.all([
             getPerformanceReport(requesterId),

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getAllUsers, addUser, updateUser } from '../../../services/users/userService';
+import { getAllUsers, addUser, updateUser } from '../../services/userService';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from "axios";
 import {
@@ -7,9 +7,8 @@ import {
   ShieldCheckIcon, UserCircleIcon, XMarkIcon, TrophyIcon,
   EyeIcon, CheckCircleIcon, EyeSlashIcon, PencilIcon
 } from '@heroicons/react/24/outline';
-import Pagination from '../../common/Pagination';
 
-const UserManagementComponent = ({ user }) => {
+const UserManagementComponent = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -21,13 +20,6 @@ const UserManagementComponent = ({ user }) => {
   const [talukas, setTalukas] = useState([]);
   const [villages, setVillages] = useState([]);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-
-  // Reset pagination when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, roleFilter]);
 
   const showToast = (title, value) => { setToast({ title, value }); setTimeout(() => setToast(null), 3000); };
   const showIconTooltip = (message, event) => {
@@ -39,7 +31,7 @@ const UserManagementComponent = ({ user }) => {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const requesterId = user?.userID;
+      const requesterId = localStorage.getItem('userID') || null;
       const data = await getAllUsers(requesterId);
       const revRoleMap = {
         'COLLECTOR': 'Collector', 'ADDITIONAL_DEPUTY_COLLECTOR': 'Addl. Collector', 'SDO': 'SDO',
@@ -63,7 +55,8 @@ const UserManagementComponent = ({ user }) => {
 
   const fetchTalukas = useCallback(async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/talukas", { withCredentials: true });
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://localhost:8080/api/talukas", { headers: { Authorization: `Bearer ${token}` } });
       setTalukas(response.data.map(t => (t?.taluka ?? t)).filter(Boolean));
     } catch (error) { console.error("Fetch Talukas Error:", error); }
   }, []);
@@ -73,7 +66,8 @@ const UserManagementComponent = ({ user }) => {
   const fetchVillages = useCallback(async (talukaName) => {
     if (!talukaName) { setVillages([]); return; }
     try {
-      const response = await axios.get(`http://localhost:8080/api/villages/${encodeURIComponent(talukaName)}`, { withCredentials: true });
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`http://localhost:8080/api/villages/${encodeURIComponent(talukaName)}`, { headers: { Authorization: `Bearer ${token}` } });
       setVillages(response.data.map(v => (v?.village ?? v)).filter(Boolean));
     } catch (error) { console.error("Fetch Villages Error:", error); setVillages([]); }
   }, []);
@@ -169,10 +163,7 @@ const UserManagementComponent = ({ user }) => {
             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Status</th>
             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Actions</th>
           </tr></thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredUsers
-              .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-              .map(user => <tr key={user.id} className="hover:bg-gray-50 transition-colors group">
+          <tbody className="divide-y divide-gray-100">{filteredUsers.map(user => <tr key={user.id} className="hover:bg-gray-50 transition-colors group">
             <td className="py-3 px-4"><div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm">{user.avatar}</div>
               <p className="font-medium text-gray-800 text-sm">{user.name}</p>
@@ -193,12 +184,6 @@ const UserManagementComponent = ({ user }) => {
             </div></td>
           </tr>)}</tbody>
         </table></div>
-        <Pagination 
-          totalItems={filteredUsers.length}
-          itemsPerPage={itemsPerPage}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-        />
       </div>}
 
       <AnimatePresence>{isModalOpen && <UserModal user={selectedUser} allUsers={users} roles={roles} talukas={talukas} villages={villages}
@@ -209,7 +194,7 @@ const UserManagementComponent = ({ user }) => {
         onSave={async (userData) => {
           try {
             const roleMap = { 'Collector': 'COLLECTOR', 'Addl. Collector': 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO': 'SDO', 'Tehsildar': 'TEHSILDAR', 'BDO': 'BDO', 'Talathi': 'TALATHI', 'Gram Sevak': 'GRAMSEVAK', 'Admin': 'SYSTEM_ADMINISTRATOR' };
-            const payload = { ...userData, role: roleMap[userData.role] || userData.role, requesterId: user?.userID || '', active: userData.status === 'Active' };
+            const payload = { ...userData, role: roleMap[userData.role] || userData.role, requesterId: localStorage.getItem('userID') || '', active: userData.status === 'Active' };
             delete payload.status;
             
             if (selectedUser) {

@@ -34,8 +34,8 @@ const AppreciationComponent = ({ user }) => {
   const [appreciations, setAppreciations] = useState([]);
   const [staff, setStaff] = useState([]);
 
-  // Use props user id if available, fallback to localStorage
-  const currentUserID = user?.userID || localStorage.getItem('userID');
+  // Use props user id if available
+  const currentUserID = user?.userID;
   const fetchAppreciations = async () => {
     try {
       const data = await getAllAppreciations();
@@ -162,7 +162,7 @@ const AppreciationComponent = ({ user }) => {
                          apt.to.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Improved "mine" filter logic to use actual logged-in user name
-    const currentUserName = user?.name || JSON.parse(localStorage.getItem('user') || '{}').name || '';
+    const currentUserName = user?.name || '';
     
     const matchesFilter = filter === 'all' || 
                          (filter === 'liked' && apt.liked) ||
@@ -192,7 +192,7 @@ const AppreciationComponent = ({ user }) => {
     }));
 
     try {
-      const fromUserId = localStorage.getItem('userID');
+      const fromUserId = user?.userID;
       const payload = {
         fromUserId,
         toUserId: targetUser.userID,
