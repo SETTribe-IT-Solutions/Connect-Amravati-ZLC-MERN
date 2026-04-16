@@ -1,45 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Container, Row, Col, Card, Badge, Button, Form, 
+  InputGroup, Spinner, Stack, ProgressBar 
+} from 'react-bootstrap';
+import { 
+  HeartIcon, 
+  StarIcon, 
+  TrophyIcon, 
+  UserGroupIcon, 
+  CalendarIcon, 
+  PaperAirplaneIcon, 
+  MagnifyingGlassIcon, 
+  SparklesIcon 
+} from '@heroicons/react/24/outline';
 import { getAllAppreciations, sendAppreciation, getEligibleUsers } from '../../../services/appreciation/appreciationService';
 import { toast } from 'react-hot-toast';
-import {
-  HeartIcon,
-  StarIcon,
-  TrophyIcon,
-  UserGroupIcon,
-  CalendarIcon,
-  ChatBubbleLeftIcon,
-  PaperAirplaneIcon,
-  MagnifyingGlassIcon,
-  XMarkIcon,
-  SparklesIcon,
-  ClockIcon
-} from '@heroicons/react/24/outline';
-import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import Pagination from '../../common/Pagination';
 
 const AppreciationComponent = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
-  const [formStates, setFormStates] = useState({}); // Tracking message/badge for each user
-
+  const [formStates, setFormStates] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
+  const [appreciations, setAppreciations] = useState([]);
+  const [staff, setStaff] = useState([]);
 
-  // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filter]);
 
-  const [appreciations, setAppreciations] = useState([]);
-  const [staff, setStaff] = useState([]);
-
-  // Use props user id if available, fallback to localStorage
   const currentUserID = user?.userID || localStorage.getItem('userID');
+
   const fetchAppreciations = async () => {
     try {
       const data = await getAllAppreciations();
-      // Map backend AppreciationResponse to frontend expected format
       const mapped = data.map(app => ({
         id: app.id,
         from: app.fromUserName,
@@ -48,11 +43,7 @@ const AppreciationComponent = ({ user }) => {
         toAvatar: app.toUserName.substring(0, 2).toUpperCase(),
         message: app.message,
         date: app.createdAt.split('T')[0],
-        likes: 0,
-        comments: 0,
         badge: app.badge || 'Excellence Award',
-        liked: false,
-        toUserEverAppreciated: app.toUserEverAppreciated,
         fromRole: formatRole(app.fromRole),
         toRole: formatRole(app.toRole)
       }));
@@ -60,18 +51,14 @@ const AppreciationComponent = ({ user }) => {
     } catch (error) {
       console.error("Fetch Appreciations Error:", error);
       toast.error("Failed to load appreciations");
-    } finally {
-      // intentionally empty
     }
   };
 
   const fetchStaff = async () => {
     try {
       const data = await getEligibleUsers();
-      // Filter out the current user
       const filteredData = (data || []).filter(u => u.userID.toString() !== currentUserID?.toString());
       setStaff(filteredData);
-      // Initialize form states for new staff
       const initialStates = {};
       filteredData.forEach(u => {
         initialStates[u.userID] = {
@@ -92,52 +79,22 @@ const AppreciationComponent = ({ user }) => {
     fetchStaff();
   }, []);
 
-  // Updated Statistics with Dashboard-like styling
   const stats = [
-    { 
-      label: 'Total Appreciations', 
-      value: appreciations.length, 
-      icon: HeartIcon, 
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600',
-      change: ''
-    },
-    { 
-      label: 'This Month', 
-      value: appreciations.filter(a => new Date(a.date).getMonth() === new Date().getMonth()).length, 
-      icon: StarIcon, 
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-600',
-      change: ''
-    },
-    { 
-      label: 'Unique Recipients', 
-      value: new Set(appreciations.map(a => a.to)).size, 
-      icon: UserGroupIcon, 
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-600',
-      change: ''
-    },
-    { 
-      label: 'Latest Badge', 
-      value: appreciations.length > 0 ? appreciations[0].badge.split(' ')[0] : 'None', 
-      icon: TrophyIcon, 
-      bgColor: 'bg-yellow-50',
-      textColor: 'text-yellow-600',
-      change: ''
-    },
+    { label: 'Total Appreciations', value: appreciations.length, icon: HeartIcon, bgColor: 'primary', textColor: 'text-primary' },
+    { label: 'This Month', value: appreciations.filter(a => new Date(a.date).getMonth() === new Date().getMonth()).length, icon: StarIcon, bgColor: 'success', textColor: 'text-success' },
+    { label: 'Recipients', value: new Set(appreciations.map(a => a.to)).size, icon: UserGroupIcon, bgColor: 'info', textColor: 'text-info' },
+    { label: 'Latest Badge', value: appreciations.length > 0 ? appreciations[0].badge.split(' ')[0] : 'None', icon: TrophyIcon, bgColor: 'warning', textColor: 'text-warning' },
   ];
 
-  // Badge colors - Updated to match theme
-  const getBadgeColor = (badge) => {
-    const colors = {
-      'Excellence Award': 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white',
-      'Community Service': 'bg-gradient-to-r from-green-500 to-emerald-600 text-white',
-      'Quick Resolution': 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white',
-      'Innovation Award': 'bg-gradient-to-r from-purple-500 to-pink-500 text-white',
-      'Team Excellence': 'bg-gradient-to-r from-indigo-500 to-blue-600 text-white'
+  const getBadgeVariant = (badge) => {
+    const variants = {
+      'Excellence Award': 'primary',
+      'Community Service': 'success',
+      'Quick Resolution': 'warning',
+      'Innovation Award': 'info',
+      'Team Excellence': 'secondary'
     };
-    return colors[badge] || 'bg-gradient-to-r from-gray-500 to-gray-600 text-white';
+    return variants[badge] || 'dark';
   };
 
   const formatRole = (roleStr) => {
@@ -155,29 +112,15 @@ const AppreciationComponent = ({ user }) => {
     return roleMap[roleStr.toUpperCase()] || roleStr;
   };
 
-  // Filter appreciations
   const filteredAppreciations = appreciations.filter(apt => {
     const matchesSearch = apt.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          apt.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          apt.to.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Improved "mine" filter logic to use actual logged-in user name
     const currentUserName = user?.name || JSON.parse(localStorage.getItem('user') || '{}').name || '';
-    
     const matchesFilter = filter === 'all' || 
-                         (filter === 'liked' && apt.liked) ||
                          (filter === 'mine' && apt.from === currentUserName);
     return matchesSearch && matchesFilter;
   });
-
-  // Handle like
-  const handleLike = (id) => {
-    setAppreciations(appreciations.map(apt => 
-      apt.id === id 
-        ? { ...apt, liked: !apt.liked, likes: apt.liked ? apt.likes - 1 : apt.likes + 1 }
-        : apt
-    ));
-  };
 
   const handleInlineSubmit = async (targetUser) => {
     const formData = formStates[targetUser.userID];
@@ -185,329 +128,229 @@ const AppreciationComponent = ({ user }) => {
       toast.error("Please add a message");
       return;
     }
-
-    setFormStates(prev => ({
-      ...prev,
-      [targetUser.userID]: { ...formData, isSubmitting: true }
-    }));
-
+    setFormStates(prev => ({ ...prev, [targetUser.userID]: { ...formData, isSubmitting: true } }));
     try {
       const fromUserId = localStorage.getItem('userID');
-      const payload = {
-        fromUserId,
-        toUserId: targetUser.userID,
-        message: formData.message,
-        badge: formData.badge
-      };
-      console.log("Sending appreciation payload:", payload);
-      
-      await sendAppreciation(payload);
-      
+      await sendAppreciation({ fromUserId, toUserId: targetUser.userID, message: formData.message, badge: formData.badge });
       toast.success(`Appreciation sent to ${targetUser.name}!`);
-      
-      // Refresh both lists
       fetchAppreciations();
       fetchStaff();
     } catch (error) {
-      console.error("Send Appreciation Full Error:", error);
-      console.error("Response Data:", error.response?.data);
-      console.error("Response Status:", error.response?.status);
-      toast.error(
-        typeof error.response?.data === 'object' 
-          ? JSON.stringify(error.response.data) 
-          : (error.response?.data?.message || "Failed to send appreciation")
-      );
-      setFormStates(prev => ({
-        ...prev,
-        [targetUser.userID]: { ...formData, isSubmitting: false }
-      }));
+      console.error("Send Appreciation Error:", error);
+      toast.error(error.response?.data?.message || "Failed to send appreciation");
+      setFormStates(prev => ({ ...prev, [targetUser.userID]: { ...formData, isSubmitting: false } }));
     }
   };
 
-  const badges = [
-    'Excellence Award',
-    'Community Service',
-    'Quick Resolution',
-    'Innovation Award',
-    'Team Excellence'
-  ];
+  const badgesList = ['Excellence Award', 'Community Service', 'Quick Resolution', 'Innovation Award', 'Team Excellence'];
 
   return (
-    <div className="p-3 sm:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <div className="p-4 p-lg-5 bg-light min-vh-100">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Amravati Connect
-            </h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2 flex items-center gap-2">
-              <span className="hidden sm:block w-1 h-1 bg-blue-600 rounded-full"></span>
-              Celebrate team achievements and foster a culture of appreciation
-            </p>
-          </div>
-        </div>
-      </motion.div>
+      <div className="mb-5">
+        <h1 className="display-6 fw-bold text-primary mb-1 font-outfit">Amravati Connect</h1>
+        <p className="text-secondary mb-0">Celebrate team achievements and foster a culture of appreciation</p>
+      </div>
 
-      {/* Users Awaiting Appreciation Section */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.1 }}
-        className="mb-12"
-      >
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <UserGroupIcon className="h-6 w-6 text-blue-600" />
+      {/* Stats Cards */}
+      <Row className="g-4 mb-5">
+        {stats.map((stat) => (
+          <Col key={stat.label} xs={6} md={3}>
+            <Card className="border-0 shadow-sm rounded-4 h-100">
+              <Card.Body className="p-4 d-flex align-items-center justify-content-between">
+                <div>
+                  <p className="small text-secondary fw-medium mb-1">{stat.label}</p>
+                  <h3 className="fw-bold mb-0 text-dark">{stat.value}</h3>
+                </div>
+                <div className={`p-3 rounded-4 bg-${stat.bgColor} bg-opacity-10`}>
+                  <stat.icon style={{ width: '2rem' }} className={stat.textColor} />
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+
+      {/* Users Awaiting Appreciation */}
+      <div className="mb-5">
+        <div className="d-flex align-items-center gap-3 mb-4">
+          <div className="p-2 bg-primary bg-opacity-10 rounded-3">
+            <UserGroupIcon style={{ width: '1.5rem' }} className="text-primary" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-800">Users Awaiting Appreciation</h2>
-            <p className="text-sm text-gray-500">Give a quick shout-out to those who haven't received one yet</p>
+            <h4 className="fw-bold text-dark mb-0">Users Awaiting Appreciation</h4>
+            <p className="small text-secondary mb-0">Give a quick shout-out to those who haven't received one yet</p>
           </div>
         </div>
 
         {staff.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-            <AnimatePresence mode='popLayout'>
-              {staff.map((member) => (
-                <motion.div
-                  key={member.userID}
-                  layout
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold border-2 border-blue-100">
-                      {member.name.substring(0, 2).toUpperCase()}
+          <Row className="g-4">
+            {staff.map((member) => (
+              <Col key={member.userID} md={6} xl={4}>
+                <Card className="border-0 shadow-sm rounded-4 h-100 overflow-hidden hover-shadow transition-all">
+                  <Card.Body className="p-4">
+                    <div className="d-flex align-items-center gap-3 mb-4">
+                      <div className="avatar-square bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center rounded-3" style={{ width: '48px', height: '48px' }}>
+                        {member.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div className="flex-grow-1 min-w-0">
+                        <h6 className="fw-bold text-dark mb-1 truncate">{member.name}</h6>
+                        <Badge bg="light" text="dark" className="text-uppercase border px-2 py-1" style={{ fontSize: '0.65rem' }}>
+                          {formatRole(member.role)}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 truncate">{member.name}</h3>
-                      <p className="text-xs text-gray-500 font-medium bg-gray-100 w-fit px-2 py-0.5 rounded uppercase tracking-wider">
-                        {formatRole(member.role)}
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="space-y-3">
-                    <select
-                      value={formStates[member.userID]?.badge || 'Excellence Award'}
-                      onChange={(e) => setFormStates(prev => ({
-                        ...prev,
-                        [member.userID]: { ...prev[member.userID], badge: e.target.value }
-                      }))}
-                      className="w-full text-sm border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50/50"
-                    >
-                      {badges.map(b => <option key={b} value={b}>{b}</option>)}
-                    </select>
-
-                    <textarea
-                      placeholder={`What did ${member.name.split(' ')[0]} do well?`}
-                      rows="2"
-                      value={formStates[member.userID]?.message || ''}
-                      onChange={(e) => setFormStates(prev => ({
-                        ...prev,
-                        [member.userID]: { ...prev[member.userID], message: e.target.value }
-                      }))}
-                      className="w-full text-sm border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50/50 resize-none"
-                    />
-
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleInlineSubmit(member)}
-                      disabled={formStates[member.userID]?.isSubmitting}
-                      className={`w-full py-2.5 rounded-lg flex items-center justify-center gap-2 font-semibold text-sm transition-all ${
-                        formStates[member.userID]?.isSubmitting 
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-blue-600 text-white shadow-sm hover:bg-blue-700'
-                      }`}
-                    >
-                      {formStates[member.userID]?.isSubmitting ? (
-                        <div className="h-4 w-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <PaperAirplaneIcon className="h-4 w-4" />
-                          Celebrate
-                        </>
-                      )}
-                    </motion.button>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+                    <Form className="stack gap-3">
+                      <Form.Select
+                        size="sm"
+                        value={formStates[member.userID]?.badge}
+                        onChange={(e) => setFormStates(prev => ({
+                          ...prev, [member.userID]: { ...prev[member.userID], badge: e.target.value }
+                        }))}
+                        className="bg-light border-0 rounded-3 py-2"
+                      >
+                        {badgesList.map(b => <option key={b} value={b}>{b}</option>)}
+                      </Form.Select>
+                      <Form.Control
+                        as="textarea"
+                        rows={2}
+                        placeholder={`What did ${member.name.split(' ')[0]} do well?`}
+                        value={formStates[member.userID]?.message}
+                        onChange={(e) => setFormStates(prev => ({
+                          ...prev, [member.userID]: { ...prev[member.userID], message: e.target.value }
+                        }))}
+                        className="bg-light border-0 rounded-3 text-sm py-2"
+                      />
+                      <Button 
+                        variant="primary" 
+                        className="w-100 fw-bold py-2 rounded-3 d-flex align-items-center justify-content-center gap-2"
+                        onClick={() => handleInlineSubmit(member)}
+                        disabled={formStates[member.userID]?.isSubmitting}
+                      >
+                        {formStates[member.userID]?.isSubmitting ? <Spinner size="sm" /> : <><PaperAirplaneIcon style={{ width: '1rem' }} /> Celebrate</>}
+                      </Button>
+                    </Form>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
         ) : (
-          <div className="bg-white/50 border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center">
-            <div className="bg-gray-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <SparklesIcon className="h-8 w-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-bold text-gray-800">All Caught Up!</h3>
-            <p className="text-gray-500 max-w-xs mx-auto">Everyone has been recognized for now. Check back later!</p>
+          <div className="text-center py-5 bg-white rounded-4 border-2 border-dashed">
+            <SparklesIcon style={{ width: '3rem' }} className="text-secondary mx-auto mb-3 opacity-25" />
+            <h5 className="fw-bold text-dark">All Caught Up!</h5>
+            <p className="text-secondary">Everyone has been recognized for now. Check back later!</p>
           </div>
         )}
-      </motion.div>
-
-      {/* Appreciation Wall Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-emerald-100 rounded-lg">
-          <TrophyIcon className="h-6 w-6 text-emerald-600" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">Appreciation Wall</h2>
-          <p className="text-sm text-gray-500">A timeline of excellence and teamwork</p>
-        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ y: -5 }}
-            className="bg-white rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-3 sm:p-6 border border-gray-100"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-[10px] sm:text-sm font-medium text-gray-500 truncate">{stat.label}</p>
-                <p className="text-lg sm:text-3xl font-bold text-gray-900 mt-0.5 sm:mt-2 truncate">{stat.value}</p>
-              </div>
-              <div className={`${stat.bgColor} p-2 sm:p-4 rounded-lg sm:rounded-2xl shrink-0`}>
-                <stat.icon className={`h-5 w-5 sm:h-8 sm:w-8 ${stat.textColor}`} />
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+      <hr className="my-5 opacity-10" />
 
-      {/* Search and Filter */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-3 sm:p-4 mb-6 border border-gray-100"
-      >
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <div className="flex-1 relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search appreciations..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 border border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-            />
+      {/* Appreciation Wall */}
+      <div className="mb-4">
+        <div className="d-flex align-items-center gap-3 mb-4">
+          <div className="p-2 bg-success bg-opacity-10 rounded-3">
+            <TrophyIcon style={{ width: '1.5rem' }} className="text-success" />
           </div>
-          <div className="flex gap-2">
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
-            >
-              <option value="all">All</option>
-              <option value="liked">Liked</option>
-              <option value="mine">My Posts</option>
-            </select>
+          <div>
+            <h4 className="fw-bold text-dark mb-0">Appreciation Wall</h4>
+            <p className="small text-secondary mb-0">A timeline of excellence and teamwork</p>
           </div>
         </div>
-      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
-        {filteredAppreciations
-          .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-          .map((apt, index) => (
-          <motion.div
-            key={apt.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ y: -5 }}
-            className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden"
-          >
-            <div className="p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-[10px] sm:text-xs">
-                      {apt.fromAvatar}
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-gray-500 font-medium">From</p>
-                      <p className="font-bold text-gray-900 text-xs sm:text-sm">{apt.from}</p>
-                      <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{apt.fromRole}</p>
-                    </div>
-                  </div>
-                  
-                  {/* Arrow element - hidden/responsive */}
-                  <div className="flex items-center justify-center sm:block">
-                    <span className="hidden sm:inline text-gray-300 text-lg">→</span>
-                    <span className="inline sm:hidden text-gray-300 text-sm">↓</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-[10px] sm:text-xs">
-                      {apt.toAvatar}
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-gray-500 font-medium">To</p>
-                      <p className="font-bold text-emerald-700 text-xs sm:text-sm">{apt.to}</p>
-                      <p className="text-[10px] text-emerald-600/70 font-medium uppercase tracking-wider">{apt.toRole}</p>
-                    </div>
-                  </div>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleLike(apt.id)}
-                  className="p-2 sm:p-2.5 bg-gray-50 hover:bg-red-50 rounded-full transition-colors self-end sm:self-auto"
+        {/* Search & Filter */}
+        <Card className="border-0 shadow-sm rounded-4 mb-5">
+          <Card.Body className="p-3">
+            <Row className="g-3">
+              <Col md={8}>
+                <InputGroup className="bg-light rounded-3 overflow-hidden border-0">
+                  <InputGroup.Text className="bg-transparent border-0 pe-0">
+                    <MagnifyingGlassIcon style={{ width: '1.25rem' }} className="text-secondary" />
+                  </InputGroup.Text>
+                  <Form.Control 
+                    placeholder="Search appreciations..." 
+                    className="bg-transparent border-0 py-2 py-lg-3 shadow-none"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </InputGroup>
+              </Col>
+              <Col md={4}>
+                <Form.Select 
+                  className="bg-light border-0 py-2 py-lg-3 rounded-3 fw-medium h-100"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
                 >
-                  {apt.liked ? (
-                    <HeartIconSolid className="h-5 w-5 text-red-500" />
-                  ) : (
-                    <HeartIcon className="h-5 w-5 text-gray-400" />
-                  )}
-                </motion.button>
-              </div>
+                  <option value="all">All Appreciations</option>
+                  <option value="mine">My Achievements</option>
+                </Form.Select>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
 
-              <div className="mb-4">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${getBadgeColor(apt.badge)}`}>
-                  {apt.badge}
-                </span>
-              </div>
+        {/* Wall Cards */}
+        <Row className="g-4 mb-5">
+          {filteredAppreciations
+            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+            .map((apt) => (
+            <Col key={apt.id} lg={6}>
+              <Card className="border-0 shadow-sm rounded-4 h-100 hover-shadow transition-all overflow-hidden border-top border-4 border-primary">
+                <Card.Body className="p-4">
+                  <div className="d-flex align-items-center justify-content-between mb-4">
+                    <div className="d-flex align-items-center gap-4">
+                      {/* From */}
+                      <div className="text-center">
+                        <div className="avatar-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center rounded-circle mx-auto mb-1" style={{ width: '40px', height: '40px', fontSize: '0.8rem' }}>
+                          {apt.fromAvatar}
+                        </div>
+                        <p className="small mb-0 fw-bold truncate" style={{ maxWidth: '80px' }}>{apt.from}</p>
+                        <p className="text-muted" style={{ fontSize: '0.55rem' }}>{apt.fromRole}</p>
+                      </div>
+                      
+                      <div className="text-secondary opacity-50 px-2 fw-light h2 mb-0">→</div>
 
-              <div className="mb-4 bg-gray-50 rounded-xl p-4 italic text-gray-700">
-                "{apt.message}"
-              </div>
+                      {/* To */}
+                      <div className="text-center">
+                        <div className="avatar-circle bg-success text-white fw-bold d-flex align-items-center justify-content-center rounded-circle mx-auto mb-1" style={{ width: '40px', height: '40px', fontSize: '0.8rem' }}>
+                          {apt.toAvatar}
+                        </div>
+                        <p className="small mb-0 fw-bold text-success truncate" style={{ maxWidth: '80px' }}>{apt.to}</p>
+                        <p className="text-muted" style={{ fontSize: '0.55rem' }}>{apt.toRole}</p>
+                      </div>
+                    </div>
 
-              <div className="flex items-center gap-4 text-xs text-gray-500 pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-1">
-                  <CalendarIcon className="h-4 w-4" />
-                  <span>{apt.date}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <HeartIcon className="h-4 w-4" />
-                  <span>{apt.likes} Likes</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+                  </div>
+
+                  <Badge bg={getBadgeVariant(apt.badge)} className="px-3 py-2 rounded-pill mb-3 shadow-sm border border-white border-2">
+                    {apt.badge}
+                  </Badge>
+
+                  <Card className="bg-light border-0 rounded-4 overflow-hidden mb-4">
+                    <Card.Body className="p-3 fst-italic text-dark">
+                      "{apt.message}"
+                    </Card.Body>
+                  </Card>
+
+                  <div className="d-flex align-items-center gap-4 py-2 border-top border-light">
+                    <div className="d-flex align-items-center gap-1 small text-secondary">
+                      <CalendarIcon style={{ width: '1rem' }} /> {apt.date}
+                    </div>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+
+        <Pagination 
+          totalItems={filteredAppreciations.length}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+        />
       </div>
-      
-      <Pagination 
-        totalItems={filteredAppreciations.length}
-        itemsPerPage={itemsPerPage}
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-      />
     </div>
   );
 };

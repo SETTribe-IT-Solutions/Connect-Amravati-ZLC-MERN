@@ -79,61 +79,62 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 100 }}
-      className="bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 sticky top-0 z-50 w-full"
+      className="bg-white shadow-sm border-bottom sticky-top z-50"
+      style={{ backdropFilter: 'blur(12px)', backgroundColor: 'rgba(255, 255, 255, 0.95)', height: '64px' }}
     >
-      <div className="px-4 py-3 lg:px-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+      {/* Tricolor Top Bar */}
+      <div style={{ height: '4px', width: '100%', background: 'linear-gradient(90deg, #FF9933 0%, #FFFFFF 50%, #138808 100%)' }}></div>
+      
+      <div className="container-fluid px-3 px-lg-4" style={{ height: '60px' }}>
+        <div className="d-flex align-items-center justify-content-between h-100">
+          <div className="d-flex align-items-center gap-3">
             {showHamburger && (
-              <>
-                <button
-                  type="button"
-                  className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                  onClick={() => setSidebarOpen(true)}
-                >
-                  <Bars3Icon className="h-6 w-6" />
-                </button>
-
-                <button
-                  type="button"
-                  className="hidden lg:flex p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                  onClick={() => setIsCollapsed(!isCollapsed)}
-                >
-                  <Bars3Icon className="h-6 w-6" />
-                </button>
-              </>
+              <button
+                type="button"
+                className="d-lg-none btn btn-light border-0 p-2 rounded-circle shadow-sm"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <Bars3Icon style={{ width: '1.5rem', height: '1.5rem' }} />
+              </button>
             )}
-            <motion.div
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.5 }}
-              className="text-2xl sm:text-3xl lg:text-4xl text-blue-900"
-            >
-              <GiIndiaGate />
-            </motion.div>
-            <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-orange-600 via-blue-700 to-green-600 bg-clip-text text-transparent leading-tight lowercase">
-                <span className="capitalize">Amravati Connect</span>
-              </h1>
-              <p className="text-[10px] sm:text-xs lg:text-sm text-gray-600 flex items-center">
-                <FaMapMarkerAlt className="mr-1 text-blue-600" />
-                Collector Office, Amravati
-              </p>
+            
+            <div className="d-flex align-items-center gap-2">
+              <motion.div
+                whileHover={{ rotate: 15, scale: 1.1 }}
+                className="text-primary d-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-3 p-2"
+                style={{ fontSize: '1.5rem', color: '#1e3a8a' }}
+              >
+                <GiIndiaGate />
+              </motion.div>
+              <div>
+                <h1 className="h5 mb-0 fw-bold tracking-tight text-dark" style={{ 
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1
+                }}>
+                  Connect <span className="text-primary">Amravati</span>
+                </h1>
+                <p className="small text-muted mb-0 d-flex align-items-center" style={{ fontSize: '0.7rem', fontWeight: '500' }}>
+                  <FaMapMarkerAlt className="me-1 text-danger" style={{ fontSize: '0.65rem' }} />
+                  MAHARASHTRA, INDIA
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 lg:space-x-5">
+          <div className="d-flex align-items-center gap-2 gap-lg-4">
             {/* Notification Bell */}
             {user?.userID && !isSystemAdministrator && (
-              <div className="relative" ref={dropdownRef}>
+              <div className="position-relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className={`p-2 rounded-full transition-all duration-300 relative ${
-                    showDropdown ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-100'
+                  className={`btn rounded-circle p-2 position-relative ${
+                    showDropdown ? 'btn-primary' : 'btn-light text-secondary'
                   }`}
+                  style={{ width: '40px', height: '40px' }}
                 >
-                  <BellIcon className={`h-6 w-6 ${isRefreshing && unreadCount > 0 ? 'animate-pulse' : ''}`} />
+                  <BellIcon style={{ width: '1.25rem', height: '1.25rem' }} className={isRefreshing && unreadCount > 0 ? 'animate-pulse' : ''} />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 h-5 w-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white animate-bounce-short">
+                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger shadow-sm border border-white" style={{ fontSize: '0.6rem', padding: '0.35em 0.5em' }}>
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
@@ -145,56 +146,57 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="fixed inset-x-4 md:absolute md:inset-x-auto md:right-0 mt-3 w-auto md:w-80 lg:w-96 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[60]"
+                      className="position-absolute end-0 mt-3 bg-white rounded-3 shadow-lg border border-light overflow-hidden z-3"
+                      style={{ width: window.innerWidth < 768 ? 'calc(100vw - 2rem)' : '320px', minWidth: '280px' }}
                     >
-                      <div className="p-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
-                        <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wider">Notifications</h3>
-                        <span className="text-[10px] font-bold px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                      <div className="p-3 border-bottom d-flex align-items-center justify-content-between bg-light">
+                        <h6 className="mb-0 fw-bold text-uppercase small tracking-wider">Notifications</h6>
+                        <span className="badge rounded-pill bg-primary">
                           {unreadCount} New
                         </span>
                       </div>
 
-                      <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                      <div className="overflow-auto" style={{ maxHeight: '400px' }}>
                         {notifications.length === 0 ? (
-                          <div className="p-10 text-center">
-                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <BellIcon className="h-8 w-8 text-gray-300" />
+                          <div className="p-5 text-center">
+                            <div className="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style={{ width: '64px', height: '64px' }}>
+                              <BellIcon className="text-muted" style={{ width: '32px', height: '32px' }} />
                             </div>
-                            <p className="text-gray-400 text-sm">No new notifications</p>
+                            <p className="text-muted small">No new notifications</p>
                           </div>
                         ) : (
-                          notifications.slice(0, 2).map((notif) => (
+                          notifications.slice(0, 5).map((notif) => (
                             <div
                               key={notif.id}
-                              className="p-4 border-b border-gray-50 hover:bg-blue-50/30 transition-colors cursor-default group relative"
+                              className="p-3 border-bottom border-light hover-bg-light cursor-pointer"
+                              style={{ transition: 'background-color 0.2s' }}
                             >
-                              <div className="flex items-start space-x-3">
-                                <div className={`mt-1 p-2 rounded-full flex-shrink-0 ${
-                                  notif.type === 'OVERDUE' ? 'bg-red-50 text-red-500' :
-                                  notif.type === 'REMINDER' ? 'bg-orange-50 text-orange-500' :
-                                  'bg-blue-50 text-blue-500'
-                                }`}>
-                                  <InformationCircleIcon className="h-4 w-4" />
+                              <div className="d-flex align-items-start gap-3">
+                                <div className={`mt-1 p-2 rounded-circle flex-shrink-0 ${
+                                  notif.type === 'OVERDUE' ? 'bg-danger bg-opacity-10 text-danger' :
+                                  notif.type === 'REMINDER' ? 'bg-warning bg-opacity-10 text-warning' :
+                                  'bg-primary bg-opacity-10 text-primary'
+                                }`} style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <InformationCircleIcon style={{ width: '16px', height: '16px' }} />
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-bold text-gray-900 truncate uppercase tracking-tight">
+                                <div className="flex-grow-1 overflow-hidden">
+                                  <p className="small fw-bold mb-1 text-dark text-truncate text-uppercase">
                                     {notif.title}
                                   </p>
-                                  <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                                  <p className="small text-muted mb-2 lh-sm">
                                     {notif.message}
                                   </p>
-                                  <div className="mt-3">
-                                    <button
-                                      onClick={() => {
-                                        setShowDropdown(false);
-                                        navigate('/notifications');
-                                      }}
-                                      className="flex items-center space-x-1 text-[10px] font-bold text-blue-600 hover:text-blue-800 transition-colors bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100/50"
-                                    >
-                                      <EyeIcon className="h-3 w-3" />
-                                      <span>View Details</span>
-                                    </button>
-                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      setShowDropdown(false);
+                                      navigate('/notifications');
+                                    }}
+                                    className="btn btn-sm btn-outline-primary py-1 px-3 rounded-pill fw-bold"
+                                    style={{ fontSize: '0.65rem' }}
+                                  >
+                                    <EyeIcon className="me-1" style={{ width: '12px', height: '12px' }} />
+                                    View Details
+                                  </button>
                                 </div>
                               </div>
                             </div>
@@ -204,7 +206,7 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
 
                       <button 
                         onClick={() => navigate('/notifications')}
-                        className="w-full py-3 text-center text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors border-t border-gray-50"
+                        className="btn btn-link w-100 py-3 text-center text-decoration-none small fw-bold text-secondary border-top rounded-0 hover-bg-light"
                       >
                         See All Notifications
                       </button>

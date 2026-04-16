@@ -3,10 +3,38 @@ import React from 'react';
 const AnimatedBackground = () => {
   return (
     <>
-      <div className="absolute inset-0 overflow-hidden -z-10">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-4000"></div>
+      <div className="position-absolute top-0 start-0 w-100 h-100 overflow-hidden" style={{ zIndex: -10 }}>
+        <div className="position-absolute rounded-circle" style={{ 
+          top: '-160px', 
+          right: '-160px', 
+          width: '320px', 
+          height: '320px', 
+          backgroundColor: '#bfdbfe', 
+          mixBlendMode: 'multiply', 
+          filter: 'blur(64px)', 
+          opacity: 0.2,
+          animation: 'pulse 3s infinite'
+        }}></div>
+        <div className="position-absolute rounded-circle" style={{ 
+          bottom: '-160px', 
+          left: '-160px', 
+          width: '320px', 
+          height: '320px', 
+          backgroundColor: '#ffedd5', 
+          mixBlendMode: 'multiply', 
+          filter: 'blur(64px)', 
+          opacity: 0.2,
+          animation: 'pulse 3s infinite 2s'
+        }}></div>
+        <div className="position-absolute rounded-circle start-50 top-50 translate-middle" style={{ 
+          width: '384px', 
+          height: '384px', 
+          backgroundColor: '#dcfce7', 
+          mixBlendMode: 'multiply', 
+          filter: 'blur(64px)', 
+          opacity: 0.2,
+          animation: 'pulse 3s infinite 4s'
+        }}></div>
       </div>
       {/* Gradient Border */}
       <div className="gradient-border"></div>

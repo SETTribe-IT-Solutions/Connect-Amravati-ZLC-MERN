@@ -1,20 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { GiIndiaGate } from 'react-icons/gi';
-
+import { Col } from 'react-bootstrap';
 
 const CulturalSection = () => {
-
-
   return (
-    <motion.div
-      initial={{ x: -50, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.8, delay: 0.4 }}
-      className="lg:w-1/2 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-8 lg:p-12 flex items-center justify-center relative overflow-hidden min-h-[400px]"
-    >
+    <Col lg={6} className="p-0 d-flex align-items-center justify-content-center position-relative overflow-hidden min-vh-50 vh-lg-100" style={{ background: 'linear-gradient(135deg, #1e3a8a, #1d4ed8, #1e3a8a)' }}>
       {/* Animated Background Circles */}
-      <div className="absolute inset-0 opacity-10">
+      <div className="position-absolute inset-0 opacity-10">
         {[...Array(3)].map((_, i) => (
           <motion.div
             key={i}
@@ -27,7 +20,7 @@ const CulturalSection = () => {
               repeat: Infinity,
               ease: "linear"
             }}
-            className="absolute border-4 border-white rounded-full"
+            className="position-absolute border border-4 border-white rounded-circle"
             style={{
               width: `${150 + i * 50}px`,
               height: `${150 + i * 50}px`,
@@ -38,46 +31,48 @@ const CulturalSection = () => {
         ))}
       </div>
 
-      <div className="relative z-10 text-white text-center">
+      <div className="position-relative z-index-10 text-white text-center p-5">
         <motion.div
           animate={{ y: [0, -20, 0] }}
           transition={{ duration: 5, repeat: Infinity }}
-          className="mb-8"
+          className="mb-4"
         >
-          <GiIndiaGate className="text-8xl mx-auto" />
+          <GiIndiaGate size={120} className="mx-auto" />
         </motion.div>
 
         <motion.h2
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 3, repeat: Infinity }}
-          className="text-5xl font-bold mb-6"
+          className="display-4 fw-bold mb-4 font-outfit"
         >
-          DISTRICT CONNECT
+          CONNECT AMRAVATI
         </motion.h2>
 
-        <div className="h-1 w-24 bg-gradient-to-r from-orange-400 via-white to-green-400 mx-auto mb-6" />
+        <div className="mx-auto mb-4" style={{ height: '4px', width: '100px', background: 'linear-gradient(to right, #f97316, #ffffff, #22c55e)' }} />
 
-        <p className="text-xl text-blue-100 mb-4">
+        <p className="h5 text-light mb-5 fw-light opacity-75">
           District Administration Communication Portal
         </p>
 
-        <div className="flex justify-center space-x-4 mt-8">
-          {['a', 'ma', 'ra'].map((item, index) => (
+        <div className="d-flex justify-content-center gap-3">
+          {['A', 'MA', 'RA'].map((item, index) => (
             <motion.div
               key={item}
               whileHover={{ scale: 1.2, rotate: 360 }}
-              className={`h-12 w-12 rounded-full flex items-center justify-center shadow-lg cursor-pointer ${
-                index === 0 ? 'bg-orange-500' : index === 1 ? 'bg-white' : 'bg-green-500'
-              }`}
+              className={`rounded-circle d-flex align-items-center justify-content-center shadow cursor-pointer`}
+              style={{ 
+                width: '60px', 
+                height: '60px',
+                backgroundColor: index === 0 ? '#f97316' : index === 1 ? '#ffffff' : '#22c55e',
+                color: index === 1 ? '#1e3a8a' : '#ffffff'
+              }}
             >
-              <span className={`font-bold text-xl ${index === 1 ? 'text-blue-900' : 'text-white'}`}>
-                {item.toUpperCase()}
-              </span>
+              <span className="fw-bold h4 mb-0">{item}</span>
             </motion.div>
           ))}
         </div>
       </div>
-    </motion.div>
+    </Col>
   );
 };
 

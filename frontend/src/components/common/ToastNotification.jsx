@@ -1,5 +1,10 @@
 import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Toast, ToastContainer } from 'react-bootstrap';
+import { 
+  CheckCircleIcon, 
+  XCircleIcon, 
+  InformationCircleIcon 
+} from '@heroicons/react/24/outline';
 
 const ToastNotification = ({ message, type, isVisible, onClose }) => {
   useEffect(() => {
@@ -9,54 +14,41 @@ const ToastNotification = ({ message, type, isVisible, onClose }) => {
     }
   }, [isVisible, onClose]);
 
-  const icons = {
-    success: '✓',
-    error: '✗',
-    info: 'ℹ'
+  const config = {
+    success: {
+      icon: <CheckCircleIcon style={{ width: '1.25rem' }} className="text-success" />,
+      bg: 'success',
+      title: 'Success'
+    },
+    error: {
+      icon: <XCircleIcon style={{ width: '1.25rem' }} className="text-danger" />,
+      bg: 'danger',
+      title: 'Error'
+    },
+    info: {
+      icon: <InformationCircleIcon style={{ width: '1.25rem' }} className="text-info" />,
+      bg: 'info',
+      title: 'Information'
+    }
   };
 
-  const colors = {
-    success: 'border-green-500 bg-green-50',
-    error: 'border-red-500 bg-red-50',
-    info: 'border-blue-500 bg-blue-50'
-  };
-
-  const textColors = {
-    success: 'text-green-700',
-    error: 'text-red-700',
-    info: 'text-blue-700'
-  };
-
-  const iconColors = {
-    success: 'bg-green-100',
-    error: 'bg-red-100',
-    info: 'bg-blue-100'
-  };
+  const currentConfig = config[type || 'info'];
 
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ x: 300, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 300, opacity: 0 }}
-          className={`fixed top-5 right-5 z-[210] border-l-4 ${colors[type]} bg-white shadow-lg rounded-lg overflow-hidden max-w-sm`}
-        >
-          <div className="flex items-center p-4">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${iconColors[type]}`}>
-              <span className={textColors[type]}>{icons[type]}</span>
-            </div>
-            <p className={textColors[type]}>{message}</p>
-            <button
-              onClick={onClose}
-              className="ml-4 text-gray-400 hover:text-gray-600"
-            >
-              {/* ✕ */}
-            </button>
+    <ToastContainer position="top-end" className="p-3" style={{ zIndex: 9999 }}>
+      <Toast show={isVisible} onClose={onClose} className="border-0 shadow-lg rounded-3 overflow-hidden">
+        <Toast.Header className="bg-white border-0 py-2">
+          <div className="d-flex align-items-center gap-2 me-auto">
+            {currentConfig.icon}
+            <strong className="fw-bold" style={{ fontSize: '0.9rem' }}>{currentConfig.title}</strong>
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </Toast.Header>
+        <Toast.Body className={`bg-white p-3 ${type === 'error' ? 'text-danger' : type === 'success' ? 'text-success' : 'text-primary'} fw-medium`} style={{ fontSize: '0.9rem' }}>
+          {message}
+        </Toast.Body>
+        <div className={`bg-${currentConfig.bg}`} style={{ height: '3px', width: isVisible ? '100%' : '0%', transition: 'width 3s linear' }}></div>
+      </Toast>
+    </ToastContainer>
   );
 };
 

@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { FaBell, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Dropdown, Badge, Button, ListGroup, Card } from 'react-bootstrap';
 import { fetchNotifications, markAsRead } from '../../services/notifications/notificationService';
 import { toast } from 'react-hot-toast';
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [showDropdown, setShowDropdown] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
   const navigate = useNavigate();
@@ -19,7 +18,6 @@ const NotificationBell = () => {
     try {
       const data = await fetchNotifications(userId);
       
-      // Check for new notifications to show toasts
       const unread = data.filter(n => !n.isRead);
       if (notifications.length > 0) {
         const newNotifications = unread.filter(n => !notifications.find(prev => prev.id === n.id));
@@ -41,12 +39,8 @@ const NotificationBell = () => {
 
   useEffect(() => {
     loadNotifications();
-    
-    // Listen for manual sync events from other components
     const handleSync = () => loadNotifications();
     window.addEventListener('notificationsUpdated', handleSync);
-    
-    // Poll every 60 seconds
     const interval = setInterval(loadNotifications, 60000);
     
     return () => {
@@ -55,22 +49,19 @@ const NotificationBell = () => {
     };
   }, [userId]);
 
-  const handleBellClick = () => {
-    if (unreadCount > 0) {
+  const handleToggle = (isOpen) => {
+    if (isOpen && unreadCount > 0) {
       setIsAnimating(true);
       setTimeout(() => setIsAnimating(false), 1000);
     }
-    setShowDropdown(!showDropdown);
   };
 
   const handleViewAll = () => {
-    setShowDropdown(false);
     navigate('/notifications');
   };
 
   const handleNotificationClick = (notificationId) => {
     handleMarkAsRead(notificationId);
-    setShowDropdown(false);
     navigate('/notifications');
   };
 
@@ -91,108 +82,83 @@ const NotificationBell = () => {
   };
 
   return (
-    <div className="relative">
-      <motion.button
-        onClick={handleBellClick}
-        className="relative p-3 text-gray-600 hover:bg-blue-50 rounded-xl transition-all duration-300 hover:shadow-lg group"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        animate={isAnimating ? {
-          rotate: [0, -10, 10, -10, 10, 0],
-          transition: { duration: 0.6 }
-        } : {}}
+    <Dropdown onToggle={handleToggle} align="end">
+      <Dropdown.Toggle 
+        variant="light" 
+        className="p-3 text-secondary border-0 bg-transparent shadow-none d-flex align-items-center justify-content-center position-relative"
+        bsPrefix="p-0"
       >
-        <motion.div
-          animate={unreadCount > 0 ? {
-            scale: [1, 1.2, 1],
-            transition: { duration: 2, repeat: Infinity, repeatDelay: 3 }
-          } : {}}
-        >
-          <FaBell className={`h-6 w-6 transition-colors duration-300 ${
-            unreadCount > 0
-              ? 'text-blue-600 group-hover:text-blue-700'
-              : 'text-gray-600 group-hover:text-blue-600'
-          }`} />
-        </motion.div>
-        {unreadCount > 0 && (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shadow-lg border-2 border-white"
-          >
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </motion.span>
-        )}
-      </motion.button>
-
-      {showDropdown && (
-        <motion.div
-          initial={{ opacity: 0, y: -10, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.95 }}
-          className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-[200] max-h-96 overflow-hidden"
-        >
-          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <FaBell className="mr-2 text-blue-600" />
-                Notifications
-              </h3>
-              <button
-                onClick={() => setShowDropdown(false)}
-                className="p-1 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                <FaTimes className="h-4 w-4 text-gray-500" />
-              </button>
-            </div>
-          </div>
-
-          {notifications.filter(n => !n.isRead).length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              <div className="text-4xl mb-2">✅</div>
-              <p>All caught up!</p>
-            </div>
-          ) : (
-            <div className="max-h-80 overflow-y-auto">
-              {notifications
-                .filter(n => !n.isRead)
-                .slice(0, 2)
-                .map((notification) => (
-                <div
-                  key={notification.id}
-                  className="p-4 hover:bg-blue-100 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors bg-blue-50"
-                  onClick={() => handleNotificationClick(notification.id)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-gray-900 truncate">
-                        {notification.title}
-                      </h4>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        {formatDate(notification.createdAt)}
-                      </p>
-                    </div>
-                    <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 flex-shrink-0 mt-1"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+        <div className={`p-2 rounded-3 hover-bg-light transition-all ${isAnimating ? 'animate-bounce' : ''}`}>
+          <FaBell size={22} className={unreadCount > 0 ? 'text-primary' : 'text-secondary'} />
+          {unreadCount > 0 && (
+            <Badge 
+              pill 
+              bg="danger" 
+              className="position-absolute translate-middle border border-white"
+              style={{ top: '15%', left: '85%', fontSize: '0.65rem' }}
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </Badge>
           )}
+        </div>
+      </Dropdown.Toggle>
 
-          <div className="p-3 border-t border-gray-200 bg-gray-50 rounded-b-xl">
-            <button
+      <Dropdown.Menu className="border-0 shadow-lg p-0 overflow-hidden rounded-3 mt-2" style={{ width: '320px' }}>
+        <Card className="border-0">
+          <Card.Header className="bg-primary bg-opacity-10 py-3 border-0">
+            <div className="d-flex align-items-center justify-content-between">
+              <h6 className="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                <FaBell className="text-primary" /> Notifications
+              </h6>
+              {unreadCount > 0 && <Badge bg="primary-subtle" text="primary">{unreadCount} New</Badge>}
+            </div>
+          </Card.Header>
+          <Card.Body className="p-0">
+            <ListGroup variant="flush" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+              {notifications.filter(n => !n.isRead).length === 0 ? (
+                <div className="p-5 text-center text-secondary">
+                  <div className="h3 mb-2">✅</div>
+                  <p className="small mb-0">All caught up!</p>
+                </div>
+              ) : (
+                notifications
+                  .filter(n => !n.isRead)
+                  .map((notification) => (
+                    <ListGroup.Item 
+                      key={notification.id}
+                      className="p-3 border-bottom hover-bg-light cursor-pointer transition-all border-0 bg-primary bg-opacity-10 mb-1"
+                      onClick={() => handleNotificationClick(notification.id)}
+                    >
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div className="flex-grow-1">
+                          <h6 className="small fw-bold text-dark mb-1">{notification.title}</h6>
+                          <p className="small text-secondary mb-2 line-clamp-2" style={{ fontSize: '0.8rem' }}>
+                            {notification.message}
+                          </p>
+                          <span className="text-secondary" style={{ fontSize: '0.7rem' }}>
+                            {formatDate(notification.createdAt)}
+                          </span>
+                        </div>
+                        <div className="p-1 bg-primary rounded-circle ms-2 mt-1" style={{ width: '8px', height: '8px' }}></div>
+                      </div>
+                    </ListGroup.Item>
+                  ))
+              )}
+            </ListGroup>
+          </Card.Body>
+          <Card.Footer className="bg-light p-3 border-0">
+            <Button 
+              variant="primary" 
+              size="sm" 
+              className="w-100 fw-bold rounded-2 py-2"
               onClick={handleViewAll}
-              className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
             >
               View All Notifications
-            </button>
-          </div>
-        </motion.div>
-      )}
-    </div>
+            </Button>
+          </Card.Footer>
+        </Card>
+      </Dropdown.Menu>
+    </Dropdown>
   );
 };
 

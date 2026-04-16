@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GiIndiaGate } from 'react-icons/gi';
 
-
 const WelcomeOverlay = ({ onComplete }) => {
   const [showWelcome, setShowWelcome] = useState(true);
 
@@ -21,7 +20,11 @@ const WelcomeOverlay = ({ onComplete }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-gradient-to-r from-blue-900 to-blue-800 z-[200] flex items-center justify-center"
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ 
+            zIndex: 9999, 
+            background: 'linear-gradient(to right, #1e3a8a, #1d4ed8)',
+          }}
         >
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
@@ -33,12 +36,12 @@ const WelcomeOverlay = ({ onComplete }) => {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="mb-8"
+              className="mb-4"
             >
-              <GiIndiaGate className="text-8xl mx-auto" />
+              <GiIndiaGate size={120} className="mx-auto" />
             </motion.div>
-            <h1 className="text-4xl font-bold mb-4">WELCOME</h1>
-            <p className="text-xl opacity-90">to Connect Amravati Portal</p>
+            <h1 className="display-4 fw-bold mb-3 font-outfit">WELCOME</h1>
+            <p className="h4 opacity-75 fw-light">to Connect Amravati Portal</p>
           </motion.div>
         </motion.div>
       )}
