@@ -7,29 +7,28 @@ const Footer = () => {
   return (
     
     <motion.footer
-  initial={{ y: 100 }}
-  animate={{ y: 0 }}
-  transition={{ type: "spring", stiffness: 50 }}
-  className="bg-white/90 backdrop-blur-md border-t border-gray-200 mt-8 rounded-b-3xl"
->
-  <div className="container mx-auto px-4 py-4">
-    <div className="flex items-center justify-center">
-      <p className="text-gray-600 text-sm text-center flex items-center flex-wrap justify-center">
-        <span className="mr-6">
-          &copy; {new Date().getFullYear()} District Connect Amravati | Designed and Maintained by{' '}
-          <a
-            href="https://settribe.com/"
-            className="font-bold text-blue-600 hover:text-blue-800 transition-colors"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            SETTribe
-          </a>.
-        </span>
-      </p>
-    </div>
-  </div>
-</motion.footer>
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 50 }}
+      className="bg-white border-top mt-auto py-3"
+      style={{ backdropFilter: 'blur(8px)', backgroundColor: 'rgba(255, 255, 255, 0.9)' }}
+    >
+      <div className="container">
+        <div className="d-flex align-items-center justify-content-center">
+          <p className="text-secondary small mb-0 text-center">
+            &copy; {new Date().getFullYear()} District Connect Amravati | Designed and Maintained by{' '}
+            <a
+              href="https://settribe.com/"
+              className="fw-bold text-primary text-decoration-none"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              SETTribe
+            </a>.
+          </p>
+        </div>
+      </div>
+    </motion.footer>
   );
 };
 

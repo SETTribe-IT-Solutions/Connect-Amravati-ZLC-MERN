@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaUser, FaLock, FaArrowRight, FaBell, FaShieldAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUser, FaLock, FaArrowRight, FaShieldAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Form, Button, Spinner, Card } from 'react-bootstrap';
 
 import { loginUser } from '../../services/auth/authService';
 import { toast } from 'react-hot-toast';
@@ -13,29 +14,21 @@ import WelcomeOverlay from '../../components/landing/WelcomeOverlay';
 import CulturalSection from '../../components/landing/CulturalSection';
 
 const LoginPage = ({ onLogin }) => {
-
   const navigate = useNavigate();
-
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const [focusedField, setFocusedField] = useState(null);
   const [isWelcomeActive, setIsWelcomeActive] = useState(true);
-  const [showPassword, setShowPassword] = useState(false); // New state for password visibility
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!formData.username || !formData.password) {
       toast.error('Please fill in all fields');
       return;
     }
-
     setLoading(true);
-
-    // Call authService
     try {
       const data = await loginUser(formData.username, formData.password);
-
       if (data.message && data.message.toLowerCase() === "login successful") {
         if (onLogin) {
           const success = onLogin(data);
@@ -59,116 +52,110 @@ const LoginPage = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 relative overflow-hidden flex flex-col">
+    <div className="min-vh-100 position-relative overflow-hidden d-flex flex-column bg-light">
       <AnimatedBackground />
       <WelcomeOverlay onComplete={() => setIsWelcomeActive(false)} />
       {!isWelcomeActive && <Header />}
 
-      <main className="container mx-auto px-4 py-12 relative z-10 flex-grow">
+      <Container as="main" className="py-5 flex-grow-1 position-relative" style={{ zIndex: 10 }}>
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="max-w-6xl mx-auto"
+          className="mx-auto"
+          style={{ maxWidth: '1000px' }}
         >
-          <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden border border-white/50">
-            <div className="flex flex-col lg:flex-row">
+          <Card className="border-0 shadow-lg overflow-hidden rounded-4">
+            <Row className="g-0">
               <CulturalSection />
 
-              {/* Login Form */}
-              <motion.div
-                initial={{ x: 50, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.6 }}
-                className="lg:w-1/2 p-8 lg:p-12"
-              >
-                <div className="max-w-md mx-auto">
-                  <h2 className="text-4xl font-bold text-gray-800 mb-2 flex items-center">
-                    <FaShieldAlt className="mr-3 text-blue-600" />
-                    Login
-                  </h2>
-                  <p className="text-gray-600 mb-8 pl-12">
-                    Access your dashboard securely
-                  </p>
-
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Username Field */}
-                    <div className="relative">
-                      <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-600 text-xl z-10" />
-                      <input
-                        type="text"
-                        value={formData.username}
-                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                        onFocus={() => setFocusedField('username')}
-                        onBlur={() => setFocusedField(null)}
-                        className="input-field"
-                        placeholder=" "
-                      />
-                      <label className={`floating-label ${focusedField === 'username' || formData.username ? 'active' : ''}`}>
-                        UserID
-                      </label>
+              <Col lg={6} className="p-4 p-md-5 bg-white d-flex align-items-center">
+                <div className="w-100 mx-auto" style={{ maxWidth: '400px' }}>
+                  <motion.div
+                    initial={{ x: 30, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.8, delay: 0.6 }}
+                  >
+                    <div className="mb-5">
+                      <h2 className="display-6 fw-bold text-dark mb-2 d-flex align-items-center">
+                        <FaShieldAlt className="me-3 text-primary" />
+                        Login
+                      </h2>
+                      <p className="text-secondary mb-0 scale-up-hover d-inline-block">
+                        Access your dashboard securely
+                      </p>
                     </div>
 
-                    {/* Password Field */}
-                    <div className="relative">
-                      <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-600 text-xl z-10" />
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        onFocus={() => setFocusedField('password')}
-                        onBlur={() => setFocusedField(null)}
-                        className="input-field"
-                        placeholder=" "
-                      />
-                      <label className={`floating-label ${focusedField === 'password' || formData.password ? 'active' : ''}`}>
-                        Password
-                      </label>
-                      {/* Eye Icon */}
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-600 focus:outline-none z-10"
-                        tabIndex="-1"
+                    <Form onSubmit={handleSubmit}>
+                      <Form.Group className="mb-4 position-relative">
+                        <div className="position-absolute top-50 translate-middle-y ps-3 text-primary" style={{ zIndex: 5 }}>
+                          <FaUser size={18} />
+                        </div>
+                        <Form.Control
+                          type="text"
+                          placeholder="UserID"
+                          value={formData.username}
+                          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                          className="ps-5 py-3 rounded-3 border-2 shadow-none focus-border-primary"
+                          style={{ fontSize: '1rem' }}
+                        />
+                      </Form.Group>
+
+                      <Form.Group className="mb-5 position-relative">
+                        <div className="position-absolute top-50 translate-middle-y ps-3 text-primary" style={{ zIndex: 5 }}>
+                          <FaLock size={18} />
+                        </div>
+                        <Form.Control
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Password"
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          className="ps-5 py-3 rounded-3 border-2 shadow-none focus-border-primary"
+                          style={{ fontSize: '1rem' }}
+                        />
+                        <Button
+                          variant="link"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="position-absolute top-50 translate-middle-y end-0 me-2 text-secondary p-2 border-0 shadow-none"
+                          style={{ zIndex: 6 }}
+                        >
+                          {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                        </Button>
+                      </Form.Group>
+
+                      <Button
+                        type="submit"
+                        disabled={loading}
+                        className="w-100 py-3 rounded-3 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2 gradient-button-premium"
                       >
-                        {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-                      </button>
-                    </div>
+                        {loading ? (
+                          <>
+                            <Spinner animation="border" size="sm" />
+                            <span>Logging in...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Login</span>
+                            <FaArrowRight />
+                          </>
+                        )}
+                      </Button>
 
-
-                    {/* Login Button */}
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="gradient-button"
-                    >
-                      {loading ? (
-                        <>
-                          <div className="spinner" />
-                          <span>Logging in...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>Login</span>
-                          <FaArrowRight />
-                        </>
-                      )}
-                    </button>
-
-
-
-                    {/* Security Notice */}
-                    <p className="text-xs text-gray-500 text-center mt-6 flex items-center justify-center">
-                      <FaShieldAlt className="mr-1" />
-                      This is a secure government portal. Unauthorized access is prohibited.
-                    </p>
-                  </form>
+                      <div className="mt-5 pt-4 border-top text-center">
+                        <p className="small text-secondary mb-0 d-flex align-items-center justify-content-center gap-1">
+                          <FaShieldAlt className="text-muted" />
+                          This is a secure government portal. 
+                        </p>
+                        <p className="text-danger fw-bold" style={{ fontSize: '0.65rem' }}>Unauthorized access is prohibited.</p>
+                      </div>
+                    </Form>
+                  </motion.div>
                 </div>
-              </motion.div>
-            </div>
-          </div>
+              </Col>
+            </Row>
+          </Card>
         </motion.div>
-      </main>
+      </Container>
 
       <Footer />
     </div>

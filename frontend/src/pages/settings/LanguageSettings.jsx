@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap';
 import { CheckIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 import { changeGoogleLanguage, getCurrentLanguage } from '../utils/translate';
 
@@ -18,56 +18,57 @@ const LanguageSettings = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-xl p-8"
-      >
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 bg-blue-100 rounded-xl">
-            <GlobeAltIcon className="h-8 w-8 text-blue-600" />
+    <Container className="py-5" style={{ maxWidth: '900px' }}>
+      <Card className="border-0 shadow-lg rounded-4 overflow-hidden">
+        <Card.Body className="p-4 p-md-5">
+          <div className="d-flex align-items-center gap-4 mb-5">
+            <div className="p-3 bg-primary bg-opacity-10 rounded-4">
+              <GlobeAltIcon style={{ width: '2.5rem' }} className="text-primary" />
+            </div>
+            <div>
+              <h1 className="display-6 fw-bold text-dark mb-1 font-outfit">Select Language</h1>
+              <p className="text-secondary mb-0">Choose your preferred language for the interface</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Select Language</h1>
-            <p className="text-gray-600 mt-1">Choose your preferred language for the interface</p>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {languages.map((lang) => (
-            <motion.button
-              key={lang.code}
-              whileHover={{ scale: 1.02, y: -5 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => changeLanguage(lang.code)}
-              className={`p-6 rounded-xl border-2 transition-all ${
-                currentLang === lang.code
-                  ? 'border-blue-500 bg-blue-50 shadow-lg'
-                  : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-              }`}
-            >
-              <div className="text-4xl mb-3">{lang.flag}</div>
-              <h3 className="text-lg font-semibold text-gray-900">{lang.name}</h3>
-              <p className="text-sm text-gray-600 mb-3">{lang.nativeName}</p>
-              {currentLang === lang.code && (
-                <div className="flex items-center justify-center gap-1 text-blue-600">
-                  <CheckIcon className="h-5 w-5" />
-                  <span className="text-sm font-medium">Selected</span>
-                </div>
-              )}
-            </motion.button>
-          ))}
-        </div>
+          <Row className="g-4">
+            {languages.map((lang) => (
+              <Col key={lang.code} md={4}>
+                <Card 
+                  className={`h-100 border-2 transition-all cursor-pointer text-center p-4 rounded-4 ${
+                    currentLang === lang.code 
+                      ? 'border-primary bg-primary bg-opacity-5 shadow' 
+                      : 'border-light hover-border-primary'
+                  }`}
+                  onClick={() => changeLanguage(lang.code)}
+                >
+                  <div className="display-4 mb-3">{lang.flag}</div>
+                  <h5 className="fw-bold text-dark mb-1">{lang.name}</h5>
+                  <p className="small text-secondary mb-3">{lang.nativeName}</p>
+                  
+                  {currentLang === lang.code ? (
+                    <Badge pill bg="primary" className="py-2 px-3 fw-bold d-flex align-items-center justify-content-center gap-2 mx-auto" style={{ width: 'fit-content' }}>
+                      <CheckIcon style={{ width: '1rem' }} /> Selected
+                    </Badge>
+                  ) : (
+                    <div style={{ height: '31px' }}></div>
+                  )}
+                </Card>
+              </Col>
+            ))}
+          </Row>
 
-        <div className="mt-8 p-4 bg-gray-50 rounded-xl">
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Note:</span> The interface will automatically switch to your selected language using Google Translate. 
-            You can change it anytime from this page or the language selector in the header.
-          </p>
-        </div>
-      </motion.div>
-    </div>
+          <Card className="bg-light border-0 rounded-4 mt-5">
+            <Card.Body className="p-4">
+              <p className="small text-secondary mb-0">
+                <span className="fw-bold text-dark">Note:</span> The interface will automatically switch to your selected language using Google Translate. 
+                You can change it anytime from this page or the language selector in the header.
+              </p>
+            </Card.Body>
+          </Card>
+        </Card.Body>
+      </Card>
+    </Container>
   );
 };
 

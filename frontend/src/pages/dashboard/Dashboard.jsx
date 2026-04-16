@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { getDashboardStats, getTasks } from '../../services/tasks/taskService';
-import {
-  ClipboardDocumentListIcon, CheckCircleIcon, ClockIcon,
-  ExclamationTriangleIcon, ArrowPathIcon, EyeIcon, XMarkIcon,
-  CalendarIcon, UserIcon, FlagIcon,
-  ChartBarIcon, UserGroupIcon, DocumentTextIcon
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ClipboardDocumentListIcon, 
+  CheckCircleIcon, 
+  ArrowPathIcon, 
+  ClockIcon, 
+  ExclamationTriangleIcon,
+  MagnifyingGlassIcon,
+  EyeIcon,
+  XMarkIcon,
+  UserIcon,
+  CalendarIcon
 } from '@heroicons/react/24/outline';
-import {
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, BarChart, Bar
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell 
 } from 'recharts';
+import { getDashboardStats, getTasks } from '../../services/tasks/taskService';
+import { Container, Row, Col, Card, Button, Form, Modal } from 'react-bootstrap';
 
 const Dashboard = ({ user }) => {
   const navigate = useNavigate();
@@ -36,7 +43,6 @@ const Dashboard = ({ user }) => {
           const tasks = await getTasks(userID);
           setRecentTasks(tasks.slice(0, 5));
           
-          // Simulate chart data based on selected period
           if (selectedPeriod === 'week') {
             setChartData([
               { name: 'Mon', tasks: stats.totalTasks || 0, completed: stats.completed || 0, inProgress: stats.inProgress || 0, pending: stats.pending || 0, overdue: stats.overdue || 0 },
@@ -54,32 +60,12 @@ const Dashboard = ({ user }) => {
               { name: 'Week 3', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
               { name: 'Week 4', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
             ]);
-          } else if (selectedPeriod === 'quarter') {
-            setChartData([
-              { name: 'Jan', tasks: Math.floor(stats.totalTasks / 3) || 0, completed: Math.floor(stats.completed / 3) || 0, inProgress: Math.floor(stats.inProgress / 3) || 0, pending: Math.floor(stats.pending / 3) || 0, overdue: Math.floor(stats.overdue / 3) || 0 },
-              { name: 'Feb', tasks: Math.floor(stats.totalTasks / 3) || 0, completed: Math.floor(stats.completed / 3) || 0, inProgress: Math.floor(stats.inProgress / 3) || 0, pending: Math.floor(stats.pending / 3) || 0, overdue: Math.floor(stats.overdue / 3) || 0 },
-              { name: 'Mar', tasks: Math.floor(stats.totalTasks / 3) || 0, completed: Math.floor(stats.completed / 3) || 0, inProgress: Math.floor(stats.inProgress / 3) || 0, pending: Math.floor(stats.pending / 3) || 0, overdue: Math.floor(stats.overdue / 3) || 0 },
-            ]);
-          } else if (selectedPeriod === 'year') {
-            setChartData([
-              { name: 'Q1', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
-              { name: 'Q2', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
-              { name: 'Q3', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
-              { name: 'Q4', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
-            ]);
+          } else {
+            setChartData([]); // Fallback for other periods
           }
         }
       } catch (error) {
         console.error("Dashboard Fetch Error:", error);
-        setChartData([
-          { name: 'Mon', tasks: 0, completed: 0, inProgress: 0, pending: 0, overdue: 0 },
-          { name: 'Tue', tasks: 0, completed: 0, inProgress: 0, pending: 0, overdue: 0 },
-          { name: 'Wed', tasks: 0, completed: 0, inProgress: 0, pending: 0, overdue: 0 },
-          { name: 'Thu', tasks: 0, completed: 0, inProgress: 0, pending: 0, overdue: 0 },
-          { name: 'Fri', tasks: 0, completed: 0, inProgress: 0, pending: 0, overdue: 0 },
-          { name: 'Sat', tasks: 0, completed: 0, inProgress: 0, pending: 0, overdue: 0 },
-          { name: 'Sun', tasks: 0, completed: 0, inProgress: 0, pending: 0, overdue: 0 },
-        ]);
       }
     };
     fetchData();
@@ -91,199 +77,226 @@ const Dashboard = ({ user }) => {
   };
 
   const stats = [
-    { name: 'Total Tasks', value: dashboardData.totalTasks, icon: ClipboardDocumentListIcon, bgColor: 'bg-blue-50', textColor: 'text-blue-600' },
-    { name: 'Completed', value: dashboardData.completed, icon: CheckCircleIcon, bgColor: 'bg-green-50', textColor: 'text-green-600' },
-    { name: 'In Progress', value: dashboardData.inProgress, icon: ArrowPathIcon, bgColor: 'bg-gray-100', textColor: 'text-gray-800' },
-    { name: 'Pending', value: dashboardData.pending, icon: ClockIcon, bgColor: 'bg-amber-50', textColor: 'text-amber-600' },
-    { name: 'Overdue', value: dashboardData.overdue, icon: ExclamationTriangleIcon, bgColor: 'bg-red-50', textColor: 'text-red-600' }
+    { name: 'Total Tasks', value: dashboardData.totalTasks, icon: ClipboardDocumentListIcon, bgColor: '#eff6ff', textColor: '#2563eb' },
+    { name: 'Completed', value: dashboardData.completed, icon: CheckCircleIcon, bgColor: '#f0fdf4', textColor: '#16a34a' },
+    { name: 'In Progress', value: dashboardData.inProgress, icon: ArrowPathIcon, bgColor: '#f8fafc', textColor: '#475569' },
+    { name: 'Pending', value: dashboardData.pending, icon: ClockIcon, bgColor: '#fffbeb', textColor: '#d97706' },
+    { name: 'Overdue', value: dashboardData.overdue, icon: ExclamationTriangleIcon, bgColor: '#fef2f2', textColor: '#dc2626' }
   ];
 
   const taskDistribution = [
     { name: 'Completed', value: dashboardData.completed, color: '#10b981' },
-    { name: 'In Progress', value: dashboardData.inProgress, color: '#6b7280' },
+    { name: 'In Progress', value: dashboardData.inProgress, color: '#64748b' },
     { name: 'Pending', value: dashboardData.pending, color: '#f59e0b' },
     { name: 'Overdue', value: dashboardData.overdue, color: '#ef4444' },
   ].filter(item => item.value > 0);
 
-  const handleViewAll = () => {
-    navigate('/tasks');
-  };
+  const handleViewAll = () => { navigate('/tasks'); };
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <div className="container-fluid p-3 p-md-4">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Dashboard</h1>
-        <p className="text-gray-800 mt-1">Welcome, {user?.name || 'Collector Office'}</p>
+      <div className="mb-4">
+        <h1 className="h2 fw-bold" style={{ 
+          background: 'linear-gradient(90deg, #2563eb, #7c3aed)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>Dashboard</h1>
+        <p className="text-secondary small">Welcome, <span className="fw-bold">{user?.name || 'Collector Office'}</span></p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+      <div className="row g-3 mb-4">
         {stats.map((stat) => (
-          <div key={stat.name} onClick={() => showToast(stat.name, stat.value)}
-            className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all p-4 border border-gray-100 cursor-pointer">
-            <div className="flex items-center justify-between">
-              <div><p className="text-xs text-gray-800">{stat.name}</p><p className="text-2xl font-bold text-gray-800 mt-1">{stat.value}</p></div>
-              <div className={`${stat.bgColor} p-2 rounded-lg`}><stat.icon className={`h-5 w-5 ${stat.textColor}`} /></div>
+          <div key={stat.name} className="col-6 col-md-4 col-lg">
+            <div className="premium-card p-3 h-100 cursor-pointer border-0" onClick={() => showToast(stat.name, stat.value)}>
+              <div className="d-flex align-items-center justify-content-between">
+                <div>
+                  <p className="small text-secondary mb-1">{stat.name}</p>
+                  <p className="h3 fw-bold mb-0 text-dark">{stat.value}</p>
+                </div>
+                <div className="rounded-3 p-2 d-flex align-items-center justify-content-center" style={{ backgroundColor: stat.bgColor }}>
+                  <stat.icon style={{ width: '1.5rem', height: '1.5rem', color: stat.textColor }} />
+                </div>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="row g-4 mb-4">
         {/* Dynamic Chart */}
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-gray-800">
-              {selectedPeriod === 'week' ? 'Weekly' : selectedPeriod === 'month' ? 'Monthly' : selectedPeriod === 'quarter' ? 'Quarterly' : 'Yearly'} Task Overview
-            </h2>
-            <select className="text-xs border rounded-md px-2 py-1" value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)}>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="quarter">This Quarter</option>
-              <option value="year">This Year</option>
-            </select>
-          </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#9ca3af" />
-                <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
-                <Tooltip />
-                <Bar dataKey="tasks" name="Total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="completed" name="Completed" fill="#10b981" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="inProgress" name="In Progress" fill="#6b7280" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="pending" name="Pending" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="overdue" name="Overdue" fill="#ef4444" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="col-12 col-xl-7">
+          <div className="premium-card p-4 h-100 border-0">
+            <div className="d-flex align-items-center justify-content-between mb-4">
+              <h5 className="fw-bold text-dark mb-0">
+                {selectedPeriod === 'week' ? 'Weekly' : 'Monthly'} Task Overview
+              </h5>
+              <Form.Select size="sm" style={{ width: 'auto' }} value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)}>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+              </Form.Select>
+            </div>
+            <div style={{ height: '300px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                  <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
+                  <Bar dataKey="tasks" name="Total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="completed" name="Completed" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="pending" name="Pending" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
         {/* Task Distribution */}
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-          <h2 className="text-base font-semibold text-gray-800 mb-2">Task Distribution</h2>
-          <p className="text-xs text-gray-800 mb-3">Current status breakdown ({dashboardData.totalTasks} total tasks)</p>
-          <div className="h-64">
-            {taskDistribution.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={taskDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                    {taskDistribution.map((entry, idx) => (<Cell key={`cell-${idx}`} fill={entry.color} />))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (<div className="h-full flex items-center justify-center text-gray-400">No tasks available</div>)}
+        <div className="col-12 col-xl-5">
+          <div className="premium-card p-4 h-100 border-0">
+            <h5 className="fw-bold text-dark mb-1">Task Distribution</h5>
+            <p className="small text-secondary mb-4">Current status breakdown</p>
+            <div style={{ height: '260px' }}>
+              {taskDistribution.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={taskDistribution} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value">
+                      {taskDistribution.map((entry, idx) => (<Cell key={`cell-${idx}`} fill={entry.color} strokeWidth={0} />))}
+                    </Pie>
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-100 d-flex align-items-center justify-content-center text-muted small italic">
+                  No tasks available to display
+                </div>
+              )}
+            </div>
+            <div className="d-flex flex-wrap justify-content-center gap-3 mt-2">
+              {taskDistribution.map(item => (
+                <div key={item.name} className="d-flex align-items-center gap-2">
+                  <span className="rounded-circle" style={{ width: '10px', height: '10px', backgroundColor: item.color }}></span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '500' }}>{item.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Recent Activities */}
-      <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-gray-800">Recent Activities</h2>
-          <button onClick={handleViewAll} className="text-xs text-blue-600 hover:text-blue-700 cursor-pointer">View All</button>
+      <div className="premium-card p-4 border-0 mb-4">
+        <div className="d-flex align-items-center justify-content-between mb-4">
+          <h5 className="fw-bold text-dark mb-0">Recent Activities</h5>
+          <Button variant="link" size="sm" onClick={handleViewAll} className="p-0 text-decoration-none fw-bold text-primary">View All</Button>
         </div>
-        <div className="space-y-2">
+        <div className="d-flex flex-column gap-2">
           {recentTasks.length > 0 ? recentTasks.map((activity) => (
-            <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group">
-              <div className="flex-1"><p className="text-sm font-medium text-gray-800">{activity.title}</p><p className="text-xs text-gray-800">To: {activity.assignedToName} • {activity.status}</p></div>
-              <button onClick={() => { setSelectedTask(activity); setShowDetailsModal(true); }} 
-                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md opacity-70 group-hover:opacity-100 transition-opacity">
-                <EyeIcon className="h-4 w-4" />
-              </button>
+            <div key={activity.id} className="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 transition-all hover-bg-white shadow-hover">
+              <div className="overflow-hidden">
+                <p className="small fw-bold text-dark mb-0 text-truncate">{activity.title}</p>
+                <p className="text-muted mb-0" style={{ fontSize: '0.75rem' }}>
+                  To: {activity.assignedToName} • <span className="badge bg-primary bg-opacity-10 text-primary uppercase" style={{ fontSize: '0.65rem' }}>{activity.status}</span>
+                </p>
+              </div>
+              <Button variant="light" size="sm" onClick={() => { setSelectedTask(activity); setShowDetailsModal(true); }} className="p-2 border-0 rounded-circle text-primary">
+                <EyeIcon style={{ width: '1rem', height: '1rem' }} />
+              </Button>
             </div>
-          )) : (<div className="text-center py-6 text-gray-400 text-sm">No recent tasks</div>)}
+          )) : (<div className="text-center py-5 text-muted small italic">No recent activities found</div>)}
         </div>
       </div>
 
       {/* Toast Popup */}
       <AnimatePresence>
         {toast && (
-          <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }}
-            className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[200] bg-blue-600 text-white rounded-lg shadow-lg">
-            <div className="flex items-center gap-3 p-3 px-5">
-              <ClipboardDocumentListIcon className="h-5 w-5 text-white/80" />
-              <div><p className="text-sm font-medium">{toast.title}</p><p className="text-lg font-bold">{toast.value}</p></div>
-              <button onClick={() => setToast(null)} className="text-white/70 hover:text-white"><XMarkIcon className="h-4 w-4" /></button>
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            className="position-fixed top-0 start-50 translate-middle-x mt-4 p-3 rounded-4 shadow-lg border-0 d-flex align-items-center gap-3 text-white" 
+            style={{ zIndex: 1060, backgroundColor: '#2563eb', minWidth: '240px' }}>
+            <ClipboardDocumentListIcon style={{ width: '1.25rem', height: '1.25rem', opacity: 0.8 }} />
+            <div className="flex-grow-1">
+              <p className="small mb-0 opacity-80">{toast.title}</p>
+              <p className="h5 fw-bold mb-0">{toast.value}</p>
             </div>
+            <XMarkIcon className="cursor-pointer" style={{ width: '1rem', height: '1rem' }} onClick={() => setToast(null)} />
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Task Details Modal */}
-      <AnimatePresence>
-        {showDetailsModal && selectedTask && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4" onClick={() => setShowDetailsModal(false)}>
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-xl shadow-xl w-[450px] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
+      <Modal show={showDetailsModal} onHide={() => setShowCloseConfirm(true)} centered size="md" className="fade">
+        {selectedTask && (
+          <>
+            <Modal.Header className="border-0 p-4 pb-0 d-flex flex-column align-items-start position-relative overflow-hidden rounded-top-4" 
+              style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #312e81 100%)' }}>
+              <div className="d-flex justify-content-between w-100 mb-2">
+                <h5 className="modal-title fw-bold text-white">Task Details</h5>
+                <Button variant="link" className="text-white p-0" onClick={() => setShowCloseConfirm(true)}><XMarkIcon style={{ width: '1.5rem', height: '1.5rem' }} /></Button>
+              </div>
+              <div className="d-flex flex-wrap gap-3 mb-3">
+                <div className="small text-white-50 d-flex align-items-center gap-1"><UserIcon style={{ width: '0.875rem' }} /> By: {selectedTask.createdBy || 'Admin'}</div>
+                <div className="small text-white-50 d-flex align-items-center gap-1"><CalendarIcon style={{ width: '0.875rem' }} /> {selectedTask.createdAt?.split('T')[0]}</div>
+              </div>
+            </Modal.Header>
+            <Modal.Body className="p-4 rounded-bottom-4">
+              <div className="mb-4">
+                <div className="small text-muted mb-1 text-uppercase fw-bold tracking-wider" style={{ fontSize: '0.65rem' }}>Task Title</div>
+                <h6 className="fw-bold text-dark">{selectedTask.title}</h6>
+              </div>
               
-              {/* Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 text-white rounded-t-xl">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-semibold">Task Details</h3>
-                  <button onClick={() => setShowCloseConfirm(true)} className="hover:bg-white/20 p-1 rounded"><XMarkIcon className="h-4 w-4" /></button>
+              <div className="row g-3 mb-4">
+                <div className="col-6">
+                  <div className="bg-light p-3 rounded-3">
+                    <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Priority</div>
+                    <span className={`small fw-bold ${selectedTask.priority === 'HIGH' ? 'text-danger' : 'text-primary'}`}>{selectedTask.priority || 'MEDIUM'}</span>
+                  </div>
                 </div>
-                <div className="flex gap-2 text-xs text-white/80 mt-1">
-                  <div className="flex items-center gap-1"><UserIcon className="h-3 w-3" /> Created By: {selectedTask.createdBy || user?.name || 'Admin'}</div>
-                  <div className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" /> Created on: {selectedTask.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0]}</div>
+                <div className="col-6">
+                  <div className="bg-light p-3 rounded-3">
+                    <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Status</div>
+                    <span className="small fw-bold text-primary">{selectedTask.status || 'PENDING'}</span>
+                  </div>
                 </div>
               </div>
               
-              {/* Body */}
-              <div className="p-3 space-y-2">
-                <div><p className="text-[11px] text-gray-500 flex items-center gap-1"><DocumentTextIcon className="h-3 w-3" /> Task Title</p><p className="text-sm font-semibold text-gray-800">{selectedTask.title}</p></div>
-                
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500 flex items-center gap-1"><UserGroupIcon className="h-3 w-3" /> Assigned To</p><p className="text-xs font-medium">{selectedTask.assignedToName || 'Admin User'}</p></div>
-                  <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500 flex items-center gap-1"><FlagIcon className="h-3 w-3" /> Priority</p><p className={`text-xs font-semibold ${selectedTask.priority === 'HIGH' ? 'text-red-600' : selectedTask.priority === 'MEDIUM' ? 'text-amber-600' : 'text-green-600'}`}>{selectedTask.priority || 'MEDIUM'}</p></div>
-                  <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500 flex items-center gap-1"><CalendarIcon className="h-3 w-3" /> Due Date</p><p className="text-xs font-medium">{selectedTask.dueDate || 'Not set'}</p></div>
-                  <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500 flex items-center gap-1"><ChartBarIcon className="h-3 w-3" /> Status</p><p className={`text-xs font-semibold ${selectedTask.status === 'COMPLETED' ? 'text-green-600' : selectedTask.status === 'IN_PROGRESS' ? 'text-blue-600' : 'text-amber-600'}`}>{selectedTask.status || 'PENDING'}</p></div>
-                </div>
-                
-                {selectedTask.description && (
-                  <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500">Description</p><p className="text-xs text-gray-600">{selectedTask.description}</p></div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500">Target</p><p className="text-xs font-medium">{selectedTask.target || '100'}%</p></div>
-                  <div className="bg-gray-50 p-2 rounded"><p className="text-[10px] text-gray-500">Progress</p><div className="flex items-center gap-1"><div className="flex-1 h-1 bg-gray-200 rounded-full"><div className="h-1 bg-green-500 rounded-full" style={{ width: `${selectedTask.progress || 0}%` }}></div></div><span className="text-[11px] font-medium">{selectedTask.progress || 0}%</span></div></div>
-                </div>
-                
-                <div className="bg-blue-50 p-2 rounded"><p className="text-[10px] text-blue-600 flex items-center gap-1"><CheckCircleIcon className="h-3 w-3" /> Achievement</p><p className="text-xs text-gray-700">{selectedTask.achievement || 'Not Started'}</p></div>
-                
-                <button onClick={() => setShowCloseConfirm(true)} className="w-full py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-red-100 hover:text-red-600 transition-all text-xs font-medium">
-                  Close
-                </button>
+              <div className="bg-light p-3 rounded-3 mb-4">
+                <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Description</div>
+                <p className="small text-dark mb-0">{selectedTask.description || 'No description provided.'}</p>
               </div>
-            </motion.div>
-          </div>
+              
+              <div className="d-flex align-items-center justify-content-between mb-2 mt-4">
+                <span className="small fw-bold text-dark">Progress</span>
+                <span className="small fw-bold text-primary">{selectedTask.progress || 0}%</span>
+              </div>
+              <div className="progress mb-4" style={{ height: '8px', borderRadius: '4px' }}>
+                <div className="progress-bar bg-primary" role="progressbar" style={{ width: `${selectedTask.progress || 0}%` }} aria-valuenow={selectedTask.progress || 0} aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              
+              <Button variant="light" className="w-100 py-3 fw-bold rounded-3 border-0 mt-2 bg-hover-danger-soft transition-all text-secondary text-hover-danger" onClick={() => setShowCloseConfirm(true)}>
+                Close Details
+              </Button>
+            </Modal.Body>
+          </>
         )}
-      </AnimatePresence>
+      </Modal>
 
-      {/* Close Confirmation Modal */}
-      <AnimatePresence>
-        {showCloseConfirm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4" onClick={() => setShowCloseConfirm(false)}>
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-xl shadow-xl max-w-xs w-full p-4 text-center" onClick={(e) => e.stopPropagation()}>
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <ExclamationTriangleIcon className="h-5 w-5 text-red-600" />
-              </div>
-              <h3 className="text-sm font-semibold mb-1">Close Task Details?</h3>
-              <p className="text-xs text-gray-500 mb-3">Are you sure you want to close?</p>
-              <div className="flex gap-2">
-                <button onClick={() => setShowCloseConfirm(false)} className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-xs hover:bg-gray-50">Cancel</button>
-                <button onClick={() => { setShowCloseConfirm(false); setShowDetailsModal(false); }} className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs hover:bg-red-700">Yes, Close</button>
-              </div>
-            </motion.div>
+      {/* Confirmation Modal */}
+      <Modal show={showCloseConfirm} onHide={() => setShowCloseConfirm(false)} centered size="sm">
+        <Modal.Body className="p-4 text-center">
+          <div className="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
+            <ExclamationTriangleIcon style={{ width: '2rem', height: '2rem' }} className="text-danger" />
           </div>
-        )}
-      </AnimatePresence>
+          <h6 className="fw-bold mb-1">Exit Without Saving?</h6>
+          <p className="small text-muted mb-4">Are you sure you want to close this?</p>
+          <div className="d-flex gap-2">
+            <Button variant="light" className="flex-grow-1 small py-2 rounded-3 border fw-semibold" onClick={() => setShowCloseConfirm(false)}>Stay</Button>
+            <Button variant="danger" className="flex-grow-1 small py-2 rounded-3 fw-semibold shadow-sm" onClick={() => { setShowCloseConfirm(false); setShowDetailsModal(false); }}>Exit</Button>
+          </div>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };

@@ -9,35 +9,40 @@ const Layout = ({ user, onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
-
-      {/* Fixed Header */}
-      <Header
-        setSidebarOpen={setSidebarOpen}
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed}
-        user={user}
-        onLogout={onLogout}
-      />
-
-      <div className="flex flex-1 overflow-hidden relative">
+    <div className="d-flex flex-column vh-100 overflow-hidden" style={{ backgroundColor: '#f8fafc' }}>
+      <div className="d-flex flex-grow-1 overflow-hidden position-relative">
         {/* Sidebar */}
         <Sidebar
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
           user={user}
           onLogout={onLogout}
         />
 
-        {/* Main Content Area */}
+        {/* Content Column */}
         <div
-          className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'
-            }`}
+          className="d-flex flex-column flex-grow-1 overflow-hidden transition-all"
+          style={{ 
+            marginLeft: 0,
+            transition: 'all 0.3s ease-in-out',
+            paddingLeft: window.innerWidth >= 1024 ? (isCollapsed ? '80px' : '256px') : 0
+          }}
         >
-          <main className="flex-1 overflow-y-auto bg-gray-50 p-4 lg:p-8">
+          {/* Header (Now inside content column to prevent overlap) */}
+          <Header
+            setSidebarOpen={setSidebarOpen}
+            isCollapsed={isCollapsed}
+            setIsCollapsed={setIsCollapsed}
+            user={user}
+            onLogout={onLogout}
+          />
+
+          <main className="flex-grow-1 overflow-auto p-3 p-lg-4" style={{ backgroundColor: '#f8fafc' }}>
             <Outlet />
           </main>
+
           <Footer
             user={user}
             onLogout={onLogout}

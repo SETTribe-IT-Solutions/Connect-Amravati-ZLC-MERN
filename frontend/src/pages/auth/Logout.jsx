@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { ArrowRightOnRectangleIcon, XMarkIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { Modal, Button, Spinner, Stack, Badge } from 'react-bootstrap';
+import { 
+  ArrowRightOnRectangleIcon, 
+  XMarkIcon, 
+  CheckCircleIcon,
+  ClockIcon,
+  ExclamationTriangleIcon
+} from '@heroicons/react/24/outline';
 
 const Logout = ({ onLogout, onClose }) => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -7,114 +14,108 @@ const Logout = ({ onLogout, onClose }) => {
 
   const handleLogout = () => {
     setIsProcessing(true);
-    
-    // Simulate logout process
     setTimeout(() => {
       setIsProcessing(false);
       setIsSuccess(true);
-      
-      // Redirect after success
       setTimeout(() => {
-        if (onLogout) {
-          onLogout();
-        }
+        if (onLogout) onLogout();
       }, 1500);
     }, 1500);
   };
 
-  // Success view
-  if (isSuccess) {
-    return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4">
-        <div className="bg-white rounded-xl max-w-md w-full p-8 text-center">
-          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircleIcon className="h-8 w-8 text-white" />
-          </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Logged Out Successfully!</h3>
-          <p className="text-sm text-gray-600">Redirecting to login page...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Processing view
-  if (isProcessing) {
-    return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4">
-        <div className="bg-white rounded-xl max-w-md w-full p-8 text-center">
-          <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Logging out...</h3>
-          <p className="text-sm text-gray-600">Please wait</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Confirm view
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4">
-      <div className="bg-white rounded-xl max-w-lg w-full overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <ArrowRightOnRectangleIcon className="h-6 w-6" />
-              <h2 className="text-xl font-bold">Ready to Leave?</h2>
-            </div>
-            <button 
-              onClick={onClose} 
-              className="hover:bg-white/20 p-1 rounded-lg transition-colors"
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
+    <Modal 
+      show={true} 
+      onHide={onClose} 
+      centered 
+      backdrop="static" 
+      keyboard={false}
+      className="logout-modal"
+    >
+      {isSuccess ? (
+        <Modal.Body className="p-5 text-center">
+          <div className="bg-success bg-opacity-10 p-4 rounded-circle d-inline-flex mb-4">
+            <CheckCircleIcon style={{ width: '3rem' }} className="text-success" />
           </div>
-          <p className="text-red-100 text-sm mt-2">We'll save your progress</p>
-        </div>
-        
-        {/* Body */}
-        <div className="p-6">
-          <div className="bg-blue-50 p-4 rounded-lg mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="bg-blue-100 p-2 rounded-lg">
-                <span className="text-blue-600 font-bold">2h 30m</span>
+          <h3 className="fw-bold text-dark mb-2">Logged Out Successfully!</h3>
+          <p className="text-secondary mb-0">Redirecting to login page...</p>
+        </Modal.Body>
+      ) : isProcessing ? (
+        <Modal.Body className="p-5 text-center">
+          <Spinner animation="border" variant="primary" style={{ width: '3.5rem', height: '3.5rem' }} className="mb-4" />
+          <h3 className="fw-bold text-dark mb-2">Logging out...</h3>
+          <p className="text-secondary mb-0">Please wait, clearing your session...</p>
+        </Modal.Body>
+      ) : (
+        <>
+          <Modal.Header className="bg-primary text-white border-0 p-4">
+            <div className="d-flex align-items-center gap-3 w-100">
+              <div className="p-2 bg-white bg-opacity-20 rounded-3">
+                <ArrowRightOnRectangleIcon style={{ width: '1.5rem' }} className="text-white" />
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Session Duration</p>
-                <p className="text-xs text-gray-500">Logged in at 09:30 AM</p>
-              </div>
+              <Modal.Title className="fw-bold h5 mb-0">Ready to Leave?</Modal.Title>
+              <Button 
+                variant="link" 
+                onClick={onClose} 
+                className="text-white p-0 ms-auto border-0 shadow-none"
+              >
+                <XMarkIcon style={{ width: '1.5rem' }} />
+              </Button>
             </div>
-          </div>
-
-          <p className="text-gray-600 mb-6">
-            Are you sure you want to logout? You have <span className="font-bold text-red-500">3 pending tasks</span>.
-          </p>
+          </Modal.Header>
           
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex-1 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all font-medium flex items-center justify-center"
-            >
-              <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
-              Logout
-            </button>
-          </div>
-        </div>
+          <Modal.Body className="p-4 p-md-5">
+            <div className="bg-light p-4 rounded-4 mb-4 border border-light-subtle">
+              <div className="d-flex align-items-center gap-3">
+                <div className="p-3 bg-white rounded-3 shadow-sm text-primary fw-bold">
+                  2h 30m
+                </div>
+                <div>
+                  <p className="small text-secondary fw-semibold mb-0">Session Duration</p>
+                  <p className="text-muted mb-0" style={{ fontSize: '0.75rem' }}>
+                    <ClockIcon style={{ width: '0.8rem' }} className="me-1" />
+                    Logged in at 09:30 AM
+                  </p>
+                </div>
+              </div>
+            </div>
 
-        {/* Footer */}
-        <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
-          <p className="text-xs text-gray-500 text-center">
-            Session will expire automatically after 4 hours of inactivity
-          </p>
-        </div>
-      </div>
-    </div>
+            <div className="mb-5">
+              <p className="text-secondary lead mb-2">Are you sure you want to logout?</p>
+              <div className="d-flex align-items-center gap-2 text-danger small fw-bold">
+                <ExclamationTriangleIcon style={{ width: '1rem' }} />
+                <span>You have 3 pending tasks for today.</span>
+              </div>
+            </div>
+            
+            <Stack direction="horizontal" gap={3}>
+              <Button
+                variant="light"
+                onClick={onClose}
+                className="flex-grow-1 py-2 fw-bold rounded-3 border bg-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleLogout}
+                className="flex-grow-1 py-2 fw-bold rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', border: 'none' }}
+              >
+                <ArrowRightOnRectangleIcon style={{ width: '1.25rem' }} />
+                Logout
+              </Button>
+            </Stack>
+          </Modal.Body>
+
+          <Modal.Footer className="bg-light border-0 py-3 justify-content-center">
+            <p className="small text-muted mb-0" style={{ fontSize: '0.7rem' }}>
+              Your session will automatically expire after 4 hours of inactivity.
+            </p>
+          </Modal.Footer>
+        </>
+      )}
+    </Modal>
   );
 };
 

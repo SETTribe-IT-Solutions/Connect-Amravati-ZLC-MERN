@@ -1,31 +1,33 @@
 import React, { useState } from 'react';
-
 import { NavLink } from 'react-router-dom';
-import {
-  HomeIcon,
-  ClipboardDocumentListIcon,
-  ChatBubbleLeftRightIcon,
-  ChartBarIcon,
-  UserGroupIcon,
-  HeartIcon,
-  KeyIcon,
-  ArrowRightOnRectangleIcon,
-  ExclamationTriangleIcon
+import { Modal, Button } from 'react-bootstrap';
+import { 
+  HomeIcon, 
+  ClipboardDocumentListIcon, 
+  ChatBubbleLeftRightIcon, 
+  ChartBarIcon, 
+  UserGroupIcon, 
+  HeartIcon, 
+  KeyIcon, 
+  ArrowRightOnRectangleIcon, 
+  ExclamationTriangleIcon,
+  Bars3Icon
 } from '@heroicons/react/24/outline';
+import { GiIndiaGate } from 'react-icons/gi';
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) => {
+const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed, user, onLogout }) => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const role = user?.role || localStorage.getItem('role') || 'user';
   const roleLower = role.toLowerCase();
 
   const allNavItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, color: 'from-blue-500 to-blue-600' },
-    { name: 'Tasks', href: '/tasks', icon: ClipboardDocumentListIcon, color: 'from-blue-500 to-blue-600' },
-    { name: 'Communications', href: '/communications', icon: ChatBubbleLeftRightIcon, color: 'from-blue-500 to-blue-600' },
-    { name: 'Reports', href: '/reports', icon: ChartBarIcon, color: 'from-blue-500 to-blue-600' },
-    { name: 'Users', href: '/users', icon: UserGroupIcon, color: 'from-blue-500 to-blue-600' },
-    { name: 'Appreciation', href: '/appreciation', icon: HeartIcon, color: 'from-blue-500 to-blue-600' },
+    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, color: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)' },
+    { name: 'Tasks', href: '/tasks', icon: ClipboardDocumentListIcon, color: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)' },
+    { name: 'Communications', href: '/communications', icon: ChatBubbleLeftRightIcon, color: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)' },
+    { name: 'Reports', href: '/reports', icon: ChartBarIcon, color: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)' },
+    { name: 'Users', href: '/users', icon: UserGroupIcon, color: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)' },
+    { name: 'Appreciation', href: '/appreciation', icon: HeartIcon, color: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)' },
   ];
 
   let navigation = [];
@@ -38,114 +40,160 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) =
     navigation = allNavItems.filter(item => item.href !== '/users');
   }
 
-  const sidebarWidth = isCollapsed ? 'lg:w-20' : 'lg:w-64';
+  const sidebarWidth = isCollapsed ? '80px' : '256px';
 
   return (
     <>
       {/* Mobile backdrop */}
-      <div
-        className={`fixed inset-0 bg-gray-600 bg-opacity-75 z-[90] lg:hidden transition-opacity duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
-        onClick={() => setSidebarOpen(false)}
-      />
+      {sidebarOpen && (
+        <div
+          className="position-fixed inset-0 bg-dark bg-opacity-50 z-index-mobile-backdrop d-lg-none transition-all"
+          style={{ zIndex: 1040, inset: 0 }}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
       {/* Sidebar */}
       <div
-        className={`fixed lg:absolute left-0 top-0 lg:top-0 h-full lg:h-full bg-white border-r border-gray-100 z-[100] lg:z-30 transition-all duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-          } ${sidebarWidth} w-64 flex flex-col`}
+        className="position-fixed bg-white border-end z-index-sidebar transition-all d-flex flex-column shadow-sm"
+        style={{
+          width: sidebarWidth,
+          left: sidebarOpen ? '0' : (window.innerWidth < 1024 ? '-256px' : '0'),
+          top: 0,
+          bottom: 0,
+          zIndex: 1050,
+          transition: 'all 0.3s ease-in-out',
+        }}
       >
-        {/* Logo Section - Hidden on collapsed desktop, visible on mobile */}
-        <div className={`h-16 flex items-center justify-center border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-600 lg:hidden`}>
-          <h1 className="text-xl font-bold text-white">Amravati Connect</h1>
+        {/* Tricolor Top Bar */}
+        <div style={{ height: '4px', width: '100%', background: 'linear-gradient(90deg, #FF9933 0%, #FFFFFF 50%, #138808 100%)' }}></div>
+
+        {/* Sidebar Toggle & Logo Section */}
+        <div className="d-flex align-items-center border-bottom px-3 bg-white" style={{ height: '60px', minHeight: '60px' }}>
+          <div className={`d-flex align-items-center w-100 ${isCollapsed ? 'justify-content-center' : 'justify-content-between'}`}>
+            {!isCollapsed && (
+              <div className="d-flex align-items-center gap-2 overflow-hidden">
+                <div className="bg-primary bg-opacity-10 p-1 rounded">
+                   <GiIndiaGate className="text-primary" style={{ fontSize: '1.2rem' }} />
+                </div>
+                <span className="fw-bold text-dark text-truncate" style={{ fontSize: '0.9rem', letterSpacing: '0.5px' }}>
+                  AMRAVATI
+                </span>
+              </div>
+            )}
+            
+            {/* Toggle Button for Desktop (Collapse) and Mobile (Close) */}
+            <button
+              onClick={() => {
+                if (window.innerWidth < 1024) {
+                  setSidebarOpen(false);
+                } else {
+                  if (setIsCollapsed) setIsCollapsed(!isCollapsed);
+                }
+              }}
+              className="btn btn-light border-0 p-2 rounded-circle shadow-sm d-flex align-items-center justify-content-center hover-bg-primary-soft transition-all"
+              style={{ width: '32px', height: '32px' }}
+              title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            >
+               <Bars3Icon style={{ width: '1.2rem', height: '1.2rem' }} className="text-primary" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-6 scrollbar-thin scrollbar-thumb-gray-200">
-          <ul className="space-y-2 px-3">
+        <nav className="flex-grow-1 overflow-auto py-4 custom-scrollbar">
+          <ul className="list-unstyled px-3 m-0">
             {navigation.map((item) => (
-              <li key={item.name}>
+              <li key={item.name} className="mb-2">
                 <NavLink
                   to={item.href}
                   className={({ isActive }) =>
-                    `flex items-center ${isCollapsed ? 'lg:justify-center' : ''} px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group ${isActive
-                      ? `bg-gradient-to-r ${item.color} text-white shadow-md`
-                      : 'text-gray-700 hover:bg-gray-50'
+                    `d-flex align-items-center text-decoration-none rounded-3 px-3 py-2 transition-all ${
+                      isActive ? 'text-white shadow-sm' : 'text-secondary bg-hover-light'
                     }`
                   }
+                  style={({ isActive }) => ({
+                    background: isActive ? item.color : 'transparent',
+                    justifyContent: isCollapsed ? 'center' : 'flex-start',
+                    fontWeight: '500'
+                  })}
                   title={isCollapsed ? item.name : ''}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <item.icon className={`h-5 w-5 ${isCollapsed ? 'lg:m-0' : 'mr-3'} transition-transform group-hover:scale-110 flex-shrink-0`} />
-                  <span className={`transition-opacity duration-300 ${isCollapsed ? 'lg:hidden opacity-0' : 'opacity-100'}`}>
-                    {item.name}
-                  </span>
-
+                  <item.icon style={{ width: '1.25rem', height: '1.25rem', marginRight: isCollapsed ? '0' : '0.75rem' }} />
+                  {!isCollapsed && <span>{item.name}</span>}
                 </NavLink>
               </li>
             ))}
 
-            {/* Divider line */}
-            <li className="border-t border-gray-100 my-4"></li>
+            <li className="my-3 border-top opacity-50"></li>
 
-            {/* Change Password Option */}
-            <li>
+            <li className="mb-2">
               <NavLink
                 to="/change-password"
                 className={({ isActive }) =>
-                  `flex items-center ${isCollapsed ? 'lg:justify-center' : ''} px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group ${isActive
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
-                    : 'text-gray-700 hover:bg-gray-50'
+                  `d-flex align-items-center text-decoration-none rounded-3 px-3 py-2 transition-all ${
+                    isActive ? 'text-white shadow-sm bg-primary' : 'text-secondary bg-hover-light'
                   }`
                 }
+                style={{
+                  justifyContent: isCollapsed ? 'center' : 'flex-start',
+                  fontWeight: '500'
+                }}
                 title={isCollapsed ? 'Change Password' : ''}
                 onClick={() => setSidebarOpen(false)}
               >
-                <KeyIcon className={`h-5 w-5 ${isCollapsed ? 'lg:m-0' : 'mr-3'} transition-transform group-hover:scale-110 flex-shrink-0`} />
-                <span className={`transition-opacity duration-300 ${isCollapsed ? 'lg:hidden opacity-0' : 'opacity-100'}`}>
-                  Change Password
-                </span>
+                <KeyIcon style={{ width: '1.25rem', height: '1.25rem', marginRight: isCollapsed ? '0' : '0.75rem' }} />
+                {!isCollapsed && <span>Change Password</span>}
               </NavLink>
             </li>
 
-            {/* Logout Button */}
             <li>
               <button
                 onClick={() => {
                   setSidebarOpen(false);
                   setShowLogoutModal(true);
                 }}
-                className={`w-full flex items-center ${isCollapsed ? 'lg:justify-center' : ''} px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group text-red-600 hover:bg-red-50`}
+                className="btn w-100 d-flex align-items-center rounded-3 px-3 py-2 transition-all text-danger bg-hover-danger-soft border-0"
+                style={{
+                  justifyContent: isCollapsed ? 'center' : 'flex-start',
+                  fontWeight: '500'
+                }}
                 title={isCollapsed ? 'Logout' : ''}
               >
-                <ArrowRightOnRectangleIcon className={`h-5 w-5 ${isCollapsed ? 'lg:m-0' : 'mr-3'} transition-transform group-hover:scale-110 flex-shrink-0`} />
-                <span className={`transition-opacity duration-300 ${isCollapsed ? 'lg:hidden opacity-0' : 'opacity-100'}`}>
-                  Logout
-                </span>
+                <ArrowRightOnRectangleIcon style={{ width: '1.25rem', height: '1.25rem', marginRight: isCollapsed ? '0' : '0.75rem' }} />
+                {!isCollapsed && <span>Logout</span>}
               </button>
             </li>
           </ul>
         </nav>
 
         {/* User Info */}
-        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-          <div className={`flex items-center ${isCollapsed ? 'lg:justify-center' : ''}`}>
+        <div className="p-3 border-top bg-light bg-opacity-50">
+          <div className={`d-flex align-items-center ${isCollapsed ? 'justify-content-center' : ''}`}>
             <div className="flex-shrink-0">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md ring-2 ring-white">
+              <div className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
+                  fontSize: '0.875rem'
+                }}>
                 {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'CO'}
               </div>
             </div>
             {!isCollapsed && (
-              <div className="ml-3 overflow-hidden flex flex-col">
-                <p className="text-sm font-bold text-gray-900 truncate">
+              <div className="ms-3 overflow-hidden d-flex flex-column">
+                <p className="small fw-bold text-dark mb-0 text-truncate" style={{ maxWidth: '140px' }}>
                   {user?.name || 'Collector Office'}
                 </p>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-md truncate uppercase tracking-wider">
+                <div className="mt-1">
+                  <span className="badge bg-primary bg-opacity-10 text-primary fw-bold p-1 px-2 rounded-pill uppercase tracking-wider" style={{ fontSize: '0.65rem' }}>
                     {user?.role ? user.role.replace(/_/g, ' ') : 'USER'}
                   </span>
                 </div>
-                <p className="text-[11px] text-gray-500 font-medium truncate flex items-center gap-1 mt-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                <p className="text-muted mt-1 mb-0 text-truncate" style={{ fontSize: '0.65rem', fontWeight: '500' }}>
+                  <span className="d-inline-block bg-success rounded-circle me-1" style={{ width: '6px', height: '6px' }}></span>
                   {user?.village && user.village !== 'ALL VILLAGES' ? user.village + ', ' : ''}{user?.taluka && user.taluka !== 'ALL TALUKAS' ? user.taluka : (user?.district || 'Amravati')}
                 </p>
               </div>
@@ -154,39 +202,28 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, user, onLogout }) =
         </div>
       </div>
 
-      {/* Custom Logout Confirmation Modal */}
-      {showLogoutModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity">
-          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 transform transition-all scale-100">
-            <div className="flex flex-col items-center text-center">
-              <div className="bg-red-100 p-3 rounded-full mb-4">
-                <ExclamationTriangleIcon className="h-8 w-8 text-red-600" />
-              </div>
-              <p className="text-sm text-gray-500 mb-6">
-                Are you sure you want to logout ?
-              </p>
-              <div className="flex w-full space-x-3">
-                <button
-                  onClick={() => setShowLogoutModal(false)}
-                  className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-semibold rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    setShowLogoutModal(false);
-                    if (onLogout) onLogout();
-                  }}
-                  className="flex-1 flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors"
-                >
-                  <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
-                  Logout
-                </button>
-              </div>
-            </div>
+      {/* Logout Modal */}
+      <Modal show={showLogoutModal} onHide={() => setShowLogoutModal(false)} centered className="fade">
+        <Modal.Body className="p-4 text-center">
+          <div className="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
+            <ExclamationTriangleIcon style={{ width: '2.5rem', height: '2.5rem' }} className="text-danger" />
           </div>
-        </div>
-      )}
+          <h5 className="fw-bold mb-3">Confirm Logout</h5>
+          <p className="text-muted mb-4">Are you sure you want to log out of your account?</p>
+          <div className="d-flex gap-3">
+            <Button variant="light" className="flex-grow-1 py-2 fw-semibold rounded-3" onClick={() => setShowLogoutModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" className="flex-grow-1 py-2 fw-semibold rounded-3 d-flex align-items-center justify-content-center gap-2 shadow-sm" onClick={() => {
+              setShowLogoutModal(false);
+              if (onLogout) onLogout();
+            }}>
+              <ArrowRightOnRectangleIcon style={{ width: '1.15rem', height: '1.15rem' }} />
+              Logout
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
     </>
   );
 };

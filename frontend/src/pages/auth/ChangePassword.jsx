@@ -7,13 +7,11 @@ import {
   EyeIcon,
   EyeSlashIcon,
   ShieldCheckIcon,
-  DevicePhoneMobileIcon,
   ArrowPathIcon,
-  EnvelopeIcon,
-  PhoneIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
+import { Container, Card, Form, Button, ProgressBar, Badge, Spinner, Stack } from 'react-bootstrap';
 
 const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
   const navigate = useNavigate();
@@ -21,10 +19,7 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: '',
-    otp: '',
-    email: '',
-    phone: ''
+    confirmPassword: ''
   });
   
   const [showPasswords, setShowPasswords] = useState({
@@ -48,354 +43,262 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
     setPasswordStrength(strength);
   };
 
-  const getStrengthText = () => {
-    if (passwordStrength <= 2) return { text: 'Weak', color: 'text-red-500', bg: 'bg-red-500', width: '20%' };
-    if (passwordStrength <= 3) return { text: 'Fair', color: 'text-orange-500', bg: 'bg-orange-500', width: '40%' };
-    if (passwordStrength <= 4) return { text: 'Good', color: 'text-yellow-500', bg: 'bg-yellow-500', width: '60%' };
-    if (passwordStrength <= 5) return { text: 'Strong', color: 'text-green-500', bg: 'bg-green-500', width: '80%' };
-    return { text: 'Very Strong', color: 'text-emerald-500', bg: 'bg-emerald-500', width: '100%' };
+  const getStrengthData = () => {
+    if (passwordStrength <= 2) return { text: 'Weak', variant: 'danger', value: 20 };
+    if (passwordStrength <= 3) return { text: 'Fair', variant: 'warning', value: 40 };
+    if (passwordStrength <= 4) return { text: 'Good', variant: 'info', value: 70 };
+    return { text: 'Strong', variant: 'success', value: 100 };
   };
 
+  const strength = getStrengthData();
 
-  // Validate form
   const validateForm = () => {
     const newErrors = {};
-
     if (step === 1) {
       if (!formData.currentPassword) {
         newErrors.currentPassword = 'Current password is required';
       }
     }
-
     if (step === 2) {
       if (!formData.newPassword) {
         newErrors.newPassword = 'New password is required';
       } else if (formData.newPassword.length < 8) {
         newErrors.newPassword = 'Password must be at least 8 characters';
-      } else if (passwordStrength < 3) {
-        newErrors.newPassword = 'Password is too weak';
       }
-
       if (!formData.confirmPassword) {
         newErrors.confirmPassword = 'Please confirm your password';
       } else if (formData.newPassword !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Passwords do not match';
       }
     }
-
     return newErrors;
   };
 
-  // Handle next step
   const handleNext = async () => {
     const newErrors = validateForm();
     if (Object.keys(newErrors).length === 0) {
       if (step === 1) {
-        // Verify current password on the backend
         if (onVerifyPassword) {
           setIsLoading(true);
           try {
             const isValid = await onVerifyPassword(formData.currentPassword);
-            if (isValid) {
-              setStep(2);
-            } else {
-              setErrors({ currentPassword: 'Current password is incorrect' });
-            }
+            if (isValid) setStep(2);
+            else setErrors({ currentPassword: 'Current password is incorrect' });
           } finally {
             setIsLoading(false);
           }
-        } else {
-          // Fallback if prop not provided
-          setStep(2);
-        }
+        } else setStep(2);
       } else if (step === 2) {
-        // Process password change via actual backend
         setIsLoading(true);
         try {
           if (onPasswordChange) {
             const success = await onPasswordChange(formData.currentPassword, formData.newPassword);
-            if (success) {
-              setStep(3);
-            } else {
-              // Error is handled by a toast in App.jsx
-            }
-          } else {
-            setStep(3); // Fallback if no handler provided
-          }
+            if (success) setStep(3);
+          } else setStep(3);
         } finally {
           setIsLoading(false);
         }
       }
-    } else {
-      setErrors(newErrors);
-    }
+    } else setErrors(newErrors);
   };
 
-
-
   return (
-    <div className="flex items-center justify-center h-full w-full">
+    <Container className="d-flex align-items-center justify-content-center py-5" style={{ minHeight: '80vh' }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        className="w-100"
+        style={{ maxWidth: '500px' }}
       >
-
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Change Password</h1>
-          <p className="text-gray-600">Reset your password</p>
+        <div className="text-center mb-5">
+          <h1 className="display-6 fw-bold text-dark mb-2 font-outfit">Change Password</h1>
+          <p className="text-secondary lead">Update your security credentials</p>
         </div>
 
-        {/* Tab Switcher - Moved to bottom */}
-        
-
-        {/* Main Card */}
-        <motion.div
-          layout
-          className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/20"
-        >
+        <Card className="border-0 shadow-lg rounded-4 overflow-hidden bg-white bg-opacity-75 backdrop-blur">
           <AnimatePresence mode="wait">
-            {/* Step 1: Verification */}
             {step === 1 && (
               <motion.div
                 key="step1"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="p-8"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="p-4 p-md-5"
               >
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <ShieldCheckIcon className="h-6 w-6 text-blue-600" />
+                <div className="d-flex align-items-center gap-3 mb-5">
+                  <div className="p-3 bg-primary bg-opacity-10 rounded-3">
+                    <ShieldCheckIcon style={{ width: '1.5rem' }} className="text-primary" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Verify Your Identity</h2>
-                    <p className="text-sm text-gray-500">
-                      Enter your current password to continue
-                    </p>
+                    <h5 className="fw-bold text-dark mb-0">Verify Identity</h5>
+                    <p className="small text-secondary mb-0">Enter current password to continue</p>
                   </div>
                 </div>
 
-                {/* Current Password Field */}
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Current Password
-                    </label>
-                    <div className="relative">
-                      <LockClosedIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                      <input
-                        type={showPasswords.current ? 'text' : 'password'}
-                        value={formData.currentPassword}
-                        onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 transition-all ${
-                          errors.currentPassword ? 'border-red-500' : 'border-gray-200'
-                        }`}
-                        placeholder="Enter current password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showPasswords.current ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                      </button>
-                    </div>
-                    {errors.currentPassword && (
-                      <p className="mt-1 text-xs text-red-600">{errors.currentPassword}</p>
-                    )}
+                <Form.Group className="mb-4">
+                  <Form.Label className="small fw-bold text-secondary text-uppercase mb-2">Current Password</Form.Label>
+                  <div className="position-relative">
+                    <LockClosedIcon 
+                      style={{ width: '1.25rem' }} 
+                      className="position-absolute top-50 translate-middle-y ms-3 text-muted" 
+                    />
+                    <Form.Control
+                      type={showPasswords.current ? 'text' : 'password'}
+                      value={formData.currentPassword}
+                      onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                      placeholder="Enter current password"
+                      className={`ps-5 py-3 rounded-3 border-2 shadow-none focus-border-primary ${errors.currentPassword ? 'border-danger' : ''}`}
+                    />
+                    <Button
+                      variant="link"
+                      className="position-absolute top-50 translate-middle-y end-0 me-2 text-muted p-2 border-0 shadow-none"
+                      onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                    >
+                      {showPasswords.current ? <EyeSlashIcon style={{ width: '1.25rem' }} /> : <EyeIcon style={{ width: '1.25rem' }} />}
+                    </Button>
                   </div>
-                </div>
+                  {errors.currentPassword && <p className="text-danger small mt-2 mb-0">{errors.currentPassword}</p>}
+                </Form.Group>
 
-                <div className="flex justify-end mt-8">
-                  <button
-                    onClick={handleNext}
+                <div className="d-flex justify-content-end mt-5">
+                  <Button 
+                    variant="primary" 
+                    onClick={handleNext} 
                     disabled={isLoading}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl font-medium disabled:opacity-50"
+                    className="px-5 py-3 fw-bold rounded-3 shadow-sm gradient-button-premium border-0"
                   >
-                    Continue
-                  </button>
+                    {isLoading ? <Spinner size="sm" /> : 'Continue'}
+                  </Button>
                 </div>
               </motion.div>
             )}
 
-            {/* Step 2: New Password */}
             {step === 2 && (
               <motion.div
                 key="step2"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="p-8"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="p-4 p-md-5"
               >
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <LockClosedIcon className="h-6 w-6 text-green-600" />
+                <div className="d-flex align-items-center gap-3 mb-5">
+                  <div className="p-3 bg-success bg-opacity-10 rounded-3">
+                    <LockClosedIcon style={{ width: '1.5rem' }} className="text-success" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Create New Password</h2>
-                    <p className="text-sm text-gray-500">Choose a strong password you haven't used before</p>
+                    <h5 className="fw-bold text-dark mb-0">Create New Password</h5>
+                    <p className="small text-secondary mb-0">Choose a strong, unique password</p>
                   </div>
                 </div>
 
-                <div className="space-y-6"> 
-                  {/* New Password */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      New Password
-                    </label>
-                    <div className="relative">
-                      <LockClosedIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                      <input
+                <Stack gap={4}>
+                  <Form.Group>
+                    <Form.Label className="small fw-bold text-secondary text-uppercase mb-2">New Password</Form.Label>
+                    <div className="position-relative">
+                      <LockClosedIcon style={{ width: '1.25rem' }} className="position-absolute top-50 translate-middle-y ms-3 text-muted" />
+                      <Form.Control
                         type={showPasswords.new ? 'text' : 'password'}
                         value={formData.newPassword}
                         onChange={(e) => {
                           setFormData({ ...formData, newPassword: e.target.value });
                           checkPasswordStrength(e.target.value);
                         }}
-                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
-                          errors.newPassword ? 'border-red-500' : 'border-gray-200'
-                        }`}
-                        placeholder="Enter new password"
+                        className={`ps-5 py-3 rounded-3 border-2 shadow-none focus-border-primary ${errors.newPassword ? 'border-danger' : ''}`}
                       />
-                      <button
-                        type="button"
+                      <Button
+                        variant="link"
+                        className="position-absolute top-50 translate-middle-y end-0 me-2 text-muted p-2 border-0 shadow-none"
                         onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
-                        {showPasswords.new ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                      </button>
+                        {showPasswords.new ? <EyeSlashIcon style={{ width: '1.25rem' }} /> : <EyeIcon style={{ width: '1.25rem' }} />}
+                      </Button>
                     </div>
-                    {errors.newPassword && (
-                      <p className="mt-1 text-xs text-red-600">{errors.newPassword}</p>
-                    )}
-                  </div>
+                    {errors.newPassword && <p className="text-danger small mt-2 mb-0">{errors.newPassword}</p>}
+                  </Form.Group>
 
-                  {/* Password Strength */}
                   {formData.newPassword && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-xs text-gray-500">Password strength:</span>
-                        <span className={`text-xs font-medium ${strength.color}`}>{strength.text}</span>
+                    <div className="p-3 bg-light rounded-3">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <span className="small text-secondary fw-bold">STRENGTH:</span>
+                        <Badge bg={strength.variant} className="text-uppercase">{strength.text}</Badge>
                       </div>
-                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: strength.width }}
-                          className={`h-full ${strength.bg}`}
-                        />
-                      </div>
+                      <ProgressBar 
+                        variant={strength.variant} 
+                        now={strength.value} 
+                        style={{ height: '6px' }} 
+                        className="bg-white"
+                      />
                     </div>
                   )}
 
-                  {/* Confirm Password */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Confirm Password
-                    </label>
-                    <div className="relative">
-                      <LockClosedIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                      <input
+                  <Form.Group>
+                    <Form.Label className="small fw-bold text-secondary text-uppercase mb-2">Confirm Password</Form.Label>
+                    <div className="position-relative">
+                      <LockClosedIcon style={{ width: '1.25rem' }} className="position-absolute top-50 translate-middle-y ms-3 text-muted" />
+                      <Form.Control
                         type={showPasswords.confirm ? 'text' : 'password'}
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 ${
-                          errors.confirmPassword ? 'border-red-500' : 'border-gray-200'
-                        }`}
-                        placeholder="Confirm new password"
+                        className={`ps-5 py-3 rounded-3 border-2 shadow-none focus-border-primary ${errors.confirmPassword ? 'border-danger' : ''}`}
                       />
-                      <button
-                        type="button"
+                      <Button
+                        variant="link"
+                        className="position-absolute top-50 translate-middle-y end-0 me-2 text-muted p-2 border-0 shadow-none"
                         onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
-                        {showPasswords.confirm ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                      </button>
+                        {showPasswords.confirm ? <EyeSlashIcon style={{ width: '1.25rem' }} /> : <EyeIcon style={{ width: '1.25rem' }} />}
+                      </Button>
                     </div>
-                    {errors.confirmPassword && (
-                      <p className="mt-1 text-xs text-red-600">{errors.confirmPassword}</p>
-                    )}
-                  </div>
+                    {errors.confirmPassword && <p className="text-danger small mt-2 mb-0">{errors.confirmPassword}</p>}
+                  </Form.Group>
+                </Stack>
 
-                  {/* Password Requirements */}
-                  <div className="bg-gray-50 p-4 rounded-xl">
-                    <p className="text-xs font-medium text-gray-700 mb-2">Password Requirements:</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { text: 'At least 8 characters', met: formData.newPassword.length >= 8 },
-                        { text: 'Uppercase letter', met: /[A-Z]/.test(formData.newPassword) },
-                        { text: 'Number', met: /[0-9]/.test(formData.newPassword) },
-                        { text: 'Special character', met: /[^A-Za-z0-9]/.test(formData.newPassword) }
-                      ].map((req, idx) => (
-                        <div key={idx} className="flex items-center text-xs">
-                          <CheckCircleIcon className={`h-3 w-3 mr-1 ${req.met ? 'text-green-500' : 'text-gray-300'}`} />
-                          <span className={req.met ? 'text-gray-700' : 'text-gray-400'}>{req.text}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-between mt-8">
-                  <button
+                <div className="d-flex justify-content-between mt-5 gap-3">
+                  <Button 
+                    variant="light" 
                     onClick={() => setStep(1)}
-                    className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all flex items-center"
+                    className="flex-grow-1 py-3 fw-bold rounded-3 border bg-white"
                   >
-                    <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                    Back
-                  </button>
-                  <button
-                    onClick={handleNext}
+                    <ArrowLeftIcon style={{ width: '1.1rem' }} className="me-2" /> Back
+                  </Button>
+                  <Button 
+                    variant="success" 
+                    onClick={handleNext} 
                     disabled={isLoading}
-                    className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg hover:shadow-xl font-medium disabled:opacity-50 flex items-center"
+                    className="flex-grow-1 py-3 fw-bold rounded-3 shadow-sm border-0"
+                    style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
                   >
-                    {isLoading ? (
-                      <>
-                        <ArrowPathIcon className="h-5 w-5 animate-spin mr-2" />
-                        Updating...
-                      </>
-                    ) : (
-                      'Update Password'
-                    )}
-                  </button>
+                    {isLoading ? <Spinner size="sm" /> : 'Update Password'}
+                  </Button>
                 </div>
               </motion.div>
             )}
 
-            {/* Step 3: Success */}
             {step === 3 && (
               <motion.div
                 key="step3"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="p-8 text-center"
+                className="p-5 text-center"
               >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', delay: 0.2 }}
-                  className="w-24 h-24 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl"
-                >
-                  <CheckCircleIcon className="h-12 w-12 text-white" />
-                </motion.div>
-
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Password Changed!</h2>
-                <p className="text-gray-600 mb-6">Your password has been updated successfully</p>
-
-                <button
+                <div className="bg-success bg-opacity-10 p-4 rounded-circle d-inline-flex mb-4">
+                  <CheckCircleIcon style={{ width: '4rem' }} className="text-success" />
+                </div>
+                <h3 className="fw-bold text-dark mb-2">Success!</h3>
+                <p className="text-secondary mb-5">Your password has been changed successfully.</p>
+                <Button
+                  variant="primary"
                   onClick={() => onClose ? onClose() : navigate('/dashboard')}
-                  className="w-full px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl font-medium"
+                  className="w-100 py-3 fw-bold rounded-3 shadow-sm gradient-button-premium border-0"
                 >
                   Go to Dashboard
-                </button>
+                </Button>
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
-
+        </Card>
       </motion.div>
-    </div>
+    </Container>
   );
 };
 
