@@ -12,6 +12,10 @@ import org.springframework.stereotype.Component;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.ResponseCookie;
+import org.springframework.web.util.WebUtils;
 
 @Component
 public class JwtUtils {
@@ -20,17 +24,59 @@ public class JwtUtils {
     @Value("${amravati.app.jwtSecret}")
     private String jwtSecret;
 
-    @Value("${amravati.app.jwtExpirationMs}")
+    @Value("${amravati.app.jwtExpirationMs:900000}")
     private int jwtExpirationMs;
 
-    public String generateJwtToken(Authentication authentication) {
+    @Value("${amravati.app.jwtCookieName:amravati-access}")
+    private String jwtAccessCookieName;
 
-        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+    @Value("${amravati.app.jwtRefreshCookieName:amravati-refresh}")
+    private String jwtRefreshCookieName;
 
+    public String getJwtFromCookies(HttpServletRequest request) {
+        Cookie cookie = WebUtils.getCookie(request, jwtAccessCookieName);
+        return (cookie != null) ? cookie.getValue() : null;
+    }
+
+    public String getRefreshJwtFromCookies(HttpServletRequest request) {
+        Cookie cookie = WebUtils.getCookie(request, jwtRefreshCookieName);
+        return (cookie != null) ? cookie.getValue() : null;
+    }
+
+    public ResponseCookie generateAccessCookie(UserDetailsImpl userPrincipal) {
+        String jwt = generateTokenFromUsername(userPrincipal.getEmail(), jwtExpirationMs);
+        return ResponseCookie.from(jwtAccessCookieName, jwt)
+                .path("/")
+                .maxAge(jwtExpirationMs / 1000)
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .build();
+    }
+
+    public ResponseCookie generateRefreshCookie(String refreshToken) {
+        return ResponseCookie.from(jwtRefreshCookieName, refreshToken)
+                .path("/")
+                .maxAge(24 * 60 * 60) // 24 hours
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .build();
+    }
+
+    public ResponseCookie getCleanAccessCookie() {
+        return ResponseCookie.from(jwtAccessCookieName, null).path("/").maxAge(0).build();
+    }
+
+    public ResponseCookie getCleanRefreshCookie() {
+        return ResponseCookie.from(jwtRefreshCookieName, null).path("/").maxAge(0).build();
+    }
+
+    public String generateTokenFromUsername(String email, int expirationMs) {
         return Jwts.builder()
-                .subject((userPrincipal.getEmail()))
+                .subject(email)
                 .issuedAt(new Date())
-                .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .expiration(new Date((new Date()).getTime() + expirationMs))
                 .signWith(key())
                 .compact();
     }

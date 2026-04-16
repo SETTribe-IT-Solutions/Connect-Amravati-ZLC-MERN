@@ -79,7 +79,7 @@ public class UsermanagementService {
     // ═══════════════════════════════════════════════════
  
     public List<UserResponse> getAllUsers(String requesterId) {
-        User requester = (requesterId != null) ? findUser(requesterId) : null;
+        User requester = (requesterId != null && !requesterId.equals("null")) ? findUser(requesterId) : null;
  
         return userRepository.findAll()
                 .stream()

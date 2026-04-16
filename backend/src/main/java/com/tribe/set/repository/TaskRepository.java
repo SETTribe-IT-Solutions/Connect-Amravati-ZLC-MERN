@@ -22,7 +22,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
            "JOIN FETCH t.createdBy " +
            "WHERE t.assignedTo = :assignedTo OR t.createdBy = :createdBy " +
            "ORDER BY t.createdAt DESC")
-    List<Task> findByAssignedToOrCreatedByOrderByCreatedAtDesc(@Param("assignedTo") User assignedTo, @Param("createdBy") User createdBy);
+    org.springframework.data.domain.Page<Task> findByAssignedToOrCreatedByOrderByCreatedAtDesc(@Param("assignedTo") User assignedTo, @Param("createdBy") User createdBy, org.springframework.data.domain.Pageable pageable);
 
     List<Task> findByStatusOrderByCreatedAtDesc(TaskStatus status);
 

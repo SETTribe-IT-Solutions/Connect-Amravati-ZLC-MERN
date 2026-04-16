@@ -15,7 +15,6 @@ import com.tribe.set.service.ReportService;
 
 @RestController
 @RequestMapping("/api/reports")
-@CrossOrigin("*")
 public class ReportController {
 
     @Autowired

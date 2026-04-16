@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -265,22 +267,20 @@ public class TaskService {
     // ═══════════════════════════════════════════════════
 
     @Transactional(readOnly = true)
-    public List<TaskResponse> getTasks(String finalUserId) {
+    public Page<TaskResponse> getTasks(String finalUserId, Pageable pageable) {
         User requester = findUser(finalUserId);
 
-        List<Task> tasks;
+        Page<Task> tasks;
 
         if (requester.getRole() == Role.SYSTEM_ADMINISTRATOR) {
             // Only system administrator sees all tasks
-            tasks = taskRepository.findAll();
+            tasks = taskRepository.findAll(pageable);
         } else {
             // Everyone else sees only tasks assigned to them or forwarded/created by them
-            tasks = taskRepository.findByAssignedToOrCreatedByOrderByCreatedAtDesc(requester, requester);
+            tasks = taskRepository.findByAssignedToOrCreatedByOrderByCreatedAtDesc(requester, requester, pageable);
         }
 
-        return tasks.stream()
-                .map(TaskResponse::from)
-                .collect(Collectors.toList());
+        return tasks.map(TaskResponse::from);
     }
 
     // ═══════════════════════════════════════════════════
@@ -445,7 +445,7 @@ public class TaskService {
     // ADD REMARK
     // ═══════════════════════════════════════════════════
 
-    public TaskRemark addRemark(Long taskId, String remarkText, String requesterId) {
+    public RemarkResponse addRemark(Long taskId, String remarkText, String requesterId) {
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
 
@@ -461,16 +461,18 @@ public class TaskService {
         remark.setAddedBy(requester);
         remark.setRemark(remarkText);
 
-        return remarkRepository.save(remark);
+        return RemarkResponse.from(remarkRepository.save(remark));
     }
 
     // ═══════════════════════════════════════════════════
     // GET REMARKS
     // ═══════════════════════════════════════════════════
 
-    public List<TaskRemark> getRemarks(Long taskId) {
+    public List<RemarkResponse> getRemarks(Long taskId) {
         Task task = findTask(taskId);
-        return remarkRepository.findByTaskOrderByCreatedAtDesc(task);
+        return remarkRepository.findByTaskOrderByCreatedAtDesc(task).stream()
+                .map(RemarkResponse::from)
+                .collect(Collectors.toList());
     }
 
     // ═══════════════════════════════════════════════════

@@ -14,19 +14,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.multipart.MultipartFile;
 import com.tribe.set.dto.CreateAnnouncementRequest;
-import com.tribe.set.entity.Announcement;
 import com.tribe.set.service.AnnouncementService;
 import com.tribe.set.service.AnnouncementService.AnnouncementDTO;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/announcements")
-@CrossOrigin("*")
 public class AnnouncementController {
 
     private final AnnouncementService announcementService;
@@ -37,28 +34,33 @@ public class AnnouncementController {
     }
 
     @PostMapping(value = "/create", consumes = { "multipart/form-data" })
-    public ResponseEntity<Announcement> createAnnouncement(
+    @PreAuthorize("hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
+    public ResponseEntity<AnnouncementDTO> createAnnouncement(
             @RequestPart("announcement") @Valid CreateAnnouncementRequest request,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         return ResponseEntity.ok(announcementService.createAnnouncement(request, file));
     }
 
     @GetMapping("/list")
+    @PreAuthorize("authenticated")
     public ResponseEntity<List<AnnouncementDTO>> getAnnouncements(@RequestParam(name = "userId") String userId) {
         return ResponseEntity.ok(announcementService.getAnnouncementsForUser(userId));
     }
 
     @GetMapping("/sent")
+    @PreAuthorize("hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<List<AnnouncementDTO>> getSentAnnouncements(@RequestParam(name = "userId") String userId) {
         return ResponseEntity.ok(announcementService.getSentAnnouncements(userId));
     }
 
     @GetMapping("/{id}/acknowledgments")
+    @PreAuthorize("hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<List<AnnouncementService.AcknowledgmentDetailDTO>> getAcknowledgmentDetails(@PathVariable(name = "id") Long id) {
         return ResponseEntity.ok(announcementService.getAcknowledgmentDetails(id));
     }
 
     @PostMapping("/{id}/acknowledge")
+    @PreAuthorize("authenticated")
     public ResponseEntity<String> acknowledgeAnnouncement(
             @PathVariable(name = "id") Long id,
             @RequestParam(name = "userId") String userId) {
@@ -67,7 +69,8 @@ public class AnnouncementController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Announcement> updateAnnouncement(
+    @PreAuthorize("hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
+    public ResponseEntity<AnnouncementDTO> updateAnnouncement(
             @PathVariable(name = "id") Long id,
             @RequestParam(name = "userId") String userId,
             @RequestBody UpdateRequest request) {
@@ -75,6 +78,7 @@ public class AnnouncementController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<String> deleteAnnouncement(
             @PathVariable(name = "id") Long id,
             @RequestParam(name = "userId") String userId) {

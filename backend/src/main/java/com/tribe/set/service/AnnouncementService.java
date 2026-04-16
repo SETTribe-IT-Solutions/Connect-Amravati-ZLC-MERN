@@ -41,7 +41,7 @@ public class AnnouncementService {
     }
 
     @Transactional
-    public Announcement createAnnouncement(CreateAnnouncementRequest request, MultipartFile file) {
+    public AnnouncementDTO createAnnouncement(CreateAnnouncementRequest request, MultipartFile file) {
         User creator = userRepository.findByUserID(request.getRequesterId())
                 .orElseThrow(() -> new RuntimeException("Creator not found"));
 
@@ -102,7 +102,8 @@ public class AnnouncementService {
             }
         }
         
-        return announcementRepository.save(announcement);
+        Announcement savedAnnouncement = announcementRepository.save(announcement);
+        return new AnnouncementDTO(savedAnnouncement, false, 0);
     }
 
     public List<AnnouncementDTO> getAnnouncementsForUser(String userId) {
@@ -150,7 +151,7 @@ public class AnnouncementService {
     }
 
     @Transactional
-    public Announcement updateAnnouncement(Long announcementId, String userId, String title, String message) {
+    public AnnouncementDTO updateAnnouncement(Long announcementId, String userId, String title, String message) {
         Announcement announcement = announcementRepository.findById(announcementId)
                 .orElseThrow(() -> new RuntimeException("Announcement not found"));
                 
@@ -160,7 +161,12 @@ public class AnnouncementService {
         
         announcement.setTitle(title);
         announcement.setMessage(message);
-        return announcementRepository.save(announcement);
+        Announcement updated = announcementRepository.save(announcement);
+        // We know it's acknowledged by creator (they updated it), but usually creator doesn't acknowledge their own in the same way.
+        // We check if an ack exists or just return 0/false for simplicity in update response as per current logic.
+        boolean acknowledged = acknowledgmentRepository.existsByAnnouncementAndUser(updated, updated.getCreatedBy());
+        long count = acknowledgmentRepository.countByAnnouncement(updated);
+        return new AnnouncementDTO(updated, acknowledged, count);
     }
 
     @Transactional

@@ -11,6 +11,8 @@ import com.tribe.set.entity.NotificationType;
 import com.tribe.set.entity.User;
 import com.tribe.set.repository.NotificationRepository;
 import com.tribe.set.repository.UserRepository;
+import com.tribe.set.dto.NotificationResponse;
+import java.util.stream.Collectors;
 
 @Service
 public class NotificationServices {
@@ -51,27 +53,33 @@ public class NotificationServices {
         send(user, title, message, type, taskId);
     }
 
-    public List<Notification> getMyNotifications(String userId) {
+    public List<NotificationResponse> getMyNotifications(String userId) {
         User user = findUser(userId);
-        return notificationRepository.findByUserOrderByCreatedAtDesc(user);
+        return notificationRepository.findByUserOrderByCreatedAtDesc(user).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     /**
      * Get active notifications: unread + read within 15 days
      */
-    public List<Notification> getActiveNotifications(String userId) {
+    public List<NotificationResponse> getActiveNotifications(String userId) {
         User user = findUser(userId);
         // Requirement: Only return notifications where createdAt >= (current date - 7 days)
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
-        return notificationRepository.findActiveNotificationsForUser(user, sevenDaysAgo);
+        return notificationRepository.findActiveNotificationsForUser(user, sevenDaysAgo).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     /**
      * Requirement: Get ONLY UNREAD notifications to show in dropdown
      */
-    public List<Notification> getUnreadNotifications(String userId) {
+    public List<NotificationResponse> getUnreadNotifications(String userId) {
         User user = findUser(userId);
-        return notificationRepository.findByUserAndIsReadOrderByCreatedAtDesc(user, false);
+        return notificationRepository.findByUserAndIsReadOrderByCreatedAtDesc(user, false).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     public long getUnreadCount(String userId) {
@@ -79,7 +87,7 @@ public class NotificationServices {
         return notificationRepository.countByUserAndIsRead(user, false);
     }
 
-    public Notification markOneAsRead(Long notificationId, String userId) {
+    public NotificationResponse markOneAsRead(Long notificationId, String userId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
 
@@ -90,7 +98,7 @@ public class NotificationServices {
 
         notification.setIsRead(true);
         notification.setReadAt(LocalDateTime.now());
-        return notificationRepository.save(notification);
+        return mapToResponse(notificationRepository.save(notification));
     }
 
     public void markAllAsRead(String userId) {
@@ -109,6 +117,19 @@ public class NotificationServices {
     public void cleanupOldNotifications() {
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
         notificationRepository.deleteByCreatedAtBefore(sevenDaysAgo);
+    }
+
+    private NotificationResponse mapToResponse(Notification notification) {
+        NotificationResponse response = new NotificationResponse();
+        response.setId(notification.getId());
+        response.setTitle(notification.getTitle());
+        response.setMessage(notification.getMessage());
+        response.setType(notification.getType().name());
+        response.setIsRead(notification.getIsRead());
+        response.setTaskId(notification.getTaskId());
+        response.setCreatedAt(notification.getCreatedAt());
+        response.setReadAt(notification.getReadAt());
+        return response;
     }
 
     // ─── Helper method ───
