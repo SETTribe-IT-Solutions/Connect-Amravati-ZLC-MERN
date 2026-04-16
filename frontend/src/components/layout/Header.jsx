@@ -98,26 +98,10 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
               </button>
             )}
             
-            <div className="d-flex align-items-center gap-2">
-              <motion.div
-                whileHover={{ rotate: 15, scale: 1.1 }}
-                className="text-primary d-none d-sm-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-3 p-2"
-                style={{ fontSize: '1.5rem', color: '#1e3a8a' }}
-              >
-                <GiIndiaGate />
-              </motion.div>
-              <div>
-                <h1 className="h6 h5-sm mb-0 fw-bold tracking-tight text-dark text-nowrap" style={{ 
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1
-                }}>
-                  Connect <span className="text-primary">Amravati</span>
-                </h1>
-                <p className="small text-muted mb-0 d-none d-md-flex align-items-center" style={{ fontSize: '0.7rem', fontWeight: '500' }}>
-                  <FaMapMarkerAlt className="me-1 text-danger" style={{ fontSize: '0.65rem' }} />
-                  MAHARASHTRA, INDIA
-                </p>
-              </div>
+            <div className="ms-2">
+              <h1 className="h6 mb-0 fw-bold tracking-tight text-dark" style={{ letterSpacing: '-0.01em' }}>
+                District <span className="text-primary">Connect</span>
+              </h1>
             </div>
           </div>
 

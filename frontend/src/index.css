@@ -68,6 +68,18 @@ body {
 @media (max-width: 767px) {
   .notification-dropdown {
     width: calc(100vw - 2rem) !important;
+    position: fixed !important;
+    top: 68px !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    margin: 0 !important;
+    z-index: 1100 !important;
+  }
+  /* Ensure all bootstrap dropdowns stay within screen on mobile */
+  .dropdown-menu {
+    max-width: calc(100vw - 2rem) !important;
+    right: 1rem !important;
+    left: auto !important;
   }
 }
 
