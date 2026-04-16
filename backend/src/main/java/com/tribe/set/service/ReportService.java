@@ -16,6 +16,8 @@ import com.tribe.set.entity.TaskStatus;
 import com.tribe.set.entity.User;
 import com.tribe.set.repository.TaskRepository;
 import com.tribe.set.repository.UserRepository;
+import com.tribe.set.dto.GlobalStatsDTO;
+import com.tribe.set.dto.PerformanceReportDTO;
 
 @Service
 public class ReportService {
@@ -26,7 +28,7 @@ public class ReportService {
     @Autowired
     private UserRepository userRepository;
 
-    public Map<String, Object> getGlobalStats(String requesterId) {
+    public GlobalStatsDTO getGlobalStats(String requesterId) {
         checkAccess(requesterId);
         List<Task> allTasks = taskRepository.findAll();
 
@@ -36,30 +38,24 @@ public class ReportService {
         long progress = allTasks.stream().filter(t -> t.getStatus() == TaskStatus.IN_PROGRESS).count();
         long overdue = allTasks.stream().filter(t -> t.getStatus() == TaskStatus.OVERDUE).count();
 
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("total", total);
-        stats.put("completed", completed);
-        stats.put("pending", pending);
-        stats.put("inProgress", progress);
-        stats.put("overdue", overdue);
-        stats.put("completionRate", Math.round((total > 0 ? (double) completed / total * 100 : 0) * 10.0) / 10.0);
+        double completionRate = Math.round((total > 0 ? (double) completed / total * 100 : 0) * 10.0) / 10.0;
 
-        return stats;
+        return new GlobalStatsDTO(total, completed, pending, progress, overdue, completionRate);
     }
 
-    public List<Map<String, Object>> getPerformanceReport(String requesterId) {
+    public List<PerformanceReportDTO> getPerformanceReport(String requesterId) {
         checkAccess(requesterId);
 
         List<Task> allTasks = taskRepository.findAll();
 
         // Group tasks by which user they are assigned to
-        Map<Object, List<Task>> tasksByUser = allTasks.stream()
+        Map<String, List<Task>> tasksByUser = allTasks.stream()
                 .filter(t -> t.getAssignedTo() != null)
                 .collect(Collectors.groupingBy(t -> t.getAssignedTo().getUserID()));
 
-        List<Map<String, Object>> performanceList = new ArrayList<>();
+        List<PerformanceReportDTO> performanceList = new ArrayList<>();
 
-        for (Entry<Object, List<Task>> entry : tasksByUser.entrySet()) {
+        for (Entry<String, List<Task>> entry : tasksByUser.entrySet()) {
             List<Task> userTasks = entry.getValue();
             User assignee = userTasks.get(0).getAssignedTo();
 
@@ -68,17 +64,17 @@ public class ReportService {
             long overdue = userTasks.stream().filter(t -> t.getStatus() == TaskStatus.OVERDUE).count();
 
             double efficiency = total > 0 ? (double) completed / total * 100 : 0;
+            efficiency = Math.round(efficiency * 100.0) / 100.0;
 
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("userId", assignee.getUserID());
-            stats.put("userName", assignee.getName());
-            stats.put("role", assignee.getRole());
-            stats.put("totalTasks", total);
-            stats.put("completedTasks", completed);
-            stats.put("overdueTasks", overdue);
-            stats.put("efficiency", Math.round(efficiency * 100.0) / 100.0);
-
-            performanceList.add(stats);
+            performanceList.add(new PerformanceReportDTO(
+                assignee.getUserID(),
+                assignee.getName(),
+                assignee.getRole(),
+                total,
+                completed,
+                overdue,
+                efficiency
+            ));
         }
 
         return performanceList;

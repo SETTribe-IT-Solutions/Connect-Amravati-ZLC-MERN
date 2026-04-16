@@ -44,7 +44,7 @@ public class JwtUtils {
     }
 
     public ResponseCookie generateAccessCookie(UserDetailsImpl userPrincipal) {
-        String jwt = generateTokenFromUsername(userPrincipal.getEmail(), jwtExpirationMs);
+        String jwt = generateTokenFromUserId(userPrincipal.getId(), jwtExpirationMs);
         return ResponseCookie.from(jwtAccessCookieName, jwt)
                 .path("/")
                 .maxAge(jwtExpirationMs / 1000)
@@ -72,9 +72,9 @@ public class JwtUtils {
         return ResponseCookie.from(jwtRefreshCookieName, null).path("/").maxAge(0).build();
     }
 
-    public String generateTokenFromUsername(String email, int expirationMs) {
+    public String generateTokenFromUserId(String userId, int expirationMs) {
         return Jwts.builder()
-                .subject(email)
+                .subject(userId)
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + expirationMs))
                 .signWith(key())
@@ -85,7 +85,7 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
-    public String getUserNameFromJwtToken(String token) {
+    public String getUserIdFromJwtToken(String token) {
         return Jwts.parser().verifyWith(key()).build()
                 .parseSignedClaims(token).getPayload().getSubject();
     }
