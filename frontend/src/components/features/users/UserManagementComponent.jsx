@@ -24,6 +24,7 @@ const UserManagementComponent = ({ user }) => {
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -175,57 +176,90 @@ const UserManagementComponent = ({ user }) => {
           <h3 className="h5 fw-bold text-dark">No Users Found</h3>
           <p className="text-secondary small mb-0">No users match your search criteria.</p>
         </div>
-      </div>
+      ) : (
+        <div className="bg-white rounded-4 shadow-sm border overflow-hidden">
+          <div className="table-responsive">
+            <Table hover className="align-middle mb-0">
+              <thead className="bg-light border-bottom">
+                <tr>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">User</th>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">Role</th>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">Email</th>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">Contact</th>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">Jurisdiction</th>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary text-center">Status</th>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map(member => (
+                    <tr key={member.id}>
+                      <td className="px-4 py-3">
+                        <div className="d-flex align-items-center gap-3">
+                          <div className="avatar-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center rounded-circle" style={{ width: '40px', height: '40px', fontSize: '0.8rem' }}>
+                            {member.avatar}
+                          </div>
+                          <p className="fw-bold text-dark mb-0 small">{member.name}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge bg={getRoleColor(member.role)} className="rounded-pill px-2 py-1" style={{ fontSize: '0.7rem' }}>
+                          {member.role}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="small text-muted mb-0">{member.email}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="small text-muted mb-0">{member.phone}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="small text-muted mb-0 truncate" style={{ maxWidth: '150px' }}>{member.jurisdiction}</p>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Badge bg={member.status === 'Active' ? 'success' : 'secondary'} className="rounded-pill px-2 py-1" style={{ fontSize: '0.65rem' }}>
+                          {member.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-end">
+                        <div className="d-flex gap-2 justify-content-end">
+                          <Button 
+                            variant="light" 
+                            size="sm" 
+                            className="p-2 rounded-circle hover-bg-primary-soft border-0"
+                            onClick={() => { setSelectedUser(member); setIsEditing(false); setIsModalOpen(true); }}
+                          >
+                            <EyeIcon style={{ width: '1.1rem' }} className="text-primary" />
+                          </Button>
+                          <Button 
+                            variant="light" 
+                            size="sm" 
+                            className="p-2 rounded-circle hover-bg-primary-soft border-0"
+                            onClick={() => { setSelectedUser(member); setIsEditing(true); setIsModalOpen(true); }}
+                          >
+                            <PencilIcon style={{ width: '1.1rem' }} className="text-success" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </Table>
+          </div>
+          <div className="p-3 border-top">
+            <Pagination 
+              totalItems={filteredUsers.length}
+              itemsPerPage={itemsPerPage}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        </div>
+      )}
 
-      {loading ? <div className="flex flex-col items-center justify-center p-20 bg-white rounded-xl border border-gray-100">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div><p className="text-gray-500 font-medium">Loading user data...</p>
-      </div> : filteredUsers.length === 0 ? <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-        <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4"><UserCircleIcon className="h-10 w-10 text-blue-300" /></div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">No Users Found</h3><p className="text-gray-500 max-w-sm mx-auto">No users match your search criteria.</p>
-      </div> : <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto"><table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200"><tr>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">User</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Role</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Email</th>
-             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Contact</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Jurisdiction</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Status</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Actions</th>
-          </tr></thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredUsers
-              .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-              .map(user => <tr key={user.id} className="hover:bg-gray-50 transition-colors group">
-            <td className="py-3 px-4"><div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm">{user.avatar}</div>
-              <p className="font-medium text-gray-800 text-sm">{user.name}</p>
-            </div></td>
-            <td className="py-3 px-4"><span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getRoleColor(user.role)}`}>{user.role}</span></td>
-            <td className="py-3 px-4"><p className="text-sm text-gray-600 truncate max-w-[180px]">{user.email}</p>
-            <p className="text-xs text-gray-500"></p></td>
-             <td className="py-3 px-4"><p className="text-sm text-gray-600 truncate max-w-[180px]"></p>
-            <p className="text-xs text-gray-500">{user.phone}</p></td>
-            <td className="py-3 px-4 text-sm text-gray-600 truncate max-w-[150px]">{user.jurisdiction}</td>
-            <td className="py-3  px-3"><span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.status === 'Active' ? 'bg-green-500' : 'bg-gray-500'}`}></span>{user.status}
-            </span></td>
-            <td className="py-3 px-4"><div className="flex gap-2">
-              <button onMouseEnter={(e) => showIconTooltip('View User Details', e)} onClick={() => { setSelectedUser(user); setIsModalOpen(true); }} className="p-1.5 hover:bg-blue-50 rounded-lg">
-                <EyeIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
-              </button>
-            </div></td>
-          </tr>)}</tbody>
-        </table></div>
-        <Pagination 
-          totalItems={filteredUsers.length}
-          itemsPerPage={itemsPerPage}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-        />
-      </div>}
-
-      <AnimatePresence>{isModalOpen && <UserModal user={selectedUser} allUsers={users} roles={roles} talukas={talukas} villages={villages}
+      <AnimatePresence>{isModalOpen && <UserModal user={selectedUser} initialIsEditing={isEditing} allUsers={users} roles={roles} talukas={talukas} villages={villages}
         fetchVillages={fetchVillages} showIconTooltip={showIconTooltip}
         onClose={() => { setShowCloseConfirm(true); }}
         onConfirmClose={() => { setIsModalOpen(false); setSelectedUser(null); setVillages([]); setShowCloseConfirm(false); }}
@@ -240,12 +274,19 @@ const UserManagementComponent = ({ user }) => {
               delete payload.userID; // NOT present in UpdateUserRequest DTO
               if (!payload.password) delete payload.password;
               await updateUser(selectedUser.id, payload);
+              showToast("Success", "User updated successfully");
             } else {
               await addUser(payload);
+              showToast("Success", "User added successfully");
             }
-          }} 
-        />
-      </Modal>
+            setIsModalOpen(false);
+            fetchUsers();
+          } catch (error) {
+            console.error("Save User Error:", error);
+            showToast("Error", error.response?.data?.message || "Failed to save user");
+          }
+        }} 
+      />}</AnimatePresence>
 
       {/* Confirmation Modal */}
       <Modal show={showCloseConfirm} onHide={() => setShowCloseConfirm(false)} centered size="sm">
@@ -265,12 +306,12 @@ const UserManagementComponent = ({ user }) => {
   );
 };
 
-const UserModal = ({ user, allUsers, roles, talukas, villages, fetchVillages, onClose, onSave }) => {
+const UserModal = ({ user, initialIsEditing, allUsers, roles, talukas, villages, fetchVillages, onClose, onSave }) => {
   const roleLimits = {
     'Collector': 1, 'Addl. Collector': 8, 'SDO': 6, 'Tehsildar': 30, 'BDO': 14, 'Talathi': 600, 'Gram Sevak': 900, 'Admin': Infinity
   };
 
-  const [isEditing, setIsEditing] = useState(!user);
+  const [isEditing, setIsEditing] = useState(initialIsEditing);
   const [formData, setFormData] = useState({
     id: user?.id || '',
     userID: user?.id || '', 

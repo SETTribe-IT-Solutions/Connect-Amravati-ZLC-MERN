@@ -30,9 +30,6 @@ const AppreciationComponent = ({ user }) => {
     setCurrentPage(1);
   }, [searchTerm, filter]);
 
-  const [appreciations, setAppreciations] = useState([]);
-  const [staff, setStaff] = useState([]);
-
   // Use props user id if available
   const currentUserID = user?.userID;
   const fetchAppreciations = async () => {
