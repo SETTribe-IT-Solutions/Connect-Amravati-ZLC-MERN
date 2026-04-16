@@ -55,14 +55,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed, use
 
       {/* Sidebar */}
       <div
-        className="position-fixed bg-white border-end z-index-sidebar transition-all d-flex flex-column shadow-sm"
+        className={`position-fixed bg-white border-end shadow-sm d-flex flex-column sidebar-container ${sidebarOpen ? 'mobile-open' : ''}`}
         style={{
           width: sidebarWidth,
-          left: sidebarOpen ? '0' : (window.innerWidth < 1024 ? '-256px' : '0'),
+          left: 0,
           top: 0,
           bottom: 0,
-          zIndex: 1050,
-          transition: 'all 0.3s ease-in-out',
         }}
       >
         {/* Tricolor Top Bar */}
@@ -85,7 +83,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed, use
             {/* Toggle Button for Desktop (Collapse) and Mobile (Close) */}
             <button
               onClick={() => {
-                if (window.innerWidth < 1024) {
+                const isMobile = window.innerWidth < 1024;
+                if (isMobile) {
                   setSidebarOpen(false);
                 } else {
                   if (setIsCollapsed) setIsCollapsed(!isCollapsed);

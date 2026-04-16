@@ -31,7 +31,7 @@ const LanguageSwitcher = () => {
         style={{ fontSize: '0.9rem', fontWeight: '600', color: '#ea580c', backgroundColor: '#fff7ed' }}
       >
         <FaLanguage size={18} />
-        <span>{currentLangObj.name}</span>
+        <span className="d-none d-md-inline">{currentLangObj.name}</span>
       </Dropdown.Toggle>
 
       <Dropdown.Menu className="border-0 shadow-lg rounded-3 mt-2 overflow-hidden">
