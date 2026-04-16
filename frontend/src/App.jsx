@@ -19,7 +19,7 @@ import UserManagement from './pages/users/UserManagement';
 import Appreciation from './pages/appreciation/Appreciation';
 import Notifications from './pages/notifications/Notifications';
 import ChangePassword from './pages/auth/ChangePassword';
-import { changePassword, loginUser } from './services/auth/authService';
+import { changePassword, loginUser, getCurrentUser, logoutUser } from './services/auth/authService';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -27,15 +27,15 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   // Handle logout
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.error("Logout error", error);
+    }
+    
     setIsAuthenticated(false);
     setUser(null);
-    
-    // Clear all storage
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('user');
-    localStorage.removeItem('sessionToken');
-    sessionStorage.clear();
     
     // Redirect to login
     window.location.href = '/login';
@@ -43,44 +43,43 @@ function App() {
 
   // Check for existing session on load
   useEffect(() => {
-    const checkAuth = () => {
-      const savedUser = localStorage.getItem('user');
-      const savedAuth = localStorage.getItem('isAuthenticated');
-      const token = localStorage.getItem('sessionToken');
-      
-      // Safeguard: Clear old dummy tokens
-      if (token && token.startsWith('sess_')) {
-        handleLogout();
-        return;
-      }
-
-      if (savedUser && savedAuth === 'true') {
-        const userData = JSON.parse(savedUser);
-        setUser(userData);
-        setIsAuthenticated(true);
-        // Restore all essential bits to localStorage
-        localStorage.setItem('role', userData.role);
-        localStorage.setItem('userID', userData.userID);
-        // Restore sessionToken if it exists
-        if (token) {
-          localStorage.setItem('sessionToken', token);
+    const vaildateSession = async () => {
+      try {
+        const userData = await getCurrentUser();
+        if (userData) {
+          const userToStore = {
+            userID: userData.id,
+            name: userData.name,
+            role: userData.role,
+            email: userData.email,
+            district: userData.district,
+            taluka: userData.taluka,
+            village: userData.village,
+            loginTime: new Date().toISOString(),
+            permissions: userData.role === 'SYSTEM_ADMINISTRATOR' ? ['all'] : ['view_tasks']
+          };
+          setUser(userToStore);
+          setIsAuthenticated(true);
         }
+      } catch (error) {
+        // Not authenticated or session expired
+        setIsAuthenticated(false);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    checkAuth();
+    vaildateSession();
   }, []);
 
   // Handle login
   const handleLogin = (userData) => {
     if (userData) {
-      // Normalize role because backend might return ADMIN but frontend uses Collector/SDO in some places
-      // We'll store both for compatibility
       const normalizedRole = userData.role;
       
       const userToStore = {
-        userID: userData.id, // backend JwtResponse has 'id'
+        userID: userData.id,
         name: userData.name,
         role: normalizedRole,
         email: userData.email,
@@ -90,16 +89,9 @@ function App() {
         loginTime: new Date().toISOString(),
         permissions: normalizedRole === 'SYSTEM_ADMINISTRATOR' ? ['all'] : ['view_tasks']
       };
-
+ 
       setIsAuthenticated(true);
       setUser(userToStore);
-      
-      // Save to localStorage
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify(userToStore));
-      localStorage.setItem('role', normalizedRole);
-      localStorage.setItem('userID', userData.id); // mapping from backend 'id'
-      localStorage.setItem('sessionToken', userData.accessToken); // mapping from backend 'accessToken'
       
       return true;
     }

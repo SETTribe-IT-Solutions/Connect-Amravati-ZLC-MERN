@@ -36,7 +36,7 @@ const Dashboard = ({ user }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userID = user?.userID || localStorage.getItem('userID');
+        const userID = user?.userID;
         if (userID) {
           const stats = await getDashboardStats(userID);
           setDashboardData(stats);

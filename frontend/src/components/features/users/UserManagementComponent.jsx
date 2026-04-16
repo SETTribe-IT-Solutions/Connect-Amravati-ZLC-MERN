@@ -10,7 +10,7 @@ import {
 import Pagination from '../../common/Pagination';
 import { Container, Row, Col, Card, Button, Form, Table, Badge, Modal, ProgressBar } from 'react-bootstrap';
 
-const UserManagementComponent = () => {
+const UserManagementComponent = ({ user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -40,7 +40,7 @@ const UserManagementComponent = () => {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const requesterId = localStorage.getItem('userID') || null;
+      const requesterId = user?.userID;
       const data = await getAllUsers(requesterId);
       const revRoleMap = {
         'COLLECTOR': 'Collector', 'ADDITIONAL_DEPUTY_COLLECTOR': 'Addl. Collector', 'SDO': 'SDO',
@@ -61,8 +61,7 @@ const UserManagementComponent = () => {
 
   const fetchTalukas = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:8080/api/talukas", { headers: { Authorization: `Bearer ${token}` } });
+      const response = await axios.get("http://localhost:8080/api/talukas", { withCredentials: true });
       setTalukas(response.data.map(t => (t?.taluka ?? t)).filter(Boolean));
     } catch (error) { console.error("Fetch Talukas Error:", error); }
   }, []);
@@ -72,8 +71,7 @@ const UserManagementComponent = () => {
   const fetchVillages = useCallback(async (talukaName) => {
     if (!talukaName) { setVillages([]); return; }
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`http://localhost:8080/api/villages/${encodeURIComponent(talukaName)}`, { headers: { Authorization: `Bearer ${token}` } });
+      const response = await axios.get(`http://localhost:8080/api/villages/${encodeURIComponent(talukaName)}`, { withCredentials: true });
       setVillages(response.data.map(v => (v?.village ?? v)).filter(Boolean));
     } catch (error) { console.error("Fetch Villages Error:", error); setVillages([]); }
   }, []);
@@ -177,104 +175,73 @@ const UserManagementComponent = () => {
           <h3 className="h5 fw-bold text-dark">No Users Found</h3>
           <p className="text-secondary small mb-0">No users match your search criteria.</p>
         </div>
-      ) : (
-        <Card className="premium-card border-0 overflow-hidden shadow-sm">
-          <div className="table-responsive">
-            <Table hover borderless className="align-middle mb-0 custom-table">
-              <thead className="bg-light border-bottom">
-                <tr className="text-secondary small fw-bold text-uppercase">
-                  <th className="py-3 px-4">User</th>
-                  <th className="py-3 px-4">Role</th>
-                  <th className="py-3 px-4">Email / Contact</th>
-                  <th className="py-3 px-4">Jurisdiction</th>
-                  <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((user) => (
-                  <tr key={user.id} className="border-bottom-ghost">
-                    <td className="py-3 px-4">
-                      <div className="d-flex align-items-center gap-3">
-                        <div className={`h-10 w-10 rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold small`}>
-                          {user.avatar}
-                        </div>
-                        <span className="fw-bold text-dark small">{user.name}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <Badge bg={getRoleColor(user.role)} className="rounded-pill px-2 py-1 uppercase" style={{ fontSize: '0.65rem' }}>{user.role}</Badge>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="d-flex flex-column">
-                        <span className="small text-dark fw-medium text-truncate" style={{ maxWidth: '180px' }}>{user.email}</span>
-                        <span className="text-muted" style={{ fontSize: '0.7rem' }}>{user.phone}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-secondary truncate" style={{ maxWidth: '150px' }}>
-                      {user.jurisdiction}
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <Badge bg={user.status === 'Active' ? 'success' : 'secondary'} className="rounded-pill px-2 py-1" style={{ fontSize: '0.65rem' }}>
-                        {user.status}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <Button variant="light" size="sm" onClick={() => { setSelectedUser(user); setIsModalOpen(true); }} className="rounded-pill p-1 shadow-sm border-0 bg-white">
-                        <EyeIcon style={{ width: '1.25rem', height: '1.25rem' }} className="text-primary" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </div>
-          <div className="p-3 border-top bg-light">
-            <Pagination 
-              totalItems={filteredUsers.length}
-              itemsPerPage={itemsPerPage}
-              currentPage={currentPage}
-              onPageChange={setCurrentPage}
-            />
-          </div>
-        </Card>
-      )}
+      </div>
 
-      {/* User Management Modal (Add/Edit/View) */}
-      <Modal show={isModalOpen} onHide={() => setShowCloseConfirm(true)} centered size="lg">
-        <UserModal 
-          user={selectedUser} 
-          allUsers={users} 
-          roles={roles} 
-          talukas={talukas} 
-          villages={villages}
-          fetchVillages={fetchVillages} 
-          showIconTooltip={showIconTooltip}
-          onClose={() => setShowCloseConfirm(true)}
-          onConfirmClose={() => { setIsModalOpen(false); setSelectedUser(null); setVillages([]); setShowCloseConfirm(false); }}
-          onSave={async (userData) => {
-            try {
-              const roleMap = { 'Collector': 'COLLECTOR', 'Addl. Collector': 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO': 'SDO', 'Tehsildar': 'TEHSILDAR', 'BDO': 'BDO', 'Talathi': 'TALATHI', 'Gram Sevak': 'GRAMSEVAK', 'Admin': 'SYSTEM_ADMINISTRATOR' };
-              const payload = { ...userData, role: roleMap[userData.role] || userData.role, requesterId: localStorage.getItem('userID') || '', active: userData.status === 'Active' };
-              delete payload.status;
-              
-              if (userData.id) {
-                const updatePayload = { ...payload };
-                delete updatePayload.id;
-                delete updatePayload.userID;
-                if (!updatePayload.password) delete updatePayload.password;
-                await updateUser(userData.id, updatePayload);
-              } else {
-                await addUser(payload);
-              }
-              
-              fetchUsers(); 
-              setIsModalOpen(false); 
-              setSelectedUser(null);
-              showToast(selectedUser ? 'User Updated' : 'User Created', 'Successfully');
-            } catch (error) { 
-              console.error("Save Error:", error.response?.data || error.message);
-              showToast('Operation Failed', 'Please try again'); 
+      {loading ? <div className="flex flex-col items-center justify-center p-20 bg-white rounded-xl border border-gray-100">
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div><p className="text-gray-500 font-medium">Loading user data...</p>
+      </div> : filteredUsers.length === 0 ? <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
+        <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4"><UserCircleIcon className="h-10 w-10 text-blue-300" /></div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">No Users Found</h3><p className="text-gray-500 max-w-sm mx-auto">No users match your search criteria.</p>
+      </div> : <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto"><table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200"><tr>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">User</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Role</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Email</th>
+             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Contact</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Jurisdiction</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Status</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Actions</th>
+          </tr></thead>
+          <tbody className="divide-y divide-gray-100">
+            {filteredUsers
+              .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+              .map(user => <tr key={user.id} className="hover:bg-gray-50 transition-colors group">
+            <td className="py-3 px-4"><div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm">{user.avatar}</div>
+              <p className="font-medium text-gray-800 text-sm">{user.name}</p>
+            </div></td>
+            <td className="py-3 px-4"><span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getRoleColor(user.role)}`}>{user.role}</span></td>
+            <td className="py-3 px-4"><p className="text-sm text-gray-600 truncate max-w-[180px]">{user.email}</p>
+            <p className="text-xs text-gray-500"></p></td>
+             <td className="py-3 px-4"><p className="text-sm text-gray-600 truncate max-w-[180px]"></p>
+            <p className="text-xs text-gray-500">{user.phone}</p></td>
+            <td className="py-3 px-4 text-sm text-gray-600 truncate max-w-[150px]">{user.jurisdiction}</td>
+            <td className="py-3  px-3"><span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.status === 'Active' ? 'bg-green-500' : 'bg-gray-500'}`}></span>{user.status}
+            </span></td>
+            <td className="py-3 px-4"><div className="flex gap-2">
+              <button onMouseEnter={(e) => showIconTooltip('View User Details', e)} onClick={() => { setSelectedUser(user); setIsModalOpen(true); }} className="p-1.5 hover:bg-blue-50 rounded-lg">
+                <EyeIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
+              </button>
+            </div></td>
+          </tr>)}</tbody>
+        </table></div>
+        <Pagination 
+          totalItems={filteredUsers.length}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+        />
+      </div>}
+
+      <AnimatePresence>{isModalOpen && <UserModal user={selectedUser} allUsers={users} roles={roles} talukas={talukas} villages={villages}
+        fetchVillages={fetchVillages} showIconTooltip={showIconTooltip}
+        onClose={() => { setShowCloseConfirm(true); }}
+        onConfirmClose={() => { setIsModalOpen(false); setSelectedUser(null); setVillages([]); setShowCloseConfirm(false); }}
+        onCancelClose={() => setShowCloseConfirm(false)}
+        onSave={async (userData) => {
+          try {
+            const roleMap = { 'Collector': 'COLLECTOR', 'Addl. Collector': 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO': 'SDO', 'Tehsildar': 'TEHSILDAR', 'BDO': 'BDO', 'Talathi': 'TALATHI', 'Gram Sevak': 'GRAMSEVAK', 'Admin': 'SYSTEM_ADMINISTRATOR' };
+            const payload = { ...userData, role: roleMap[userData.role] || userData.role, requesterId: user?.userID || '', active: userData.status === 'Active' };
+            delete payload.status;
+            
+            if (selectedUser) {
+              delete payload.userID; // NOT present in UpdateUserRequest DTO
+              if (!payload.password) delete payload.password;
+              await updateUser(selectedUser.id, payload);
+            } else {
+              await addUser(payload);
             }
           }} 
         />

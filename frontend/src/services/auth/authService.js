@@ -14,11 +14,13 @@ export const registerUser = async (userData) => {
   return response.data;
 };
 
-export const logoutUser = () => {
-  localStorage.removeItem("user");
-  localStorage.removeItem("role");
-  localStorage.removeItem("isAuthenticated");
-  localStorage.removeItem("sessionToken");
+export const logoutUser = async () => {
+  return await axiosInstance.post("/auth/logout");
+};
+
+export const getCurrentUser = async () => {
+  const response = await axiosInstance.get("/auth/me");
+  return response.data;
 };
 
 export const changePassword = async (userID, currentPassword, newPassword) => {

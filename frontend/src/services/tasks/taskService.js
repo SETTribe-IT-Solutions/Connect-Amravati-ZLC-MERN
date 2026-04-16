@@ -1,14 +1,19 @@
 import axiosInstance from "../../config/axiosConfig";
 
-export const getDashboardStats = async () => {
-  const requesterId = localStorage.getItem('userID');
-  const response = await axiosInstance.get(`/tasks/dashboard?requesterId=${requesterId}`);
+export const getDashboardStats = async (requesterId) => {
+  const queryParam = requesterId ? `?requesterId=${requesterId}` : '';
+  const response = await axiosInstance.get(`/tasks/dashboard${queryParam}`);
   return response.data; // { total, pending, inProgress, completed, overdue }
 };
 
-export const getTasks = async () => {
-  const requesterId = localStorage.getItem('userID');
-  const response = await axiosInstance.get(`/tasks?requesterId=${requesterId}`);
+export const getTasks = async (requesterId) => {
+  const queryParam = requesterId ? `?requesterId=${requesterId}` : '';
+  const response = await axiosInstance.get(`/tasks${queryParam}`);
+  
+  // Handle Paginated Response (extract .content) or direct array
+  if (response.data && response.data.content) {
+    return response.data.content;
+  }
   return response.data; // List<TaskResponse>
 };
 

@@ -30,8 +30,11 @@ const AppreciationComponent = ({ user }) => {
     setCurrentPage(1);
   }, [searchTerm, filter]);
 
-  const currentUserID = user?.userID || localStorage.getItem('userID');
+  const [appreciations, setAppreciations] = useState([]);
+  const [staff, setStaff] = useState([]);
 
+  // Use props user id if available
+  const currentUserID = user?.userID;
   const fetchAppreciations = async () => {
     try {
       const data = await getAllAppreciations();
@@ -116,7 +119,10 @@ const AppreciationComponent = ({ user }) => {
     const matchesSearch = apt.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          apt.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          apt.to.toLowerCase().includes(searchTerm.toLowerCase());
-    const currentUserName = user?.name || JSON.parse(localStorage.getItem('user') || '{}').name || '';
+    
+    // Improved "mine" filter logic to use actual logged-in user name
+    const currentUserName = user?.name || '';
+    
     const matchesFilter = filter === 'all' || 
                          (filter === 'mine' && apt.from === currentUserName);
     return matchesSearch && matchesFilter;
@@ -130,8 +136,17 @@ const AppreciationComponent = ({ user }) => {
     }
     setFormStates(prev => ({ ...prev, [targetUser.userID]: { ...formData, isSubmitting: true } }));
     try {
-      const fromUserId = localStorage.getItem('userID');
-      await sendAppreciation({ fromUserId, toUserId: targetUser.userID, message: formData.message, badge: formData.badge });
+      const fromUserId = user?.userID;
+      const payload = {
+        fromUserId,
+        toUserId: targetUser.userID,
+        message: formData.message,
+        badge: formData.badge
+      };
+      console.log("Sending appreciation payload:", payload);
+      
+      await sendAppreciation(payload);
+      
       toast.success(`Appreciation sent to ${targetUser.name}!`);
       fetchAppreciations();
       fetchStaff();
