@@ -101,19 +101,19 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
             <div className="d-flex align-items-center gap-2">
               <motion.div
                 whileHover={{ rotate: 15, scale: 1.1 }}
-                className="text-primary d-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-3 p-2"
+                className="text-primary d-none d-sm-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-3 p-2"
                 style={{ fontSize: '1.5rem', color: '#1e3a8a' }}
               >
                 <GiIndiaGate />
               </motion.div>
               <div>
-                <h1 className="h5 mb-0 fw-bold tracking-tight text-dark" style={{ 
+                <h1 className="h6 h5-sm mb-0 fw-bold tracking-tight text-dark text-nowrap" style={{ 
                   letterSpacing: '-0.02em',
                   lineHeight: 1
                 }}>
                   Connect <span className="text-primary">Amravati</span>
                 </h1>
-                <p className="small text-muted mb-0 d-flex align-items-center" style={{ fontSize: '0.7rem', fontWeight: '500' }}>
+                <p className="small text-muted mb-0 d-none d-md-flex align-items-center" style={{ fontSize: '0.7rem', fontWeight: '500' }}>
                   <FaMapMarkerAlt className="me-1 text-danger" style={{ fontSize: '0.65rem' }} />
                   MAHARASHTRA, INDIA
                 </p>
@@ -146,8 +146,7 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="position-absolute end-0 mt-3 bg-white rounded-3 shadow-lg border border-light overflow-hidden z-3"
-                      style={{ width: window.innerWidth < 768 ? 'calc(100vw - 2rem)' : '320px', minWidth: '280px' }}
+                      className="position-absolute end-0 mt-3 bg-white rounded-3 shadow-lg border border-light overflow-hidden z-3 notification-dropdown"
                     >
                       <div className="p-3 border-bottom d-flex align-items-center justify-content-between bg-light">
                         <h6 className="mb-0 fw-bold text-uppercase small tracking-wider">Notifications</h6>
