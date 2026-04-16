@@ -6,24 +6,26 @@ import com.tribe.set.service.UsermanagementService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin("*")
 public class UserManagementController {
 
     @Autowired
     private UsermanagementService userService;
 
     @PostMapping("/add")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<UserResponse> addUser(@Valid @RequestBody CreateuserRequest request) {
         return ResponseEntity.ok(userService.createUser(request, request.getRequesterId()));
     }
 
     @PutMapping("/update/{id}")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable(name = "id") String id,
             @Valid @RequestBody UpdateUserRequest request) {
@@ -31,6 +33,7 @@ public class UserManagementController {
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<String> deleteUser(
             @PathVariable(name = "id") String id,
             @Valid @RequestBody DeleteUserRequest request) {
@@ -39,25 +42,31 @@ public class UserManagementController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<UserResponse>> getAllUsers(@RequestParam(required = false, name = "requesterId") String requesterId) {
+    @PreAuthorize("authenticated")
+    public ResponseEntity<List<UserResponse>> getAllUsers(
+            @RequestParam(required = false, name = "requesterId") String requesterId) {
         return ResponseEntity.ok(userService.getAllUsers(requesterId));
     }
 
     @GetMapping("/profile/{id}")
+    @PreAuthorize("authenticated")
     public ResponseEntity<UserResponse> getUserProfile(
             @PathVariable(name = "id") String id,
             @RequestParam(name = "requesterId") String requesterId) {
         return ResponseEntity.ok(userService.getUserProfile(id, requesterId));
     }
 
-//    @PostMapping("/toggle-status/{id}")
-//    public ResponseEntity<UserResponse> toggleUserStatus(
-//            @PathVariable(name = "id") Long id,
-//            @RequestBody DeleteUserRequest request) { // Reusing DeleteUserRequest for requesterId
-//        return ResponseEntity.ok(userService.toggleUserStatus(id, request.getRequesterId()));
-//    }
-    
+    // @PostMapping("/toggle-status/{id}")
+    // public ResponseEntity<UserResponse> toggleUserStatus(
+    // @PathVariable(name = "id") Long id,
+    // @RequestBody DeleteUserRequest request) { // Reusing DeleteUserRequest for
+    // requesterId
+    // return ResponseEntity.ok(userService.toggleUserStatus(id,
+    // request.getRequesterId()));
+    // }
+
     @GetMapping("/role/{role}")
+    @PreAuthorize("authenticated")
     public ResponseEntity<List<UserResponse>> getUsersByRole(
             @PathVariable(name = "role") Role role,
             @RequestParam(name = "requesterId") String requesterId) {
@@ -65,6 +74,7 @@ public class UserManagementController {
     }
 
     @GetMapping("/subordinates")
+    @PreAuthorize("authenticated")
     public ResponseEntity<List<UserResponse>> getSubordinates(@RequestParam(name = "requesterId") String requesterId) {
         return ResponseEntity.ok(userService.getSubordinates(requesterId));
     }

@@ -21,14 +21,24 @@ public class UserDetailsImpl implements UserDetails {
     @JsonIgnore
     private String password;
 
+    private String role;
+    private String district;
+    private String taluka;
+    private String village;
+
     private GrantedAuthority authority;
 
-    public UserDetailsImpl(String string, String name, String email, String password,
+    public UserDetailsImpl(String id, String name, String email, String password,
+            String role, String district, String taluka, String village,
             GrantedAuthority authority) {
-        this.id = string;
+        this.id = id;
         this.name = name;
         this.email = email;
         this.password = password;
+        this.role = role;
+        this.district = district;
+        this.taluka = taluka;
+        this.village = village;
         this.authority = authority;
     }
 
@@ -40,6 +50,10 @@ public class UserDetailsImpl implements UserDetails {
                 user.getName(),
                 user.getEmail(),
                 user.getPassword(),
+                user.getRole().name(),
+                user.getDistrict(),
+                user.getTaluka(),
+                user.getVillage(),
                 authority);
     }
 
@@ -50,6 +64,26 @@ public class UserDetailsImpl implements UserDetails {
 
     public String getId() {
         return id;
+    }
+
+    public String getUserID() {
+        return id;
+    }
+    
+    public String getRole() {
+        return role;
+    }
+
+    public String getDistrict() {
+        return district;
+    }
+
+    public String getTaluka() {
+        return taluka;
+    }
+
+    public String getVillage() {
+        return village;
     }
 
     public String getEmail() {

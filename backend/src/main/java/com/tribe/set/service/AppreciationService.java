@@ -14,6 +14,7 @@ import com.tribe.set.dto.AppreciationRequest;
 import com.tribe.set.dto.AppreciationResponse;
 import com.tribe.set.repository.AppreciationRepository;
 import com.tribe.set.repository.UserRepository;
+import com.tribe.set.dto.UserResponse;
 
 @Service
 public class AppreciationService {
@@ -82,7 +83,10 @@ public class AppreciationService {
                                 .collect(Collectors.toList());
         }
 
-        public List<User> getEligibleUsers() {
-                return userRepository.findEligibleForAppreciation();
+        public List<UserResponse> getEligibleUsers() {
+                return userRepository.findEligibleForAppreciation()
+                                .stream()
+                                .map(UserResponse::from)
+                                .collect(Collectors.toList());
         }
 }

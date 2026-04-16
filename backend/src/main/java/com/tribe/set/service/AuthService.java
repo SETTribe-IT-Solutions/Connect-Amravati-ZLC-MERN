@@ -15,6 +15,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.tribe.set.dto.JwtResponse;
 import com.tribe.set.dto.RegisterRequest;
 import com.tribe.set.dto.UserRequest;
+import com.tribe.set.repository.AuditLogRepository;
+import com.tribe.set.entity.AuditLog;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class AuthService {
@@ -31,36 +34,38 @@ public class AuthService {
     @Autowired
     private JwtUtils jwtUtils;
 
-    public JwtResponse login(UserRequest request) {
+    @Autowired
+    private RefreshTokenService refreshTokenService;
 
-        // find user by ID first to get their email (username)
-        User user = userRepository.findByUserID(request.getUserID())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    @Autowired
+    private AuditLogRepository auditLogRepository;
 
-        if (!user.getActive()) {
-            throw new RuntimeException("User account is inactive");
+    public Authentication authenticateUser(UserRequest request, HttpServletRequest httpRequest) {
+        String ip = httpRequest.getRemoteAddr();
+        
+        try {
+            // find user by ID first to get their email (username)
+            User user = userRepository.findByUserID(request.getUserID())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            if (!user.getActive()) {
+                auditLogRepository.save(new AuditLog("LOGIN_FAILED", request.getUserID(), ip, "FAILURE", "Account inactive"));
+                throw new RuntimeException("User account is inactive");
+            }
+
+            // Authenticate using AuthenticationManager
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getEmail(), request.getPassword()));
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            
+            auditLogRepository.save(new AuditLog("LOGIN_SUCCESS", request.getUserID(), ip, "SUCCESS", "User logged in successfully"));
+            
+            return authentication;
+        } catch (Exception e) {
+            auditLogRepository.save(new AuditLog("LOGIN_FAILED", request.getUserID(), ip, "FAILURE", e.getMessage()));
+            throw e;
         }
-
-        // Authenticate using AuthenticationManager
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getEmail(), request.getPassword()));
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
-
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
-        // return JWT response
-        return new JwtResponse(
-                jwt,
-                user.getUserID(),
-                user.getName(),
-                user.getEmail(),
-                user.getRole().name(),
-                user.getDistrict(),
-                user.getTaluka(),
-                user.getVillage(),
-                "Login successful");
     }
 
 //    public String register(RegisterRequest request) {

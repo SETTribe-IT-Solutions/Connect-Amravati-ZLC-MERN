@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tribe.set.dto.NotificationRequest;
-import com.tribe.set.entity.Notification;
+import com.tribe.set.dto.NotificationResponse;
 import com.tribe.set.service.NotificationServices;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/notifications")
-@CrossOrigin("*")
 public class NotificationController {
 
     @Autowired
@@ -31,8 +31,9 @@ public class NotificationController {
      * Active = unread + read within 15 days
      */
     @GetMapping
-    public ResponseEntity<List<Notification>> getActiveNotifications(@RequestParam String userId) {
-        List<Notification> notifications = notificationService.getActiveNotifications(userId);
+    @PreAuthorize("authenticated")
+    public ResponseEntity<List<NotificationResponse>> getActiveNotifications(@RequestParam String userId) {
+        List<NotificationResponse> notifications = notificationService.getActiveNotifications(userId);
         return ResponseEntity.ok(notifications);
     }
 
@@ -41,18 +42,21 @@ public class NotificationController {
      * This updates the isRead flag in the database.
      */
     @PutMapping("/{id}/read")
-    public ResponseEntity<Notification> markAsRead(@PathVariable Long id, @RequestParam String userId) {
-        Notification notification = notificationService.markOneAsRead(id, userId);
+    @PreAuthorize("authenticated")
+    public ResponseEntity<NotificationResponse> markAsRead(@PathVariable Long id, @RequestParam String userId) {
+        NotificationResponse notification = notificationService.markOneAsRead(id, userId);
         return ResponseEntity.ok(notification);
     }
 
     @PutMapping("/read-all")
+    @PreAuthorize("authenticated")
     public ResponseEntity<Void> markAllAsRead(@RequestParam String userId) {
         notificationService.markAllAsRead(userId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<Void> createNotification(@RequestBody NotificationRequest request) {
         notificationService.createNotification(
                 request.getUserId(),

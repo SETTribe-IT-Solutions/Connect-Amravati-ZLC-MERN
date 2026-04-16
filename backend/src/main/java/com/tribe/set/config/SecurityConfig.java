@@ -54,9 +54,20 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+        // Allow all local development variants
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",
+                "http://localhost:5174",
+                "http://localhost:5175",
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:5174"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        // Allow all headers during development to prevent preflight blocks
         configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        // Expose headers if needed
+        configuration.setExposedHeaders(Arrays.asList("Set-Cookie"));
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -70,12 +81,15 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/talukas", "/api/villages/**").permitAll()
+                        .requestMatchers("/api/talukas/**", "/api/villages/**")
+                        .hasAnyRole("BDO", "TALATHI", "GRAMSEVAK", "TEHSILDAR")
+                        .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/tasks/**")
                         .hasAnyRole("BDO", "TALATHI", "GRAMSEVAK", "COLLECTOR", "SDO", "TEHSILDAR",
-                                "ADDITIONAL_DEPUTY_COLLECTOR", "SYSTEM_ADMINISTRATOR")
+                                "ADDITIONAL_DEPUTY_COLLECTOR")
                         .anyRequest().authenticated());
 
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

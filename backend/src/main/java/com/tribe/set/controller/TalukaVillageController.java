@@ -2,6 +2,7 @@ package com.tribe.set.controller;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.tribe.set.dto.TalukaDTO;
 import com.tribe.set.dto.VillageDTO;
@@ -9,14 +10,14 @@ import com.tribe.set.entity.Role;
 import com.tribe.set.service.TalukaVillageService;
 
 @RestController
-@RequestMapping("/api")
-@CrossOrigin("*") 
+@RequestMapping("/api/talukas")
 public class TalukaVillageController {
 
     @Autowired
     private TalukaVillageService service;
 
     @GetMapping("/talukas")
+    @PreAuthorize("hasAnyRole('BDO', 'TALATHI', 'GRAMSEVAK', 'TEHSILDAR')")
     public List<TalukaDTO> getTalukas(@RequestParam(required = false) Role role) {
         if (role != null) {
             return service.getTalukasByRole(role);
@@ -25,6 +26,7 @@ public class TalukaVillageController {
     }
 
     @GetMapping("/villages/{taluka}")
+    @PreAuthorize("hasAnyRole('BDO', 'TALATHI', 'GRAMSEVAK', 'TEHSILDAR')")
     public List<VillageDTO> getVillages(
             @PathVariable String taluka,
             @RequestParam(required = false) Role role) {

@@ -15,11 +15,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import jakarta.validation.Valid;
 
-import com.tribe.set.entity.TaskRemark;
+import com.tribe.set.dto.RemarkResponse;
 import com.tribe.set.dto.DashboardResponse;
 import com.tribe.set.dto.RemarkRequest;
 import com.tribe.set.dto.TaskRequest;
@@ -32,7 +36,6 @@ import com.tribe.set.service.TaskService;
 
 @RestController
 @RequestMapping("/api/tasks")
-@CrossOrigin("*")
 public class TaskController {
 
     @Autowired
@@ -49,12 +52,20 @@ public class TaskController {
     // GET accepts a requesterId as a fallback if Authentication is stale in the environment
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<TaskResponse>> getTasks(
+    public ResponseEntity<Page<TaskResponse>> getTasks(
             Authentication authentication,
-            @RequestParam(name = "requesterId", required = false) String requesterId) {
+            @RequestParam(name = "requesterId", required = false) String requesterId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
         
         String finalUserId = (requesterId != null) ? requesterId : ((UserDetailsImpl) authentication.getPrincipal()).getId();
-        return ResponseEntity.ok(taskService.getTasks(finalUserId));
+        
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        
+        return ResponseEntity.ok(taskService.getTasks(finalUserId, pageable));
     }
 
     // requesterId comes from JSON body (inside TaskStatusRequest)
@@ -79,7 +90,7 @@ public class TaskController {
     // requesterId comes from JSON body (inside RemarkRequest)
     @PostMapping("/{id}/remark")
     @PreAuthorize("hasAnyRole('BDO', 'TALATHI', 'GRAMSEVAK', 'COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
-    public ResponseEntity<TaskRemark> addRemark(
+    public ResponseEntity<RemarkResponse> addRemark(
             @PathVariable(name = "id") Long id,
             @Valid @RequestBody RemarkRequest request) {
 
