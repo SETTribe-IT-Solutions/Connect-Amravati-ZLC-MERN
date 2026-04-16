@@ -60,7 +60,7 @@ const ReportsDashboard = ({ user }) => {
 
   // Stats cards in correct sequence
   const stats = [
-    { title: 'Total Tasks', value: globalStats?.total || 0, icon: DocumentTextIcon, bgColor: 'primary', textColor: 'text-primary' },
+    { title: 'Total Tasks', value: globalStats?.totalTasks || 0, icon: DocumentTextIcon, bgColor: 'primary', textColor: 'text-primary' },
     { title: 'Completed', value: globalStats?.completed || 0, icon: CheckCircleIcon, bgColor: 'success', textColor: 'text-success' },
     { title: 'In Progress', value: globalStats?.inProgress || 0, icon: ArrowPathIcon, bgColor: 'secondary', textColor: 'text-secondary' },
     { title: 'Pending', value: globalStats?.pending || 0, icon: ClockIcon, bgColor: 'warning', textColor: 'text-warning' },
@@ -101,7 +101,7 @@ const ReportsDashboard = ({ user }) => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     return months.map(month => ({
       period: month,
-      total: globalStats?.total || 0,
+      total: globalStats?.totalTasks || 0,
       completed: globalStats?.completed || 0,
       inProgress: globalStats?.inProgress || 0,
       pending: globalStats?.pending || 0,
@@ -113,7 +113,7 @@ const ReportsDashboard = ({ user }) => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return days.map(day => ({
       period: day,
-      total: day === 'Mon' ? (globalStats?.total || 0) : 0,
+      total: day === 'Mon' ? (globalStats?.totalTasks || 0) : 0,
       completed: day === 'Mon' ? (globalStats?.completed || 0) : 0,
       inProgress: day === 'Mon' ? (globalStats?.inProgress || 0) : 0,
       pending: day === 'Mon' ? (globalStats?.pending || 0) : 0,
@@ -125,7 +125,7 @@ const ReportsDashboard = ({ user }) => {
   const getQuarterlyData = () => {
     return ['Q1', 'Q2', 'Q3', 'Q4'].map(q => ({
       period: q,
-      total: q === 'Q1' ? (globalStats?.total || 0) : 0,
+      total: q === 'Q1' ? (globalStats?.totalTasks || 0) : 0,
       completed: q === 'Q1' ? (globalStats?.completed || 0) : 0,
       inProgress: q === 'Q1' ? (globalStats?.inProgress || 0) : 0,
       pending: q === 'Q1' ? (globalStats?.pending || 0) : 0,
@@ -137,7 +137,7 @@ const ReportsDashboard = ({ user }) => {
     const currentYear = new Date().getFullYear();
     return [currentYear - 1, currentYear, currentYear + 1].map(year => ({
       period: year.toString(),
-      total: year === currentYear ? (globalStats?.total || 0) : 0,
+      total: year === currentYear ? (globalStats?.totalTasks || 0) : 0,
       completed: year === currentYear ? (globalStats?.completed || 0) : 0,
       inProgress: year === currentYear ? (globalStats?.inProgress || 0) : 0,
       pending: year === currentYear ? (globalStats?.pending || 0) : 0,
@@ -286,7 +286,7 @@ const ReportsDashboard = ({ user }) => {
             <Card className="border-0 shadow-sm rounded-4 h-100">
               <Card.Header className="bg-transparent border-0 pt-4 px-4 pb-0">
                 <h5 className="fw-bold text-dark mb-1">Task Distribution</h5>
-                <p className="small text-secondary mb-0">Current status breakdown ({globalStats?.total || 0} total tasks)</p>
+                <p className="small text-secondary mb-0">Current status breakdown ({globalStats?.totalTasks || 0} total tasks)</p>
               </Card.Header>
               <Card.Body className="p-4 d-flex align-items-center justify-content-center">
                 <div style={{ height: '300px', width: '100%' }}>

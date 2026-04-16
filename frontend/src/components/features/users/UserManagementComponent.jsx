@@ -175,80 +175,127 @@ const UserManagementComponent = ({ user }) => {
           <h3 className="h5 fw-bold text-dark">No Users Found</h3>
           <p className="text-secondary small mb-0">No users match your search criteria.</p>
         </div>
-      </div>
+      ) : (
+        <Card className="premium-card border-0 overflow-hidden shadow-sm">
+          <div className="table-responsive">
+            <Table hover className="align-middle mb-0">
+              <thead className="bg-light bg-opacity-50">
+                <tr className="text-secondary small fw-bold text-uppercase pb-2">
+                  <th className="px-4 py-3 border-bottom-0">User</th>
+                  <th className="px-4 py-3 border-bottom-0">Role</th>
+                  <th className="px-4 py-3 border-bottom-0">Contact</th>
+                  <th className="px-4 py-3 border-bottom-0">Jurisdiction</th>
+                  <th className="px-4 py-3 border-bottom-0">Status</th>
+                  <th className="px-4 py-3 border-bottom-0 text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="border-top-0">
+                {filteredUsers
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((user) => (
+                  <tr key={user.id} className="hover-light">
+                    <td className="px-4 py-3">
+                      <div className="d-flex align-items-center gap-3">
+                        <div className="avatar-circle-sm bg-primary text-white fw-bold d-flex align-items-center justify-content-center rounded-circle" style={{ width: '36px', height: '36px', fontSize: '0.8rem' }}>
+                          {user.avatar}
+                        </div>
+                        <div>
+                          <p className="fw-bold text-dark mb-0 small">{user.name}</p>
+                          <p className="text-muted mb-0" style={{ fontSize: '0.7rem' }}>ID: {user.id}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge bg={getRoleColor(user.role)} className="bg-opacity-10 text-dark border px-2 py-1 fw-medium" style={{ fontSize: '0.7rem' }}>
+                        {user.role}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-dark small mb-0">{user.email}</p>
+                      <p className="text-muted mb-0" style={{ fontSize: '0.75rem' }}>{user.phone}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-dark small mb-0 truncate" style={{ maxWidth: '150px' }}>{user.jurisdiction}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="d-flex align-items-center gap-2">
+                        <span className={`rounded-circle bg-${user.status === 'Active' ? 'success' : 'secondary'}`} style={{ width: '8px', height: '8px' }}></span>
+                        <span className="small fw-medium">{user.status}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-end">
+                      <Button 
+                        variant="link" 
+                        className="p-1 text-primary hover-bg-light rounded-2"
+                        onClick={() => { setSelectedUser(user); setIsModalOpen(true); }}
+                      >
+                        <EyeIcon style={{ width: '1.25rem' }} />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+          <div className="p-4 border-top">
+            <Pagination 
+              totalItems={filteredUsers.length}
+              itemsPerPage={itemsPerPage}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        </Card>
+      )}
 
-      {loading ? <div className="flex flex-col items-center justify-center p-20 bg-white rounded-xl border border-gray-100">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div><p className="text-gray-500 font-medium">Loading user data...</p>
-      </div> : filteredUsers.length === 0 ? <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-        <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4"><UserCircleIcon className="h-10 w-10 text-blue-300" /></div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">No Users Found</h3><p className="text-gray-500 max-w-sm mx-auto">No users match your search criteria.</p>
-      </div> : <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto"><table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200"><tr>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">User</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Role</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Email</th>
-             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Contact</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Jurisdiction</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Status</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Actions</th>
-          </tr></thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredUsers
-              .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-              .map(user => <tr key={user.id} className="hover:bg-gray-50 transition-colors group">
-            <td className="py-3 px-4"><div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm">{user.avatar}</div>
-              <p className="font-medium text-gray-800 text-sm">{user.name}</p>
-            </div></td>
-            <td className="py-3 px-4"><span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getRoleColor(user.role)}`}>{user.role}</span></td>
-            <td className="py-3 px-4"><p className="text-sm text-gray-600 truncate max-w-[180px]">{user.email}</p>
-            <p className="text-xs text-gray-500"></p></td>
-             <td className="py-3 px-4"><p className="text-sm text-gray-600 truncate max-w-[180px]"></p>
-            <p className="text-xs text-gray-500">{user.phone}</p></td>
-            <td className="py-3 px-4 text-sm text-gray-600 truncate max-w-[150px]">{user.jurisdiction}</td>
-            <td className="py-3  px-3"><span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.status === 'Active' ? 'bg-green-500' : 'bg-gray-500'}`}></span>{user.status}
-            </span></td>
-            <td className="py-3 px-4"><div className="flex gap-2">
-              <button onMouseEnter={(e) => showIconTooltip('View User Details', e)} onClick={() => { setSelectedUser(user); setIsModalOpen(true); }} className="p-1.5 hover:bg-blue-50 rounded-lg">
-                <EyeIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
-              </button>
-            </div></td>
-          </tr>)}</tbody>
-        </table></div>
-        <Pagination 
-          totalItems={filteredUsers.length}
-          itemsPerPage={itemsPerPage}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-        />
-      </div>}
+      <AnimatePresence>
+        {isModalOpen && (
+          <Modal show={isModalOpen} onHide={() => setIsModalOpen(false)} centered size="lg" className="premium-modal">
+            <UserModal 
+              user={selectedUser} 
+              allUsers={users} 
+              roles={roles} 
+              talukas={talukas} 
+              villages={villages}
+              fetchVillages={fetchVillages} 
+              showIconTooltip={showIconTooltip}
+              onClose={() => setShowCloseConfirm(true)}
+              onSave={async (userData) => {
+                try {
+                  const roleMap = { 
+                    'Collector': 'COLLECTOR', 'Addl. Collector': 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO': 'SDO', 
+                    'Tehsildar': 'TEHSILDAR', 'BDO': 'BDO', 'Talathi': 'TALATHI', 
+                    'Gram Sevak': 'GRAMSEVAK', 'Admin': 'SYSTEM_ADMINISTRATOR' 
+                  };
+                  const payload = { 
+                    ...userData, 
+                    role: roleMap[userData.role] || userData.role, 
+                    requesterId: user?.userID || '', 
+                    active: userData.status === 'Active' 
+                  };
+                  delete payload.status;
+                  
+                  if (selectedUser) {
+                    delete payload.userID; 
+                    if (!payload.password) delete payload.password;
+                    await updateUser(selectedUser.id, payload);
+                  } else {
+                    await addUser(payload);
+                  }
+                  
+                  showToast(selectedUser ? 'User Updated' : 'User Created', userData.name);
+                  setIsModalOpen(false);
+                  fetchUsers();
+                } catch (error) {
+                  console.error("Save User Error:", error);
+                }
+              }} 
+            />
+          </Modal>
+        )}
+      </AnimatePresence>
 
-      <AnimatePresence>{isModalOpen && <UserModal user={selectedUser} allUsers={users} roles={roles} talukas={talukas} villages={villages}
-        fetchVillages={fetchVillages} showIconTooltip={showIconTooltip}
-        onClose={() => { setShowCloseConfirm(true); }}
-        onConfirmClose={() => { setIsModalOpen(false); setSelectedUser(null); setVillages([]); setShowCloseConfirm(false); }}
-        onCancelClose={() => setShowCloseConfirm(false)}
-        onSave={async (userData) => {
-          try {
-            const roleMap = { 'Collector': 'COLLECTOR', 'Addl. Collector': 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO': 'SDO', 'Tehsildar': 'TEHSILDAR', 'BDO': 'BDO', 'Talathi': 'TALATHI', 'Gram Sevak': 'GRAMSEVAK', 'Admin': 'SYSTEM_ADMINISTRATOR' };
-            const payload = { ...userData, role: roleMap[userData.role] || userData.role, requesterId: user?.userID || '', active: userData.status === 'Active' };
-            delete payload.status;
-            
-            if (selectedUser) {
-              delete payload.userID; // NOT present in UpdateUserRequest DTO
-              if (!payload.password) delete payload.password;
-              await updateUser(selectedUser.id, payload);
-            } else {
-              await addUser(payload);
-            }
-          }} 
-        />
-      </Modal>
-
-      {/* Confirmation Modal */}
-      <Modal show={showCloseConfirm} onHide={() => setShowCloseConfirm(false)} centered size="sm">
+      <Modal show={showCloseConfirm} onHide={() => setShowCloseConfirm(false)} centered size="sm" className="premium-modal-sm">
         <Modal.Body className="p-4 text-center">
           <div className="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
             <XMarkIcon style={{ width: '2rem', height: '2rem' }} className="text-danger" />
