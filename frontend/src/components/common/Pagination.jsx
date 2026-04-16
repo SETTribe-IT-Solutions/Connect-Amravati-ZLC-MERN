@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { Button, Nav } from 'react-bootstrap';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 const Pagination = ({ totalItems, itemsPerPage, currentPage, onPageChange }) => {
@@ -30,58 +30,52 @@ const Pagination = ({ totalItems, itemsPerPage, currentPage, onPageChange }) => 
   const showingTo = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-2">
-      <div className="text-sm text-gray-500 font-medium order-2 sm:order-1">
-        Showing <span className="font-bold text-gray-900">{showingFrom}</span> to <span className="font-bold text-gray-900">{showingTo}</span> of <span className="font-bold text-gray-900">{totalItems}</span> items
+    <div className="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3 py-3 px-1">
+      <div className="text-secondary small fw-medium order-2 order-sm-1 font-outfit">
+        Showing <span className="fw-bold text-dark">{showingFrom}</span> to <span className="fw-bold text-dark">{showingTo}</span> of <span className="fw-bold text-dark">{totalItems}</span> items
       </div>
       
-      <div className="flex items-center gap-1 order-1 sm:order-2">
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+      <Nav className="gap-1 order-1 order-sm-2">
+        <Button
+          variant="light"
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className={`p-2 rounded-xl border transition-all ${
-            currentPage === 1 
-              ? 'bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed' 
-              : 'bg-white border-gray-200 text-gray-600 hover:border-blue-500 hover:text-blue-600 shadow-sm'
+          className={`p-2 rounded-3 border-light-subtle d-flex align-items-center justify-content-center transition-all shadow-sm ${
+            currentPage === 1 ? 'opacity-50' : 'bg-white hover-bg-primary hover-text-white'
           }`}
+          style={{ width: '40px', height: '40px' }}
         >
-          <ChevronLeftIcon className="h-5 w-5" />
-        </motion.button>
+          <ChevronLeftIcon style={{ width: '1.25rem' }} />
+        </Button>
 
-        <div className="flex items-center gap-1 mx-1">
+        <div className="d-flex gap-1 mx-1">
           {getPageNumbers().map((number) => (
-            <motion.button
+            <Button
               key={number}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              variant={currentPage === number ? "primary" : "light"}
               onClick={() => onPageChange(number)}
-              className={`min-w-[40px] h-10 px-3 rounded-xl font-bold text-sm transition-all ${
-                currentPage === number
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 border border-blue-600'
-                  : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50'
+              className={`rounded-3 fw-bold small transition-all ${
+                currentPage === number ? 'shadow-sm' : 'bg-white border-light-subtle hover-bg-primary hover-text-white'
               }`}
+              style={{ minWidth: '40px', height: '40px' }}
             >
               {number}
-            </motion.button>
+            </Button>
           ))}
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <Button
+          variant="light"
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          className={`p-2 rounded-xl border transition-all ${
-            currentPage === totalPages 
-              ? 'bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed' 
-              : 'bg-white border-gray-200 text-gray-600 hover:border-blue-500 hover:text-blue-600 shadow-sm'
+          className={`p-2 rounded-3 border-light-subtle d-flex align-items-center justify-content-center transition-all shadow-sm ${
+            currentPage === totalPages ? 'opacity-50' : 'bg-white hover-bg-primary hover-text-white'
           }`}
+          style={{ width: '40px', height: '40px' }}
         >
-          <ChevronRightIcon className="h-5 w-5" />
-        </motion.button>
-      </div>
+          <ChevronRightIcon style={{ width: '1.25rem' }} />
+        </Button>
+      </Nav>
     </div>
   );
 };

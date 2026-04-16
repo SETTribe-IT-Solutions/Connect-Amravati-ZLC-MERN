@@ -32,6 +32,8 @@ import AnnouncementForm from './AnnouncementForm';
 import { toast } from 'react-hot-toast';
 import Pagination from '../../common/Pagination';
 
+import { Container, Row, Col, Card, Button, Form, Nav, Badge, Modal, Spinner } from 'react-bootstrap';
+
 const CommunicationsDashboard = ({ user }) => {
   const [announcements, setAnnouncements] = useState([]);
   const [sentAnnouncements, setSentAnnouncements] = useState([]);
@@ -223,558 +225,453 @@ const CommunicationsDashboard = ({ user }) => {
   const years = ['2024', '2025', '2026'];
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <div className="p-4 p-md-5">
       {/* Header */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-left">
+      <div className="mb-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Communications and announcements
+          <h1 className="h3 fw-bold text-primary mb-1">
+            Communications and Announcements
           </h1>
-          <p className="text-gray-600 mt-2 flex items-center gap-2">
-            <span className="w-1 h-1 bg-blue-600 rounded-full"></span>
+          <p className="text-secondary small mb-0 d-flex align-items-center gap-2">
+            <span className="p-1 bg-primary rounded-circle" style={{ width: '4px', height: '4px' }}></span>
             Manage internal communications, messages, and alerts
           </p>
         </div>
 
         {isSeniorOfficial && (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <Button 
             onClick={() => setIsFormOpen(true)}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 font-bold"
+            className="rounded-3 px-4 py-2 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2"
           >
-            <PlusIcon className="h-5 w-5" />
+            <PlusIcon style={{ width: '1.25rem' }} />
             New Communication
-          </motion.button>
+          </Button>
         )}
       </div>
 
       {/* Tabs and Filters */}
-      <div className="mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      <div className="mb-4 d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4">
         {/* Tabs */}
-        <div className="flex bg-white/50 backdrop-blur-sm p-1.5 rounded-2xl border border-gray-200 w-fit self-start">
-          <button
-            onClick={() => setActiveTab('inbox')}
-            className={`px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all duration-300 ${
-              activeTab === 'inbox' 
-                ? 'bg-blue-600 text-white shadow-md' 
-                : 'text-gray-500 hover:text-blue-600 hover:bg-white'
-            }`}
-          >
-            <InboxIcon className="h-5 w-5" />
-            Inbox
-            {announcements.length > 0 && (
-              <span className={`text-[10px] px-1.5 rounded-md ${activeTab === 'inbox' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}>
-                {announcements.length}
-              </span>
-            )}
-          </button>
-            {isSeniorOfficial && (
-            <button
-              onClick={() => setActiveTab('sent')}
-              className={`px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all duration-300 ${
-                activeTab === 'sent' 
-                  ? 'bg-blue-600 text-white shadow-md' 
-                  : 'text-gray-500 hover:text-blue-600 hover:bg-white'
-              }`}
+        <Nav variant="pills" className="bg-light p-1 rounded-3 gap-1 shadow-sm border-0" style={{ width: 'fit-content' }}>
+          <Nav.Item>
+            <Nav.Link 
+              active={activeTab === 'inbox'} 
+              onClick={() => setActiveTab('inbox')}
+              className={`rounded-3 py-2 px-4 fw-bold d-flex align-items-center gap-2 border-0 ${activeTab === 'inbox' ? '' : 'text-secondary'}`}
             >
-              <PaperAirplaneIcon className="h-5 w-5" />
-              Sent Messages
-            </button>
+              <InboxIcon style={{ width: '1.1rem' }} />
+              Inbox
+              {announcements.length > 0 && (
+                <Badge bg={activeTab === 'inbox' ? 'light' : 'secondary'} text={activeTab === 'inbox' ? 'primary' : 'white'} className="ms-1">
+                  {announcements.length}
+                </Badge>
+              )}
+            </Nav.Link>
+          </Nav.Item>
+          {isSeniorOfficial && (
+            <Nav.Item>
+              <Nav.Link 
+                active={activeTab === 'sent'} 
+                onClick={() => setActiveTab('sent')}
+                className={`rounded-3 py-2 px-4 fw-bold d-flex align-items-center gap-2 border-0 ${activeTab === 'sent' ? '' : 'text-secondary'}`}
+              >
+                <PaperAirplaneIcon style={{ width: '1.1rem' }} />
+                Sent Messages
+              </Nav.Link>
+            </Nav.Item>
           )}
-        </div>
+        </Nav>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 bg-white/80 backdrop-blur-sm p-3 md:p-4 rounded-2xl md:rounded-3xl border border-blue-100 shadow-sm transition-all hover:shadow-md w-full lg:w-auto">
-          <div className="flex items-center gap-2 text-blue-600 font-bold text-sm px-2">
-            <FunnelIcon className="h-5 w-5" />
-            Filter By:
-          </div>
-          
-          <input
-            type="date"
-            name="date"
-            value={filters.date}
-            onChange={handleFilterChange}
-            className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-          />
+        <Card className="premium-card border-0 p-3 shadow-sm">
+          <Row className="g-2 align-items-center">
+            <Col xs="auto" className="d-flex align-items-center gap-2 text-primary fw-bold small px-2">
+              <FunnelIcon style={{ width: '1.25rem' }} />
+              Filter By:
+            </Col>
+            
+            <Col md="auto">
+              <Form.Control 
+                type="date" 
+                name="date" 
+                value={filters.date} 
+                onChange={handleFilterChange} 
+                className="rounded-3 border-light-subtle small py-2"
+              />
+            </Col>
 
-          <select
-            name="month"
-            value={filters.month}
-            onChange={handleFilterChange}
-            className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all cursor-pointer"
-          >
-            <option value="">All Months</option>
-            {months.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-          </select>
+            <Col md="auto">
+              <Form.Select 
+                name="month" 
+                value={filters.month} 
+                onChange={handleFilterChange} 
+                className="rounded-3 border-light-subtle small py-2 cursor-pointer"
+              >
+                <option value="">All Months</option>
+                {months.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+              </Form.Select>
+            </Col>
 
-          <select
-            name="year"
-            value={filters.year}
-            onChange={handleFilterChange}
-            className="flex-1 md:flex-initial px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all cursor-pointer min-w-[120px]"
-          >
-            <option value="">All Years</option>
-            {years.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
+            <Col md="auto">
+              <Form.Select 
+                name="year" 
+                value={filters.year} 
+                onChange={handleFilterChange} 
+                className="rounded-3 border-light-subtle small py-2 cursor-pointer"
+                style={{ minWidth: '120px' }}
+              >
+                <option value="">All Years</option>
+                {years.map(y => <option key={y} value={y}>{y}</option>)}
+              </Form.Select>
+            </Col>
 
-          {(filters.date || filters.month || filters.year) && (
-            <motion.button
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              onClick={clearFilters}
-              className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"
-              title="Clear Filters"
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </motion.button>
-          )}
-        </div>
+            {(filters.date || filters.month || filters.year) && (
+              <Col xs="auto">
+                <Button 
+                  variant="light" 
+                  onClick={clearFilters} 
+                  className="p-2 text-danger bg-danger bg-opacity-10 rounded-3 border-0"
+                  title="Clear Filters"
+                >
+                  <XMarkIcon style={{ width: '1.25rem' }} />
+                </Button>
+              </Col>
+            )}
+          </Row>
+        </Card>
       </div>
 
       {/* Content */}
       {loading ? (
-        <div className="bg-white rounded-3xl shadow-sm p-20 border border-gray-100 flex flex-col items-center justify-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-500 font-medium font-outfit">Fetching communications...</p>
-        </div>
+        <Card className="premium-card border-0 p-5 text-center shadow-sm">
+          <div className="d-flex flex-column align-items-center py-5">
+            <Spinner animation="border" variant="primary" className="mb-3" />
+            <p className="text-secondary fw-medium mb-0">Fetching communications...</p>
+          </div>
+        </Card>
       ) : currentDisplayList.length === 0 ? (
-        <div className="bg-white rounded-3xl shadow-sm p-20 border border-gray-100 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <MegaphoneIcon className="w-12 h-12 text-blue-200" />
+        <Card className="premium-card border-0 p-5 text-center shadow-sm">
+          <div className="d-flex flex-column align-items-center py-5 text-center">
+            <div className="p-4 bg-primary bg-opacity-10 rounded-circle mb-4">
+              <MegaphoneIcon style={{ width: '3rem' }} className="text-primary opacity-50" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">No communications found</h2>
-            <p className="text-gray-500 max-w-sm mx-auto">
+            <h3 className="h5 fw-bold text-dark mb-2">No communications found</h3>
+            <p className="text-secondary small mb-0" style={{ maxWidth: '400px' }}>
               Check your filters or try switching between Inbox and Sent messages.
             </p>
           </div>
-        </div>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-6">
+        <div className="d-flex flex-column gap-4">
           {currentDisplayList
             .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
             .map((item, index) => (
-            <motion.div
+            <Card 
               key={`${activeTab}-${item.id}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="bg-white rounded-3xl shadow-sm border border-indigo-100 overflow-hidden hover:shadow-lg transition-all group"
+              className="premium-card border-0 shadow-sm overflow-hidden hover-shadow-lg transition-all"
             >
-              <div className="flex flex-col md:flex-row">
-                <div className={`w-full md:w-2 border-r ${activeTab === 'inbox' ? 'bg-indigo-600' : 'bg-blue-600'}`} />
+              <div className="d-flex flex-column flex-md-row">
+                <div 
+                  className={`bg-${activeTab === 'inbox' ? 'primary' : 'info'}`} 
+                  style={{ width: '4px' }} 
+                />
                 
-                <div className="flex-1 p-6 md:p-8">
-                  <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                    <div className="flex items-center gap-3">
-                      <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${
-                        activeTab === 'inbox' 
-                          ? 'bg-indigo-100 text-indigo-700 border-indigo-200' 
-                          : 'bg-blue-100 text-blue-700 border-blue-200'
-                      }`}>
+                <Card.Body className="p-4">
+                  <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                    <div className="d-flex align-items-center gap-2">
+                      <Badge bg={activeTab === 'inbox' ? 'primary-subtle' : 'info-subtle'} text={activeTab === 'inbox' ? 'primary' : 'info'} className="text-uppercase px-3 py-2 rounded-pill">
                         {activeTab === 'inbox' ? 'Received' : 'Sent'}
-                      </span>
+                      </Badge>
                       {activeTab === 'inbox' && item.acknowledged && (
-                        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-xs font-bold border border-green-100">
-                          <CheckBadgeIcon className="h-4 w-4" />
+                        <Badge bg="success-subtle" text="success" className="d-flex align-items-center gap-1 px-3 py-2 rounded-pill border border-success-subtle">
+                          <CheckBadgeIcon style={{ width: '1rem' }} />
                           Acknowledged
-                        </span>
+                        </Badge>
                       )}
                       {activeTab === 'sent' && (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                        <Button 
+                          variant="light" 
+                          size="sm" 
                           onClick={() => fetchAcknowledgments(item)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-bold border border-blue-100 hover:bg-blue-100 transition-colors shadow-sm"
+                          className="d-flex align-items-center gap-1 px-3 py-1 bg-light text-primary rounded-pill border-0 shadow-sm small fw-bold"
                         >
-                          <ShieldCheckIcon className="h-4 w-4" />
+                          <ShieldCheckIcon style={{ width: '1rem' }} />
                           {item.acknowledgmentCount} Acknowledgments
-                          <ChevronRightIcon className="h-3 w-3 ml-0.5" />
-                        </motion.button>
+                          <ChevronRightIcon style={{ width: '0.75rem' }} />
+                        </Button>
                       )}
                     </div>
-                    <div className="text-gray-400 text-sm flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <ClockIcon className="h-4 w-4" />
+                    <div className="text-secondary small d-flex align-items-center gap-3">
+                      <div className="d-flex align-items-center gap-1">
+                        <ClockIcon style={{ width: '1rem' }} />
                         {formatTime(item.createdAt)}
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <DocumentTextIcon className="h-4 w-4" />
+                      <div className="d-flex align-items-center gap-1 border-start ps-3">
+                        <DocumentTextIcon style={{ width: '1rem' }} />
                         {formatDate(item.createdAt)}
                       </div>
                     </div>
                   </div>
 
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">
+                  <h3 className="h4 fw-bold text-dark mb-3">
                     {item.title}
                   </h3>
                   
-                  <div className="prose prose-blue max-w-none mb-8 text-gray-600 leading-relaxed font-roboto">
+                  <div className="text-secondary mb-4 lh-relaxed" style={{ fontSize: '0.95rem', whiteSpace: 'pre-wrap' }}>
                     {item.message}
                   </div>
 
                   {activeTab === 'sent' && (
-                    <div className="mb-8 p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-wrap gap-4 items-center">
-                      <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
-                        <MapPinIcon className="h-4 w-4" />
-                        Target Audience:
+                    <div className="mb-4 p-3 bg-light rounded-3 d-flex flex-wrap gap-3 align-items-center border border-light-subtle">
+                      <div className="d-flex align-items-center gap-2 small fw-bold text-secondary text-uppercase tracking-wider">
+                        <MapPinIcon style={{ width: '1rem' }} />
+                        Target:
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <span className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-xs font-bold text-blue-600">
-                          {item.targetRole}
-                        </span>
+                      <div className="d-flex flex-wrap gap-2">
+                        <Badge bg="primary" className="fw-bold px-2 py-1">{item.targetRole}</Badge>
                         {(item.targetTaluka !== 'ALL TALUKAS' || item.targetVillage !== 'ALL VILLAGES') && (
-                           <span className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600">
+                           <Badge bg="light" text="dark" className="border px-2 py-1 fw-medium">
                              {item.targetTaluka}{item.targetVillage !== 'ALL VILLAGES' ? ` > ${item.targetVillage}` : ''}
-                           </span>
+                           </Badge>
                         )}
                       </div>
                     </div>
                   )}
 
                   {item.attachment && (
-                    <div className="mb-6 flex items-center justify-between p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 group/attach hover:bg-indigo-50 transition-all">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white text-indigo-600 rounded-xl shadow-sm group-hover/attach:scale-110 transition-transform">
-                          <PaperClipIcon className="h-5 w-5" />
+                    <div className="mb-4 d-flex align-items-center justify-content-between p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-10 transition-all">
+                      <div className="d-flex align-items-center gap-3 overflow-hidden">
+                        <div className="p-2 bg-white text-primary rounded-3 shadow-sm flex-shrink-0">
+                          <PaperClipIcon style={{ width: '1.25rem' }} />
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-gray-900 truncate max-w-[150px] md:max-w-xs">
+                        <div className="overflow-hidden">
+                          <p className="small fw-bold text-dark mb-0 text-truncate">
                             {item.attachment.split('-').slice(1).join('-') || 'Attachment'}
                           </p>
-                          <p className="text-[10px] text-indigo-500 font-medium uppercase tracking-wider">
-                            Official Document / Image
+                          <p className="text-primary fw-medium mb-0" style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                            Official Document
                           </p>
                         </div>
                       </div>
-                      <a
+                      <Button
                         href={`http://localhost:8080/uploads/${item.attachment}`}
                         download={item.attachment}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all shadow-sm"
+                        className="btn-primary d-flex align-items-center gap-2 px-4 py-2 rounded-3 text-xs fw-bold shadow-sm"
                       >
-                        <ArrowDownTrayIcon className="h-4 w-4" />
+                        <ArrowDownTrayIcon style={{ width: '1rem' }} />
                         Download
-                      </a>
+                      </Button>
                     </div>
                   )}
 
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-6 border-t border-gray-100">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-2xl flex items-center justify-center shadow-inner bg-gray-50 border border-gray-100">
-                        <UserIcon className="h-6 w-6 text-blue-600" />
+                  <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4 pt-4 border-top">
+                    <div className="d-flex align-items-center gap-3">
+                      <div className="rounded-3 bg-light text-primary d-flex align-items-center justify-content-center shadow-inner border border-light-subtle" style={{ width: '2.5rem', height: '2.5rem' }}>
+                        <UserIcon style={{ width: '1.5rem' }} />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        <p className="text-uppercase text-secondary fw-bold mb-0" style={{ fontSize: '0.6rem', letterSpacing: '0.05rem' }}>
                           {activeTab === 'inbox' ? 'Sent By' : 'Author'}
                         </p>
-                        <p className="font-bold text-gray-900">{item.creatorName}</p>
-                        <p className="text-xs text-gray-500 font-medium">{item.creatorRole}</p>
+                        <p className="fw-bold text-dark mb-0 small">{item.creatorName}</p>
+                        <p className="text-secondary mb-0" style={{ fontSize: '0.7rem' }}>{item.creatorRole}</p>
                       </div>
                     </div>
 
-                    {activeTab === 'inbox' && (
-                      !item.acknowledged ? (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleAcknowledge(item.id)}
-                          className="px-8 py-3.5 rounded-2xl font-bold transition-all shadow-lg bg-indigo-600 text-white shadow-indigo-100 hover:bg-indigo-700 flex items-center justify-center gap-2"
-                        >
-                          <ShieldCheckIcon className="h-5 w-5" />
-                          Acknowledge Receipt
-                        </motion.button>
-                      ) : (
-                        <div className="text-green-600 font-bold flex items-center gap-2 px-6 py-3 bg-green-50 rounded-2xl border border-green-100">
-                          <CheckBadgeIcon className="h-6 w-6" />
-                          Acknowledged
-                        </div>
-                      )
-                    )}
+                    <div className="ms-md-auto">
+                      {activeTab === 'inbox' && (
+                        !item.acknowledged ? (
+                          <Button
+                            onClick={() => handleAcknowledge(item.id)}
+                            className="btn-primary px-4 py-2 rounded-3 fw-bold shadow-sm d-flex align-items-center gap-2"
+                          >
+                            <ShieldCheckIcon style={{ width: '1.25rem' }} />
+                            Acknowledge Receipt
+                          </Button>
+                        ) : (
+                          <div className="text-success fw-bold d-flex align-items-center gap-2 px-3 py-2 bg-success bg-opacity-10 rounded-3 border border-success border-opacity-10">
+                            <CheckBadgeIcon style={{ width: '1.25rem' }} />
+                            Acknowledged
+                          </div>
+                        )
+                      )}
 
-                    {activeTab === 'sent' && (
-                      <div className="flex items-center gap-2 mt-4 md:mt-0">
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => openEditModal(item)}
-                          className="px-4 py-2 border border-blue-200 text-blue-600 hover:bg-blue-50 rounded-xl font-bold flex items-center gap-2 transition-colors text-sm"
-                        >
-                          <PencilSquareIcon className="h-4 w-4" />
-                          Edit
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => confirmDelete(item.id)}
-                          className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-bold flex items-center gap-2 transition-colors text-sm"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                          Delete
-                        </motion.button>
-                      </div>
-                    )}
+                      {activeTab === 'sent' && (
+                        <div className="d-flex align-items-center gap-2">
+                          <Button
+                            variant="light"
+                            onClick={() => openEditModal(item)}
+                            className="px-3 py-2 border border-light-subtle text-primary bg-white hover-bg-light rounded-3 fw-bold d-flex align-items-center gap-2 small shadow-sm"
+                          >
+                            <PencilSquareIcon style={{ width: '1.1rem' }} />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="light"
+                            onClick={() => confirmDelete(item.id)}
+                            className="px-3 py-2 border border-light-subtle text-danger bg-white rounded-3 fw-bold d-flex align-items-center gap-2 small shadow-sm"
+                          >
+                            <TrashIcon style={{ width: '1.1rem' }} />
+                            Delete
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </Card.Body>
               </div>
-            </motion.div>
+            </Card>
           ))}
           
-          <Pagination 
-            totalItems={currentDisplayList.length}
-            itemsPerPage={itemsPerPage}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-          />
+          <div className="mt-4">
+            <Pagination 
+              totalItems={currentDisplayList.length}
+              itemsPerPage={itemsPerPage}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         </div>
       )}
 
-      {/* Modal Overlay */}
-      <AnimatePresence>
-        {isFormOpen && (
-          <AnnouncementForm 
-            onClose={() => setIsFormOpen(false)} 
-            onSuccess={() => {
-              setIsFormOpen(false);
-              fetchAnnouncements();
-            }}
-            currentUser={user}
-          />
-        )}
-      </AnimatePresence>
+      {/* New Communication Modal */}
+      <Modal show={isFormOpen} onHide={() => setIsFormOpen(false)} centered size="lg">
+        <AnnouncementForm 
+          onClose={() => setIsFormOpen(false)} 
+          onSuccess={() => {
+            setIsFormOpen(false);
+            fetchAnnouncements();
+          }}
+          currentUser={user}
+        />
+      </Modal>
 
-      {/* Edit Modal Overlay */}
-      <AnimatePresence>
-        {editingAnnouncement && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setEditingAnnouncement(null)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-blue-100"
-            >
-              <div className="p-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold font-outfit flex items-center gap-2">
-                    <PencilSquareIcon className="h-6 w-6" />
-                    Edit Communication
-                  </h2>
-                </div>
-                <button
-                  onClick={() => setEditingAnnouncement(null)}
-                  className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
+      {/* Edit Communication Modal */}
+      <Modal show={!!editingAnnouncement} onHide={() => setEditingAnnouncement(null)} centered size="lg">
+        <div className="modal-content border-0 overflow-hidden rounded-4">
+          <Modal.Header className="bg-primary text-white border-0 p-4">
+            <Modal.Title className="fw-bold d-flex align-items-center gap-2">
+              <PencilSquareIcon style={{ width: '1.5rem' }} />
+              Edit Communication
+            </Modal.Title>
+            <Button variant="link" className="text-white p-0" onClick={() => setEditingAnnouncement(null)}><XMarkIcon style={{ width: '1.5rem' }} /></Button>
+          </Modal.Header>
+          <Modal.Body className="p-4">
+            <Form onSubmit={handleUpdate}>
+              <Form.Group className="mb-4">
+                <Form.Label className="small fw-bold text-secondary">Subject / Title</Form.Label>
+                <Form.Control
+                  type="text"
+                  required
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  className="rounded-3 border-light-subtle py-2 shadow-sm"
+                />
+              </Form.Group>
+              <Form.Group className="mb-5">
+                <Form.Label className="small fw-bold text-secondary">Content</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  required
+                  rows={6}
+                  value={editForm.message}
+                  onChange={(e) => setEditForm({ ...editForm, message: e.target.value })}
+                  className="rounded-3 border-light-subtle py-2 shadow-sm resize-none"
+                />
+              </Form.Group>
+              <div className="d-flex justify-content-end gap-3 pt-3 border-top">
+                <Button variant="light" className="px-4 fw-bold rounded-3 border" onClick={() => setEditingAnnouncement(null)}>Cancel</Button>
+                <Button variant="primary" type="submit" disabled={updating} className="px-5 fw-bold rounded-3 shadow-sm d-flex align-items-center gap-2">
+                  {updating ? <Spinner size="sm" /> : 'Save Changes'}
+                </Button>
               </div>
-
-              <form onSubmit={handleUpdate} className="p-6">
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Subject / Title</label>
-                  <input
-                    type="text"
-                    required
-                    value={editForm.title}
-                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50 outline-none"
-                  />
-                </div>
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Content</label>
-                  <textarea
-                    required
-                    rows={5}
-                    value={editForm.message}
-                    onChange={(e) => setEditForm({ ...editForm, message: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50 outline-none resize-none"
-                  />
-                </div>
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={() => setEditingAnnouncement(null)}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl font-bold transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={updating}
-                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors flex items-center gap-2 disabled:opacity-50"
-                  >
-                    {updating ? 'Saving...' : 'Save Changes'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+            </Form>
+          </Modal.Body>
+        </div>
+      </Modal>
 
       {/* Acknowledgments Modal */}
-      <AnimatePresence>
-        {selectedAnnouncement && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedAnnouncement(null)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-blue-100"
-            >
-              {/* Modal Header */}
-              <div className="p-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold font-outfit">Acknowledgment List</h2>
-                  <p className="text-blue-100 text-sm mt-1 truncate max-w-md opacity-80">
-                    "{selectedAnnouncement.title}"
-                  </p>
-                </div>
-                <button
-                  onClick={() => setSelectedAnnouncement(null)}
-                  className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
+      <Modal show={!!selectedAnnouncement} onHide={() => setSelectedAnnouncement(null)} centered size="lg">
+        <div className="modal-content border-0 overflow-hidden rounded-4">
+          <Modal.Header className="bg-primary text-white border-0 p-4">
+            <div>
+              <Modal.Title className="fw-bold mb-1">Acknowledgment List</Modal.Title>
+              <p className="small mb-0 opacity-75 text-truncate" style={{ maxWidth: '400px' }}>
+                "{selectedAnnouncement?.title}"
+              </p>
+            </div>
+            <Button variant="link" className="text-white p-0 ms-auto" onClick={() => setSelectedAnnouncement(null)}><XMarkIcon style={{ width: '1.5rem' }} /></Button>
+          </Modal.Header>
+          <Modal.Body className="p-4" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+            {loadingAcks ? (
+              <div className="py-5 text-center">
+                <Spinner animation="border" variant="primary" className="mb-3" />
+                <p className="text-secondary small fw-medium">Loading acknowledgments...</p>
               </div>
-
-              {/* Modal Body */}
-              <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar bg-gray-50/50">
-                {loadingAcks ? (
-                  <div className="py-20 flex flex-col items-center justify-center">
-                    <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-gray-500 mt-4 font-medium">Loading acknowledgments...</p>
-                  </div>
-                ) : (acknowledgments || []).length === 0 ? (
-                  <div className="py-20 text-center">
-                    <ShieldCheckIcon className="h-16 w-16 text-gray-200 mx-auto mb-4" />
-                    <p className="text-gray-500 font-medium">No one has acknowledged this message yet.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {acknowledgments.map((ack, idx) => (
-                      <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        key={idx}
-                        className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-blue-200 hover:shadow-md transition-all"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-bold shadow-inner">
-                            {ack.userName ? ack.userName.charAt(0) : '?'}
-                          </div>
-                          <div>
-                            <p className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors uppercase text-sm">
-                              {ack.userName || 'Unknown User'}
-                            </p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
-                                {ack.userRole || 'N/A'}
-                              </span>
-                              <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
-                                <MapPinIcon className="h-3 w-3" />
-                                {ack.taluka || 'N/A'} | {ack.village || 'N/A'}
-                              </span>
-                            </div>
+            ) : (acknowledgments || []).length === 0 ? (
+              <div className="py-5 text-center">
+                <ShieldCheckIcon style={{ width: '3rem' }} className="text-secondary opacity-25 mb-3" />
+                <p className="text-secondary fw-medium">No one has acknowledged this message yet.</p>
+              </div>
+            ) : (
+              <div className="d-flex flex-column gap-3">
+                {acknowledgments.map((ack, idx) => (
+                  <Card key={idx} className="border-light-subtle shadow-sm rounded-3">
+                    <Card.Body className="p-3 d-flex align-items-center justify-content-between">
+                      <div className="d-flex align-items-center gap-3">
+                        <div className="rounded-3 bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold shadow-sm" style={{ width: '2.5rem', height: '2.5rem' }}>
+                          {ack.userName ? ack.userName.charAt(0) : '?'}
+                        </div>
+                        <div>
+                          <p className="fw-bold text-dark mb-0 small text-uppercase">
+                            {ack.userName || 'Unknown User'}
+                          </p>
+                          <div className="d-flex align-items-center gap-2 mt-1">
+                            <Badge bg="primary-subtle" text="primary" className="text-uppercase" style={{ fontSize: '0.6rem' }}>
+                              {ack.userRole || 'N/A'}
+                            </Badge>
+                            <span className="text-secondary" style={{ fontSize: '0.65rem' }}>
+                              <MapPinIcon style={{ width: '0.8rem', verticalAlign: 'text-top' }} /> {ack.taluka || 'N/A'} | {ack.village || 'N/A'}
+                            </span>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs font-bold text-gray-900">{ack.acknowledgedAt ? formatDate(ack.acknowledgedAt) : 'N/A'}</p>
-                          <p className="text-[10px] text-gray-400 font-medium">{ack.acknowledgedAt ? formatTime(ack.acknowledgedAt) : 'N/A'}</p>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
+                      </div>
+                      <div className="text-end">
+                        <p className="small fw-bold text-dark mb-0">{ack.acknowledgedAt ? formatDate(ack.acknowledgedAt) : 'N/A'}</p>
+                        <p className="text-secondary mb-0" style={{ fontSize: '0.65rem' }}>{ack.acknowledgedAt ? formatTime(ack.acknowledgedAt) : 'N/A'}</p>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                ))}
               </div>
-
-              {/* Modal Footer */}
-              <div className="p-4 bg-white border-t border-gray-100 flex justify-end">
-                <button
-                  onClick={() => setSelectedAnnouncement(null)}
-                  className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-colors text-sm"
-                >
-                  Close
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+            )}
+          </Modal.Body>
+          <Modal.Footer className="bg-light border-0 p-3">
+            <Button variant="light" className="px-4 fw-bold rounded-3 border" onClick={() => setSelectedAnnouncement(null)}>Close</Button>
+          </Modal.Footer>
+        </div>
+      </Modal>
 
       {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {deletingAnnouncementId && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => !isDeleting && setDeletingAnnouncementId(null)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-red-100"
-            >
-              <div className="p-8 pb-6 flex flex-col items-center text-center">
-                 <div className="h-20 w-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6 shadow-inner border border-red-100">
-                    <TrashIcon className="h-10 w-10" />
-                 </div>
-                 <h2 className="text-2xl font-bold text-gray-900 mb-3 font-outfit">Delete Communication</h2>
-                 <p className="text-gray-500 font-medium">
-                   Are you sure you want to delete this communication? This will also remove it from recipients' inboxes. 
-                   <span className="block mt-2 text-red-500 font-bold">This action cannot be undone.</span>
-                 </p>
-              </div>
-              <div className="p-6 pt-4 bg-gray-50 border-t border-gray-100 flex justify-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => setDeletingAnnouncementId(null)}
-                  disabled={isDeleting}
-                  className="flex-1 py-3 border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 hover:text-gray-900 rounded-xl font-bold transition-all disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={executeDelete}
-                  disabled={isDeleting}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:translate-y-0 hover:-translate-y-0.5"
-                >
-                  {isDeleting ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <TrashIcon className="h-5 w-5" />
-                      Yes, Delete
-                    </>
-                  )}
-                </button>
-              </div>
-            </motion.div>
+      <Modal show={!!deletingAnnouncementId} onHide={() => setDeletingAnnouncementId(null)} centered size="sm">
+        <Modal.Body className="p-4 text-center">
+          <div className="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
+            <TrashIcon style={{ width: '2rem', height: '2rem' }} className="text-danger" />
           </div>
-        )}
-      </AnimatePresence>
+          <h5 className="fw-bold mb-2">Delete Message?</h5>
+          <p className="small text-secondary mb-4">
+            This action will permanently remove the message for all recipients.
+          </p>
+          <div className="d-flex gap-2">
+            <Button variant="light" className="flex-grow-1 small py-2 rounded-3 border fw-semibold" onClick={() => setDeletingAnnouncementId(null)} disabled={isDeleting}>Cancel</Button>
+            <Button variant="danger" className="flex-grow-1 small py-2 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2" onClick={executeDelete} disabled={isDeleting}>
+              {isDeleting ? <Spinner size="sm" /> : 'Delete'}
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };

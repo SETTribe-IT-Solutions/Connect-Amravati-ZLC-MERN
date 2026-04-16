@@ -1,119 +1,145 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  html {
-    @apply scroll-smooth;
-  }
-
-  body {
-    @apply antialiased bg-gray-50 text-gray-900 m-0 p-0 min-h-screen;
-    font-family: 'Inter', system-ui, sans-serif;
-  }
-
-  h1 {
-    @apply text-4xl font-bold;
-  }
-
-  button {
-    @apply cursor-pointer transition-colors;
-  }
+/* Global Reset & Base Styles */
+html {
+  scroll-behavior: smooth;
 }
 
-@layer components {
-  .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300;
-  }
-
-  .stat-card {
-    @apply p-6 rounded-xl bg-gradient-to-br from-white to-gray-50 border border-gray-100;
-  }
-
-  .btn-primary {
-    @apply px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium;
-  }
-
-  .btn-secondary {
-    @apply px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-medium;
-  }
-
-  .gradient-border {
-    @apply h-1 w-full absolute top-0 left-0 z-50;
-    background: linear-gradient(90deg, #ff9933 0%, #ffffff 25%, #1e40af 50%, #ffffff 75%, #138808 100%);
-    background-size: 200% 200%;
-    animation: gradient 3s ease infinite;
-  }
-
-  .floating-label {
-    @apply absolute left-12 transition-all duration-300 pointer-events-none text-gray-500 bg-transparent px-1;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  .floating-label.active {
-    @apply top-0 text-xs text-blue-700 font-medium bg-white;
-  }
-
-  .input-field {
-    @apply w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-2xl outline-none transition-all bg-gray-50/50 backdrop-blur-sm shadow-sm;
-  }
-
-  .input-field:focus {
-    @apply border-blue-700 ring-4 ring-blue-100;
-  }
-
-  .gradient-button {
-    @apply relative overflow-hidden bg-gradient-to-r from-orange-500 via-blue-500 to-green-500 bg-[length:200%_200%] text-white font-semibold py-4 px-8 rounded-2xl cursor-pointer w-full text-lg flex items-center justify-center gap-3 transition-all disabled:opacity-80 disabled:cursor-not-allowed shadow-lg;
-    animation: gradient 3s ease infinite;
-  }
-
-  .gradient-button:hover:not(:disabled) {
-    @apply scale-105 shadow-xl;
-  }
-
-  .gradient-button:active:not(:disabled) {
-    @apply scale-95;
-  }
-
-  .spinner {
-    @apply w-6 h-6 border-4 border-white border-t-transparent rounded-full;
-    animation: spin 1s linear infinite;
-  }
+body {
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8fafc; /* gray-50 equivalent */
+  color: #0f172a; /* gray-900 equivalent */
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+h1 {
+  font-size: 2.25rem;
+}
+
+button {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Premium Components */
+.premium-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card {
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #f1f5f9;
+}
+
+.btn-premium-primary {
+  padding: 0.5rem 1.25rem;
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  color: white;
+  border-radius: 0.75rem;
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+
+.btn-premium-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+}
+
+.gradient-border {
+  height: 4px;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  background: linear-gradient(90deg, #ff9933 0%, #ffffff 25%, #1e40af 50%, #ffffff 75%, #138808 100%);
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.input-field-premium {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  outline: none;
+  transition: all 0.3s ease;
+  background-color: rgba(248, 250, 252, 0.8);
+}
+
+.input-field-premium:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  background-color: white;
+}
+
+.gradient-button-premium {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f97316 0%, #3b82f6 50%, #22c55e 100%);
+  background-size: 200% 200%;
+  color: white;
+  font-weight: 600;
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  font-size: 1.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.gradient-button-premium:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.spinner-premium {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Animations */
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 /* Hide Google Translate ugly elements */

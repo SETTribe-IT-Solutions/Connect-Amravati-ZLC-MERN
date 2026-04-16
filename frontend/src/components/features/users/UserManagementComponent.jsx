@@ -8,6 +8,7 @@ import {
   EyeIcon, CheckCircleIcon, EyeSlashIcon, PencilIcon
 } from '@heroicons/react/24/outline';
 import Pagination from '../../common/Pagination';
+import { Container, Row, Col, Card, Button, Form, Table, Badge, Modal, ProgressBar } from 'react-bootstrap';
 
 const UserManagementComponent = ({ user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -54,12 +55,9 @@ const UserManagementComponent = ({ user }) => {
         createdAt: u.createdAt || new Date().toISOString(),
         _rawActive: u.active
       }));
-      console.log('Mapped users:', mapped.map(u => ({ id: u.id, role: u.role, status: u.status, rawActive: u._rawActive })));
       setUsers(mapped.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) { console.error("Fetch Users Error:", error); } finally { setLoading(false); }
   }, []);
-
-
 
   const fetchTalukas = useCallback(async () => {
     try {
@@ -80,17 +78,17 @@ const UserManagementComponent = ({ user }) => {
 
   const roles = ['Collector', 'Addl. Collector', 'SDO', 'Tehsildar', 'BDO', 'Talathi', 'Gram Sevak', 'Admin'];
   const stats = [
-    { label: 'Total Users', value: users.length, icon: UserCircleIcon, bgColor: 'bg-blue-50', textColor: 'text-blue-600', msg: 'Total Users Count' },
-    { label: 'Active Users', value: users.filter(u => u.status === 'Active').length, icon: ShieldCheckIcon, bgColor: 'bg-green-50', textColor: 'text-green-600', msg: 'Currently Active Users' },
-    { label: 'New This Month', value: users.filter(u => new Date(u.joinDate).getMonth() === new Date().getMonth()).length, icon: TrophyIcon, bgColor: 'bg-purple-50', textColor: 'text-purple-600', msg: 'New Users This Month' }
+    { label: 'Total Users', value: users.length, icon: UserCircleIcon, color: 'primary', msg: 'Total Users Count' },
+    { label: 'Active Users', value: users.filter(u => u.status === 'Active').length, icon: ShieldCheckIcon, color: 'success', msg: 'Currently Active Users' },
+    { label: 'New This Month', value: users.filter(u => new Date(u.joinDate).getMonth() === new Date().getMonth()).length, icon: TrophyIcon, color: 'info', msg: 'New Users This Month' }
   ];
 
   const getRoleColor = (role) => ({
-    'Collector': 'bg-purple-100 text-purple-700', 'Addl. Collector': 'bg-indigo-100 text-indigo-700',
-    'SDO': 'bg-blue-100 text-blue-700', 'Tehsildar': 'bg-green-100 text-green-700',
-    'BDO': 'bg-yellow-100 text-yellow-700', 'Talathi': 'bg-orange-100 text-orange-700',
-    'Gram Sevak': 'bg-teal-100 text-teal-700', 'Admin': 'bg-gray-100 text-gray-700'
-  }[role] || 'bg-gray-100 text-gray-700');
+    'Collector': 'secondary', 'Addl. Collector': 'dark',
+    'SDO': 'primary', 'Tehsildar': 'success',
+    'BDO': 'warning', 'Talathi': 'danger',
+    'Gram Sevak': 'info', 'Admin': 'secondary'
+  }[role] || 'secondary');
 
   const filteredUsers = users.filter(user => 
     (user.name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase()) || user.role.toLowerCase().includes(searchTerm.toLowerCase())) &&
@@ -98,58 +96,84 @@ const UserManagementComponent = ({ user }) => {
   );
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <div className="p-4 bg-light min-vh-100">
       <AnimatePresence>
-        {toast && <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }}
-          className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600 text-white rounded-lg shadow-lg">
-          <div className="flex items-center gap-3 p-3 px-5">
-            <CheckCircleIcon className="h-5 w-5 text-white/80" />
-            <div><p className="text-sm font-medium">{toast.title}</p><p className="text-lg font-bold">{toast.value}</p></div>
-            <button onClick={() => setToast(null)}><XMarkIcon className="h-4 w-4 text-white/70 hover:text-white" /></button>
-          </div>
-        </motion.div>}
+        {toast && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            className="position-fixed top-0 start-50 translate-middle-x mt-4 z-3" style={{ width: 'auto', minWidth: '300px' }}>
+            <Card className="shadow-lg border-0 bg-primary text-white p-3 rounded-4">
+              <div className="d-flex align-items-center gap-3">
+                <CheckCircleIcon style={{ width: '1.5rem' }} />
+                <div>
+                  <p className="small mb-0 opacity-75">{toast.title}</p>
+                  <p className="fw-bold mb-0">{toast.value}</p>
+                </div>
+                <Button variant="link" className="text-white ms-auto p-0" onClick={() => setToast(null)}><XMarkIcon style={{ width: '1rem' }} /></Button>
+              </div>
+            </Card>
+          </motion.div>
+        )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showTooltip.visible && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-          className="fixed z-50 bg-gray-900 text-white text-xs py-1 px-2 rounded-md whitespace-nowrap pointer-events-none"
-          style={{ left: showTooltip.x, top: showTooltip.y, transform: 'translateX(-50%)' }}>{showTooltip.message}</motion.div>}
-      </AnimatePresence>
-
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div><h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">User Management</h1>
-          <p className="text-gray-600 mt-1">Manage users, roles, and permissions across all departments</p></div>
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-            onClick={() => { setSelectedUser(null); setIsModalOpen(true); }}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 font-medium">
-            <UserPlusIcon className="h-5 w-5" /> Add User
-          </motion.button>
+      <div className="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+          <h1 className="h2 fw-bold text-dark mb-1">User Management</h1>
+          <p className="text-secondary small mb-0">Manage users, roles, and permissions across all departments</p>
         </div>
+        <Button variant="primary" className="fw-bold px-4 py-2 rounded-3 shadow-sm" onClick={() => { setSelectedUser(null); setIsModalOpen(true); }}>
+          <UserPlusIcon style={{ width: '1.25rem', height: '1.25rem', marginRight: '0.5rem' }} /> Add User
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        {stats.map((stat, index) => <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}
-          whileHover={{ y: -5 }} onMouseEnter={(e) => showIconTooltip(stat.msg, e)} onClick={() => showToast(stat.label, stat.value)} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all p-4 border border-gray-100 cursor-pointer">
-          <div className="flex items-center justify-between">
-            <div><p className="text-xs text-gray-500">{stat.label}</p><p className="text-2xl font-bold text-gray-800 mt-1">{stat.value}</p></div>
-            <div className={`${stat.bgColor} p-2 rounded-lg`}><stat.icon className={`h-5 w-5 ${stat.textColor}`} /></div>
-          </div>
-        </motion.div>)}
-      </div>
+      <Row className="g-3 mb-4">
+        {stats.map((stat, index) => (
+          <Col key={stat.label} xs={12} sm={4}>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
+              <Card className="premium-card border-0 p-3 h-100 shadow-sm shadow-hover cursor-pointer" onClick={() => showToast(stat.label, stat.value)}>
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <p className="small text-secondary fw-bold mb-1">{stat.label}</p>
+                    <p className="h3 fw-bold mb-0">{stat.value}</p>
+                  </div>
+                  <div className={`p-3 rounded-3 bg-${stat.color} bg-opacity-10 text-${stat.color}`}>
+                    <stat.icon style={{ width: '1.5rem', height: '1.5rem' }} />
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          </Col>
+        ))}
+      </Row>
 
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-100">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input type="text" placeholder="Search users by name, email, or role..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
-            className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-            <option value="all">All Roles</option>{roles.map(role => <option key={role} value={role}>{role}</option>)}
-          </select>
+      <Card className="premium-card border-0 p-4 mb-4">
+        <Row className="g-3">
+          <Col md={8}>
+            <div className="position-relative">
+              <MagnifyingGlassIcon className="position-absolute translate-middle-y text-secondary" style={{ width: '1.25rem', left: '0.75rem', top: '50%', zIndex: 10 }} />
+              <Form.Control type="text" placeholder="Search users by name, email, or role..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="rounded-3 border-light-subtle ps-5 py-2" />
+            </div>
+          </Col>
+          <Col md={4}>
+            <Form.Select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="rounded-3 border-light-subtle py-2">
+              <option value="all">All Roles</option>
+              {roles.map(role => <option key={role} value={role}>{role}</option>)}
+            </Form.Select>
+          </Col>
+        </Row>
+      </Card>
 
+      {loading ? (
+        <div className="text-center py-5 bg-white rounded-4 border shadow-sm">
+          <div className="spinner-border text-primary mb-3" role="status"></div>
+          <p className="text-secondary fw-medium">Loading user data...</p>
+        </div>
+      ) : filteredUsers.length === 0 ? (
+        <div className="text-center py-5 bg-white rounded-4 border shadow-sm">
+          <div className="p-4 bg-light rounded-circle d-inline-block mb-3">
+            <UserCircleIcon style={{ width: '3rem' }} className="text-secondary opacity-50" />
+          </div>
+          <h3 className="h5 fw-bold text-dark">No Users Found</h3>
+          <p className="text-secondary small mb-0">No users match your search criteria.</p>
         </div>
       </div>
 
@@ -219,245 +243,240 @@ const UserManagementComponent = ({ user }) => {
             } else {
               await addUser(payload);
             }
-            
-            fetchUsers(); setIsModalOpen(false); setSelectedUser(null);
-            showToast(selectedUser ? 'User Updated' : 'User Created', 'Successfully');
-          } catch (error) { 
-            console.error("Save Error:", error.response?.data || error.message);
-            showToast('Operation Failed', 'Please try again'); 
-          }
-        }} />}</AnimatePresence>
+          }} 
+        />
+      </Modal>
 
-      <AnimatePresence>{showCloseConfirm && <ConfirmPopup message="Do you want to close?" onConfirm={() => { setIsModalOpen(false); setSelectedUser(null); setVillages([]); setShowCloseConfirm(false); }} onCancel={() => setShowCloseConfirm(false)} />}</AnimatePresence>
+      {/* Confirmation Modal */}
+      <Modal show={showCloseConfirm} onHide={() => setShowCloseConfirm(false)} centered size="sm">
+        <Modal.Body className="p-4 text-center">
+          <div className="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
+            <XMarkIcon style={{ width: '2rem', height: '2rem' }} className="text-danger" />
+          </div>
+          <h6 className="fw-bold mb-1">Confirm Close</h6>
+          <p className="small text-muted mb-4">Do you want to close without saving?</p>
+          <div className="d-flex gap-2">
+            <Button variant="light" className="flex-grow-1 small py-2 rounded-3 border fw-semibold" onClick={() => setShowCloseConfirm(false)}>No</Button>
+            <Button variant="danger" className="flex-grow-1 small py-2 rounded-3 fw-semibold shadow-sm" onClick={() => { setIsModalOpen(false); setSelectedUser(null); setVillages([]); setShowCloseConfirm(false); }}>Yes, Close</Button>
+          </div>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };
 
-const UserModal = ({ user, allUsers, roles, talukas, villages, fetchVillages, onClose, onSave, showIconTooltip }) => {
+const UserModal = ({ user, allUsers, roles, talukas, villages, fetchVillages, onClose, onSave }) => {
   const roleLimits = {
-    'Collector': 1,
-    'Addl. Collector': 8,
-    'SDO': 6,
-    'Tehsildar': 30,
-    'BDO': 14,
-    'Talathi': 600,
-    'Gram Sevak': 900,
-    'Admin': Infinity
+    'Collector': 1, 'Addl. Collector': 8, 'SDO': 6, 'Tehsildar': 30, 'BDO': 14, 'Talathi': 600, 'Gram Sevak': 900, 'Admin': Infinity
   };
+
+  const [isEditing, setIsEditing] = useState(!user);
+  const [formData, setFormData] = useState({
+    id: user?.id || '',
+    userID: user?.id || '', 
+    name: user?.name || '', 
+    email: user?.email || '',
+    phone: (user?.phone || '').replace(/\D/g, '').slice(0, 10), 
+    role: user?.role || '',
+    district: user?.district || 'Amravati', 
+    taluka: user?.taluka || '', 
+    village: user?.village || '',
+    status: user?.status || 'Active', 
+    password: ''
+  });
+  
+  const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (user?.taluka) fetchVillages(user.taluka);
+  }, [user, fetchVillages]);
 
   const availableRoles = roles.filter(role => {
     if (user && user.role === role) return true;
     const count = allUsers ? allUsers.filter(u => u.role === role && u.status === 'Active').length : 0;
-    if (role === 'Collector') console.log("Collector limit check:", { count, limit: roleLimits[role], activeCollectors: allUsers?.filter(u => u.role === 'Collector' && u.status === 'Active') });
     return count < (roleLimits[role] || Infinity);
   });
-
-  const [formData, setFormData] = useState({
-    userID: user?.id || '', name: user?.name || '', email: user?.email || '',
-    phone: (user?.phone || '').replace(/\D/g, '').slice(0, 10), role: user?.role || '',
-    district: user?.district || 'Amravati', taluka: user?.taluka || '', village: user?.village || '',
-    status: user?.status || 'Active', password: ''
-  });
-  const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-
-  const validatePhone = (phone) => {
-    if (!phone) return 'Phone number is required';
-    if (!/^\d{10}$/.test(phone)) return 'Phone number must be exactly 10 digits';
-    if (!/^[6-9]/.test(phone)) return 'Phone number must start with 6, 7, 8, or 9';
-    return '';
-  };
-  const validatePassword = (password) => {
-    if (!password && !user) return 'Password is required';
-    if (password && password.length < 8) return 'Password must be at least 8 characters';
-    if (password && !/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter';
-    if (password && !/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter';
-    if (password && !/[0-9]/.test(password)) return 'Password must contain at least one number';
-    if (password && !/[!@#$%^&*]/.test(password)) return 'Password must contain at least one special character (!@#$%^&*)';
-    return '';
-  };
-
-  
-  // Initial village fetch if editing a user with an existing taluka
-useEffect(() => {
-  if (user?.taluka) {
-    fetchVillages(user.taluka);
-  }
-}, [user, fetchVillages]);
-
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
-      if (!formData.userID) {
-    newErrors.userID = "User ID is required";
-  } else if (!/^\d+$/.test(formData.userID)) {
-    newErrors.userID = "User ID must contain only digits";
-  }
-    const phoneError = validatePhone(formData.phone);
-    if (phoneError) newErrors.phone = phoneError;
-    if ((!user && !isEditing) || (isEditing && formData.password)) {
-      const passwordError = validatePassword(formData.password);
-      if (passwordError) newErrors.password = passwordError;
-    }
+    if (!formData.userID) newErrors.userID = "User ID is required";
+    if (!formData.name) newErrors.name = "Full Name is required";
+    if (!formData.email) newErrors.email = "Email is required";
+    
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!phoneRegex.test(formData.phone)) newErrors.phone = "Invalid 10-digit phone number";
+    
+    if (!user && !formData.password) newErrors.password = "Password is required";
+    if (formData.password && formData.password.length < 8) newErrors.password = "Min 8 characters required";
+
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
-    // Enforce Capacity Limits
-    const selectedRole = formData.role;
-    const isBecomingActive = formData.status === 'Active';
-    const isCurrentlyActive = user && user.status === 'Active';
-    
-    if (isBecomingActive && (!user || (user && !isCurrentlyActive) || (user && user.role !== selectedRole))) {
-      // Activating an inactive user, creating a new user, or changing to a new role while active
-      const count = allUsers ? allUsers.filter(u => u.role === selectedRole && u.status === 'Active').length : 0;
-      if (count >= (roleLimits[selectedRole] || Infinity)) {
-        setErrors({...newErrors, role: `Limit reached! The system already has ${count} Active ${selectedRole}(s).`});
+    // Role Limit Check
+    if (formData.status === 'Active' && (!user || user.status !== 'Active' || user.role !== formData.role)) {
+      const count = allUsers.filter(u => u.role === formData.role && u.status === 'Active').length;
+      if (count >= roleLimits[formData.role]) {
+        setErrors({ role: `Limit reached for ${formData.role} role.` });
         return;
       }
     }
 
-    setErrors({});
     onSave(formData);
   };
 
   if (user && !isEditing) {
-    return (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm" onClick={onClose}>
-      <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-        className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white">User Details</h2>
-          <div className="flex gap-2">
-            <button onMouseEnter={(e) => showIconTooltip && showIconTooltip('Close', e)} onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg transition-colors text-white"><XMarkIcon className="h-5 w-5" /></button>
+    return (
+      <div className="modal-content border-0 overflow-hidden rounded-4">
+        <Modal.Header className="bg-primary text-white border-0 p-4">
+          <Modal.Title className="fw-bold">User Details</Modal.Title>
+          <Button variant="link" className="text-white p-0" onClick={onClose}><XMarkIcon style={{ width: '1.5rem' }} /></Button>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          <Row className="g-4 mb-4">
+            <Col xs={6}>
+              <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.65rem' }}>User ID</div>
+              <p className="fw-bold text-dark mb-0">{user.id}</p>
+            </Col>
+            <Col xs={6}>
+              <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.65rem' }}>Full Name</div>
+              <p className="fw-bold text-dark mb-0">{user.name}</p>
+            </Col>
+            <Col xs={6}>
+              <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.65rem' }}>Email</div>
+              <p className="fw-medium text-dark mb-0">{user.email}</p>
+            </Col>
+            <Col xs={6}>
+              <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.65rem' }}>Phone</div>
+              <p className="fw-medium text-dark mb-0">{user.phone}</p>
+            </Col>
+            <Col xs={6}>
+              <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.65rem' }}>Role</div>
+              <Badge bg="primary" className="rounded-pill">{user.role}</Badge>
+            </Col>
+            <Col xs={6}>
+              <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.65rem' }}>Status</div>
+              <Badge bg={user.status === 'Active' ? 'success' : 'secondary'} className="rounded-pill">{user.status}</Badge>
+            </Col>
+            <Col xs={12}>
+              <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.65rem' }}>Jurisdiction</div>
+              <p className="fw-medium text-dark mb-0">{user.jurisdiction}</p>
+            </Col>
+          </Row>
+          <div className="d-flex gap-2">
+            <Button variant="primary" className="flex-grow-1 fw-bold rounded-3" onClick={() => setIsEditing(true)}>
+              <PencilIcon style={{ width: '1.1rem', marginRight: '0.5rem' }} /> Edit User
+            </Button>
+            <Button variant="light" className="flex-grow-1 fw-bold rounded-3" onClick={onClose}>Close</Button>
           </div>
-        </div>
-        <div className="p-5"><div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium text-gray-500 mb-1">User ID</label><p className="text-gray-900 font-medium">{user.id}</p></div>
-          <div><label className="block text-sm font-medium text-gray-500 mb-1">Full Name</label><p className="text-gray-900 font-medium">{user.name}</p></div></div>
-          <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium text-gray-500 mb-1">Email</label><p className="text-gray-900">{user.email}</p></div>
-          <div><label className="block text-sm font-medium text-gray-500 mb-1">Phone</label><p className="text-gray-900">{user.phone}</p></div></div>
-          <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium text-gray-500 mb-1">Role</label><p className="text-gray-900">{user.role}</p></div>
-          <div><label className="block text-sm font-medium text-gray-500 mb-1">Status</label><p className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{user.status}</p></div></div>
-          <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium text-gray-500 mb-1">District</label><p className="text-gray-900">{user.district || 'Amravati'}</p></div>
-          <div className="grid grid-cols-2 gap-2"><div><label className="block text-sm font-medium text-gray-500 mb-1">Taluka</label><p className="text-gray-900">{user.taluka || '-'}</p></div>
-          <div><label className="block text-sm font-medium text-gray-500 mb-1">Village</label><p className="text-gray-900">{user.village || '-'}</p></div></div></div>
-          <div><label className="block text-sm font-medium text-gray-500 mb-1">Jurisdiction</label><p className="text-gray-900">{user.jurisdiction}</p></div>
-          <div><label className="block text-sm font-medium text-gray-500 mb-1">Joined Date</label><p className="text-gray-900">{user.joinDate}</p></div>
-        </div>
-        <div className="flex gap-3 pt-6 mt-4 border-t border-gray-200">
-          <button onMouseEnter={(e) => showIconTooltip && showIconTooltip('Edit User', e)} onClick={() => setIsEditing(true)} className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-md hover:shadow-lg font-medium text-sm flex items-center justify-center gap-2">
-            <PencilIcon className="h-4 w-4" /> Edit User
-          </button>
-          <button onMouseEnter={(e) => showIconTooltip && showIconTooltip('Close', e)} onClick={onClose} className="flex-1 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 font-medium text-sm">Close</button>
-        </div></div>
-      </motion.div>
-    </motion.div>);
+        </Modal.Body>
+      </div>
+    );
   }
 
-  return (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-    className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm" onClick={onClose}>
-    <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-      className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-      <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-white">{user ? 'Edit User' : 'Add New User'}</h2>
-        <button onMouseEnter={(e) => showIconTooltip && showIconTooltip('Close', e)} onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg transition-colors text-white"><XMarkIcon className="h-5 w-5" /></button>
-      </div>
-      <div className="p-5"><form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">User ID (Number) <span className="text-red-500">*</span></label>
-          {/* <input type="number" required disabled={user} value={formData.userID} onChange={(e) => setFormData({...formData, userID: e.target.value})} */}
-
-          <input 
-  type="text"
-  inputMode="numeric"
-  pattern="[0-9]*"
-  required
-  disabled={user}
-  value={formData.userID}
-  onChange={(e) => {
-    const value = e.target.value;
-
-    // only digits allow
-    if (/^\d*$/.test(value)) {
-      setFormData({ ...formData, userID: value });
-    }
-  }}
-   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 text-sm"
-  placeholder="Enter user ID (digits only)"
-/>
-{errors.userID && <p className="mt-1 text-xs text-red-500">⚠️ {errors.userID}</p>}
-</div>
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
-          <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Enter full name" /></div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
-          <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" placeholder="example@email.com" /></div>
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
-          <input type="tel" required value={formData.phone} onChange={(e) => { const value = e.target.value.replace(/\D/g, '').slice(0, 10); setFormData({...formData, phone: value}); setErrors({...errors, phone: ''}); }}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm ${errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-200'}`} placeholder="Enter 10-digit mobile number" />
-          {errors.phone && <p className="mt-1 text-xs text-red-500">⚠️ {errors.phone}</p>}</div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">Role <span className="text-red-500">*</span></label>
-          <select required value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm ${errors.role ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
-            <option value="">Select Role</option>
-            {availableRoles.map(role => <option key={role} value={role}>{role}</option>)}
-          </select>
-          {errors.role && <p className="mt-1 text-xs text-red-500">⚠️ {errors.role}</p>}</div>
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-          <select disabled={!user} value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed">
-            <option value="Active">Active</option><option value="Inactive">Inactive</option>
-          </select></div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">District <span className="text-red-500">*</span></label>
-          <input type="text" required value={formData.district} onChange={(e) => setFormData({...formData, district: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Enter district" /></div>
-          <div className="grid grid-cols-2 gap-2"><div><label className="block text-sm font-medium text-gray-700 mb-1">Taluka {formData.role !== 'Collector' && formData.role !== 'Admin' && <span className="text-red-500">*</span>}</label>
-          <select required={formData.role !== 'Collector' && formData.role !== 'Admin'} value={formData.taluka} onChange={(e) => { setFormData({...formData, taluka: e.target.value, village: ''}); if(e.target.value) fetchVillages(e.target.value); }}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
-            <option value="">Select Taluka</option>{talukas.map((t, idx) => <option key={idx} value={t}>{t}</option>)}
-          </select></div>
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">Village {formData.role !== 'Collector' && formData.role !== 'Admin' && <span className="text-red-500">*</span>}</label>
-          <select required={formData.role !== 'Collector' && formData.role !== 'Admin'} value={formData.village} onChange={(e) => setFormData({...formData, village: e.target.value})} disabled={!formData.taluka && (formData.role !== 'Collector' && formData.role !== 'Admin')}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
-            <option value="">Select Village</option>{villages.map((v, idx) => <option key={idx} value={v}>{v}</option>)}
-          </select></div></div>
-        </div>
-        {(!user || (user && isEditing)) && (<div><label className="block text-sm font-medium text-gray-700 mb-1">{user ? 'New Password (leave blank to keep current)' : 'Password'} <span className="text-red-500">*</span></label>
-        <div className="relative"><input type={showPassword ? "text" : "password"} required={!user} value={formData.password}
-          onChange={(e) => { setFormData({...formData, password: e.target.value}); setErrors({...errors, password: ''}); }}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-sm pr-10 ${errors.password ? 'border-red-500 bg-red-50' : 'border-gray-200'}`} placeholder="Enter password" />
-          <button type="button" onMouseEnter={(e) => showIconTooltip && showIconTooltip(showPassword ? 'Hide Password' : 'Show Password', e)} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            {showPassword ? <EyeSlashIcon className="h-5 w-5 text-gray-500" /> : <EyeIcon className="h-5 w-5 text-gray-500" />}
-          </button></div>
-        {errors.password && <p className="mt-1 text-xs text-red-500">⚠️ {errors.password}</p>}
-        <p className="text-xs text-gray-500 mt-1">Password must contain: 1 uppercase, 1 lowercase, 1 number, 1 special character (!@#$%^&*), min 8 characters</p></div>)}
-        <div className="flex gap-3 pt-2">
-          <button type="submit" onMouseEnter={(e) => showIconTooltip && showIconTooltip(user ? 'Update User' : 'Create User', e)} className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-md hover:shadow-lg font-medium text-sm">{user ? 'Update User' : 'Create User'}</button>
-          <button type="button" onMouseEnter={(e) => showIconTooltip && showIconTooltip('Cancel', e)} onClick={onClose} className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 font-medium text-sm">Cancel</button>
-        </div>
-      </form></div>
-    </motion.div>
-  </motion.div>);
-};
-
-const ConfirmPopup = ({ message, onConfirm, onCancel }) => (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-  className="fixed inset-0 z-[210] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm" onClick={onCancel}>
-  <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-    className="bg-white rounded-xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-    <div className="p-5 text-center"><div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3"><XMarkIcon className="h-7 w-7 text-red-600" /></div>
-      <h3 className="text-lg font-bold text-gray-900 mb-2">Confirm Close</h3><p className="text-sm text-gray-600 mb-5">{message}</p>
-      <div className="flex gap-3"><button onClick={onCancel} className="flex-1 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 font-medium text-sm">No</button>
-      <button onClick={onConfirm} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm">Yes, Close</button></div>
+  return (
+    <div className="modal-content border-0 overflow-hidden rounded-4">
+      <Modal.Header className="bg-primary text-white border-0 p-4">
+        <Modal.Title className="fw-bold">{user ? 'Edit User' : 'Add New User'}</Modal.Title>
+        <Button variant="link" className="text-white p-0" onClick={onClose}><XMarkIcon style={{ width: '1.5rem' }} /></Button>
+      </Modal.Header>
+      <Modal.Body className="p-4">
+        <Form onSubmit={handleSubmit}>
+          <Row className="g-3 mb-3">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary">User ID (Digits) *</Form.Label>
+                <Form.Control type="text" disabled={!!user} value={formData.userID} isInvalid={!!errors.userID} 
+                  onChange={(e) => setFormData({...formData, userID: e.target.value.replace(/\D/g, '')})} className="rounded-3 border-light-subtle" />
+                <Form.Control.Feedback type="invalid">{errors.userID}</Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary">Full Name *</Form.Label>
+                <Form.Control type="text" value={formData.name} isInvalid={!!errors.name} 
+                  onChange={(e) => setFormData({...formData, name: e.target.value})} className="rounded-3 border-light-subtle" />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary">Email *</Form.Label>
+                <Form.Control type="email" value={formData.email} isInvalid={!!errors.email} 
+                  onChange={(e) => setFormData({...formData, email: e.target.value})} className="rounded-3 border-light-subtle" />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary">Phone (10-digit) *</Form.Label>
+                <Form.Control type="tel" value={formData.phone} isInvalid={!!errors.phone} 
+                  onChange={(e) => setFormData({...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10)})} className="rounded-3 border-light-subtle" />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary">Role *</Form.Label>
+                <Form.Select value={formData.role} isInvalid={!!errors.role} onChange={(e) => setFormData({...formData, role: e.target.value})} className="rounded-3 border-light-subtle">
+                  <option value="">Select Role</option>
+                  {availableRoles.map(r => <option key={r} value={r}>{r}</option>)}
+                </Form.Select>
+                <Form.Control.Feedback type="invalid">{errors.role}</Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary">Status</Form.Label>
+                <Form.Select disabled={!user} value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="rounded-3 border-light-subtle">
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary">District</Form.Label>
+                <Form.Control type="text" value={formData.district} readOnly className="rounded-3 bg-light border-light-subtle" />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary">Taluka</Form.Label>
+                <Form.Select value={formData.taluka} onChange={(e) => { setFormData({...formData, taluka: e.target.value, village: ''}); fetchVillages(e.target.value); }} className="rounded-3 border-light-subtle">
+                  <option value="">Select Taluka</option>
+                  {talukas.map(t => <option key={t} value={t}>{t}</option>)}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary">Village</Form.Label>
+                <Form.Select value={formData.village} onChange={(e) => setFormData({...formData, village: e.target.value})} className="rounded-3 border-light-subtle">
+                  <option value="">Select Village</option>
+                  {villages.map(v => <option key={v} value={v}>{v}</option>)}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col xs={12}>
+              <Form.Group className="position-relative">
+                <Form.Label className="small fw-bold text-secondary">{user ? 'New Password (Optional)' : 'Password *'}</Form.Label>
+                <Form.Control type={showPassword ? "text" : "password"} value={formData.password} isInvalid={!!errors.password} 
+                  onChange={(e) => setFormData({...formData, password: e.target.value})} className="rounded-3 border-light-subtle pe-5" />
+                <Button variant="link" className="position-absolute end-0 top-50 translate-middle-y text-secondary p-2 mt-2" onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? <EyeSlashIcon style={{ width: '1.25rem' }} /> : <EyeIcon style={{ width: '1.25rem' }} />}
+                </Button>
+                <Form.Control.Feedback type="invalid">{errors.password}</Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+          </Row>
+          <div className="d-flex gap-2 mt-4">
+            <Button variant="primary" type="submit" className="flex-grow-1 fw-bold rounded-3 py-2 shadow-sm">
+              {user ? 'Update User' : 'Create User'}
+            </Button>
+            <Button variant="light" className="flex-grow-1 fw-bold rounded-3 py-2 border" onClick={onClose}>Cancel</Button>
+          </div>
+        </Form>
+      </Modal.Body>
     </div>
-  </motion.div>
-</motion.div>);
+  );
+};
 
 export default UserManagementComponent;

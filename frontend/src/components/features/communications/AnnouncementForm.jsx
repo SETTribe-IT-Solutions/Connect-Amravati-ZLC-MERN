@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { motion } from 'framer-motion';
+import { Form, Button, Row, Col, Spinner, InputGroup } from 'react-bootstrap';
 import { 
   XMarkIcon, 
   PaperAirplaneIcon, 
@@ -62,7 +62,7 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
     axios.get(url)
       .then(res => {
         const talukaNames = res.data.map(t => t.taluka);
-        setTalukas(talukaNames);
+        setTalukas(talukaNames || []);
       })
       .catch(err => console.error("Error fetching talukas:", err));
   }, [formData.targetRole]);
@@ -80,7 +80,7 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
     axios.get(url)
       .then(res => {
         const villageNames = res.data.map(v => v.village);
-        setVillages(villageNames);
+        setVillages(villageNames || []);
       })
       .catch(err => console.error("Error fetching villages:", err));
   }, [formData.targetTaluka, formData.targetRole]);
@@ -94,7 +94,6 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
     
     if (!allowedExtensions.includes(fileExtension)) {
       toast.error('Invalid file format. Allowed: pdf, doc, docx, xls, xlsx, csv, txt, jpg, jpeg, png');
-      // Reset the file input so the invalid file isn't kept
       e.target.value = null;
       return;
     }
@@ -149,7 +148,6 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
       console.error("Error sending announcement:", error);
       const errorData = error.response?.data;
       if (typeof errorData === 'object' && errorData !== null) {
-        // Extract validation errors if present
         setFormErrors({
           title: errorData.title || '',
           message: errorData.message || (errorData.title ? '' : 'Validation failed')
@@ -166,83 +164,78 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 20 }}
-        className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-xl">
-              <MegaphoneIcon className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white">Send Communications & Announcement</h2>
-              <p className="text-blue-100 text-sm">Target by role and area</p>
-            </div>
+    <div className="modal-content border-0 overflow-hidden rounded-4">
+      {/* Header */}
+      <div className="bg-primary text-white p-4 border-0 d-flex align-items-center justify-content-between">
+        <div className="d-flex align-items-center gap-3">
+          <div className="p-2 bg-white bg-opacity-20 rounded-3">
+            <MegaphoneIcon style={{ width: '1.5rem' }} className="text-white" />
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-xl transition-colors text-white"
-          >
-            <XMarkIcon className="h-6 w-6" />
-          </button>
+          <div>
+            <h2 className="h4 fw-bold mb-0 text-white">Send Communications</h2>
+            <p className="small mb-0 opacity-75">Target by role and area</p>
+          </div>
         </div>
+        <Button variant="link" className="text-white p-0" onClick={onClose}>
+          <XMarkIcon style={{ width: '1.5rem' }} />
+        </Button>
+      </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
-          <div className="space-y-4">
+      {/* Form Body */}
+      <div className="p-4 bg-light bg-opacity-50">
+        <Form onSubmit={handleSubmit}>
+          <Row className="g-4">
             {/* Title */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Subject / Title</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => {
-                  setFormData({ ...formData, title: e.target.value });
-                  if (formErrors.title) setFormErrors({ ...formErrors, title: '' });
-                }}
-                className={`w-full px-5 py-3.5 border ${formErrors.title ? 'border-red-500 focus:ring-red-500 bg-red-50/50' : 'border-gray-200 focus:ring-indigo-500 bg-gray-50'} rounded-2xl focus:ring-2 focus:border-transparent transition-all`}
-                placeholder="Enter message title..."
-              />
-              {formErrors.title && <p className="text-sm font-medium text-red-500 mt-1.5">{formErrors.title}</p>}
-            </div>
+            <Col xs={12}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary">Subject / Title</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter message title..."
+                  value={formData.title}
+                  isInvalid={!!formErrors.title}
+                  onChange={(e) => {
+                    setFormData({ ...formData, title: e.target.value });
+                    if (formErrors.title) setFormErrors({ ...formErrors, title: '' });
+                  }}
+                  className="rounded-3 border-light-subtle py-2 shadow-sm"
+                />
+                <Form.Control.Feedback type="invalid">
+                  {formErrors.title}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
 
             {/* Message */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Content</label>
-              <textarea
-                rows={4}
-                value={formData.message}
-                onChange={(e) => {
-                  setFormData({ ...formData, message: e.target.value });
-                  if (formErrors.message) setFormErrors({ ...formErrors, message: '' });
-                }}
-                className={`w-full px-5 py-3.5 border ${formErrors.message && formErrors.message !== 'Validation failed' ? 'border-red-500 focus:ring-red-500 bg-red-50/50' : 'border-gray-200 focus:ring-indigo-500 bg-gray-50'} rounded-2xl focus:ring-2 focus:border-transparent transition-all resize-none`}
-                placeholder="Type your official communication here..."
-              />
-              {formErrors.message && formErrors.message !== 'Validation failed' && <p className="text-sm font-medium text-red-500 mt-1.5">{formErrors.message}</p>}
-            </div>
+            <Col xs={12}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary">Content</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={5}
+                  placeholder="Type your official communication here..."
+                  value={formData.message}
+                  isInvalid={!!formErrors.message && formErrors.message !== 'Validation failed'}
+                  onChange={(e) => {
+                    setFormData({ ...formData, message: e.target.value });
+                    if (formErrors.message) setFormErrors({ ...formErrors, message: '' });
+                  }}
+                  className="rounded-3 border-light-subtle py-2 shadow-sm resize-none"
+                />
+                <Form.Control.Feedback type="invalid">
+                  {formErrors.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
 
-            {/* Target Settings */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Role Selection */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                  <UserGroupIcon className="h-4 w-4 text-indigo-500" />
+            {/* Role & Area */}
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary d-flex align-items-center gap-2">
+                  <UserGroupIcon style={{ width: '1rem' }} className="text-primary" />
                   Target Role
-                </label>
-                <select
+                </Form.Label>
+                <Form.Select
                   value={formData.targetRole}
                   onChange={(e) => setFormData({ 
                     ...formData, 
@@ -250,132 +243,131 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
                     targetTaluka: '',
                     targetVillage: ''
                   })}
-                  className="w-full px-5 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 bg-gray-50 transition-all appearance-none"
+                  className="rounded-3 border-light-subtle py-2 shadow-sm cursor-pointer"
                 >
                   <option value="">Broadcast to All Roles</option>
                   {availableTargetRoles.map(role => (
                     <option key={role} value={role}>{roleDisplayNames[role]}</option>
                   ))}
-                </select>
-              </div>
+                </Form.Select>
+              </Form.Group>
+            </Col>
 
-              {/* Taluka Selection */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                  <MapPinIcon className="h-4 w-4 text-indigo-500" />
-                  Target Taluka (Area)
-                </label>
-                <select
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary d-flex align-items-center gap-2">
+                  <MapPinIcon style={{ width: '1rem' }} className="text-primary" />
+                  Target Taluka
+                </Form.Label>
+                <Form.Select
                   value={formData.targetTaluka}
                   onChange={(e) => setFormData({ ...formData, targetTaluka: e.target.value, targetVillage: '' })}
-                  className="w-full px-5 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 bg-gray-50 transition-all appearance-none"
+                  className="rounded-3 border-light-subtle py-2 shadow-sm cursor-pointer"
                 >
                   <option value="">All Talukas</option>
                   {talukas.map(taluka => (
                     <option key={taluka} value={taluka}>{taluka}</option>
                   ))}
-                </select>
-              </div>
-            </div>
+                </Form.Select>
+              </Form.Group>
+            </Col>
 
-            {/* Village Selection (Conditional) */}
             {formData.targetTaluka && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-              >
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                  <MapPinIcon className="h-4 w-4 text-indigo-500" />
-                  Target Specific Village
-                </label>
-                <select
-                  value={formData.targetVillage}
-                  onChange={(e) => setFormData({ ...formData, targetVillage: e.target.value })}
-                  className="w-full px-5 py-3.5 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 bg-gray-50 transition-all appearance-none"
-                >
-                  <option value="">All Villages in {formData.targetTaluka}</option>
-                  {villages.map(village => (
-                    <option key={village} value={village}>{village}</option>
-                  ))}
-                </select>
-              </motion.div>
+              <Col xs={12}>
+                <Form.Group>
+                  <Form.Label className="small fw-bold text-secondary d-flex align-items-center gap-2">
+                    <MapPinIcon style={{ width: '1rem' }} className="text-primary" />
+                    Target Village
+                  </Form.Label>
+                  <Form.Select
+                    value={formData.targetVillage}
+                    onChange={(e) => setFormData({ ...formData, targetVillage: e.target.value })}
+                    className="rounded-3 border-light-subtle py-2 shadow-sm cursor-pointer"
+                  >
+                    <option value="">All Villages in {formData.targetTaluka}</option>
+                    {villages.map(village => (
+                      <option key={village} value={village}>{village}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
             )}
 
             {/* File Attachment */}
-            <div className="pt-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <PaperClipIcon className="h-4 w-4 text-indigo-500" />
-                Attachment (Optional)
-              </label>
-              <div className="relative group">
-                <input
-                  type="file"
-                  id="file-upload"
-                  onChange={handleFileChange}
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png"
-                  className="hidden"
-                />
-                <label 
-                  htmlFor="file-upload"
-                  className={`w-full flex items-center justify-between px-5 py-3.5 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 ${
-                    file 
-                      ? 'border-green-400 bg-green-50/50' 
-                      : 'border-gray-200 bg-gray-50 hover:border-indigo-400 hover:bg-white'
+            <Col xs={12}>
+              <Form.Group>
+                <Form.Label className="small fw-bold text-secondary d-flex align-items-center gap-2">
+                  <PaperClipIcon style={{ width: '1rem' }} className="text-primary" />
+                  Attachment (Optional)
+                </Form.Label>
+                <div 
+                  className={`p-3 border-2 border-dashed rounded-3 bg-white transition-all d-flex align-items-center justify-content-between ${
+                    file ? 'border-success bg-success bg-opacity-10' : 'border-light-subtle'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${file ? 'bg-green-100' : 'bg-white shadow-sm'}`}>
-                      <PaperClipIcon className={`h-5 w-5 ${file ? 'text-green-600' : 'text-gray-400'}`} />
+                  <div className="d-flex align-items-center gap-3">
+                    <div className={`p-2 rounded-3 ${file ? 'bg-success text-white' : 'bg-light text-secondary'}`}>
+                      <PaperClipIcon style={{ width: '1.25rem' }} />
                     </div>
-                    <div className="text-left">
-                      <p className={`text-sm font-bold ${file ? 'text-green-700' : 'text-gray-700'}`}>
+                    <div>
+                      <p className={`small fw-bold mb-0 ${file ? 'text-success' : 'text-dark'}`}>
                         {file ? file.name : 'Select a file to attach'}
                       </p>
-                      <p className="text-[10px] text-gray-400 font-medium">
+                      <p className="text-secondary mb-0" style={{ fontSize: '0.65rem' }}>
                         {file ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : 'PDF, Images, or Documents (Max 10MB)'}
                       </p>
                     </div>
                   </div>
-                  {file && (
-                    <button 
-                      type="button" 
-                      onClick={(e) => { e.preventDefault(); setFile(null); }}
-                      className="p-1 hover:bg-red-50 text-red-500 rounded-lg transition-colors"
+                  <InputGroup className="w-auto">
+                    <Form.Control
+                      type="file"
+                      id="file-upload"
+                      className="d-none"
+                      onChange={handleFileChange}
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png"
+                    />
+                    <Button 
+                      as="label" 
+                      htmlFor="file-upload" 
+                      variant={file ? "outline-success" : "outline-primary"}
+                      size="sm"
+                      className="fw-bold px-3 rounded-3"
                     >
-                      <XMarkIcon className="h-5 w-5" />
-                    </button>
-                  )}
-                </label>
-              </div>
-            </div>
-          </div>
+                      {file ? 'Change File' : 'Browse'}
+                    </Button>
+                  </InputGroup>
+                </div>
+              </Form.Group>
+            </Col>
+          </Row>
 
-          <div className="pt-4 border-t border-gray-100 flex gap-4">
-            <button
-              type="button"
+          <div className="d-flex gap-3 pt-5 mt-2 border-top">
+            <Button 
+              variant="light" 
+              className="px-4 py-2 fw-bold text-secondary rounded-3 border w-100" 
               onClick={onClose}
-              className="flex-1 py-4 px-6 border border-gray-200 text-gray-600 rounded-2xl font-bold hover:bg-gray-50 transition-all"
             >
               Cancel
-            </button>
-            <button
-              type="submit"
+            </Button>
+            <Button 
+              variant="primary" 
+              type="submit" 
               disabled={loading}
-              className="flex-[2] py-4 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:translate-y-0"
+              className="px-4 py-2 fw-bold rounded-3 shadow-sm w-100 d-flex align-items-center justify-content-center gap-2"
             >
               {loading ? (
-                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <Spinner size="sm" />
               ) : (
                 <>
-                  <PaperAirplaneIcon className="h-5 w-5" />
+                  <PaperAirplaneIcon style={{ width: '1.25rem' }} />
                   {formData.isCircular ? 'Publish Circular' : 'Send Message'}
                 </>
               )}
-            </button>
+            </Button>
           </div>
-        </form>
-      </motion.div>
-    </motion.div>
+        </Form>
+      </div>
+    </div>
   );
 };
 

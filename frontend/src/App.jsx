@@ -137,10 +137,10 @@ function App() {
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center">
+      <div className="d-flex align-items-center justify-content-center vh-100" style={{ background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)' }}>
         <div className="text-center">
-          <div className="w-20 h-20 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-lg font-medium">Loading Amravati Connect...</p>
+          <div className="spinner-premium mx-auto mb-4" style={{ width: '3rem', height: '3rem' }}></div>
+          <p className="text-white h5 fw-medium">Loading Amravati Connect...</p>
         </div>
       </div>
     );
@@ -149,7 +149,7 @@ function App() {
   return (
     <Provider store={store}>
       <Router>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="min-vh-100" style={{ backgroundColor: '#f8fafc' }}>
           <Toaster 
             position="top-right"
             toastOptions={{
@@ -277,13 +277,13 @@ function App() {
 
           {/* Global Session Status (optional) */}
           {isAuthenticated && (
-            <div className="fixed bottom-4 right-4 z-50 hidden lg:block">
-              <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2 flex items-center space-x-3 border-l-4 border-green-500">
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></span>
-                  <span className="text-sm text-gray-600">Session Active</span>
+            <div className="position-fixed bottom-0 end-0 m-4 p-3 z-3 d-none d-lg-block">
+              <div className="bg-white border-start border-4 border-success rounded shadow-sm px-4 py-2 d-flex align-items-center gap-3">
+                <div className="d-flex align-items-center">
+                  <span className="bg-success rounded-circle me-2" style={{ width: '8px', height: '8px' }}></span>
+                  <span className="small text-secondary">Session Active</span>
                 </div>
-                <div className="text-xs text-gray-400">
+                <div className="small text-muted fw-bold">
                   {user?.name || 'Collector'}
                 </div>
               </div>
