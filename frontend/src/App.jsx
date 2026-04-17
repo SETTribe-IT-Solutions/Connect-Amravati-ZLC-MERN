@@ -210,40 +210,68 @@ function App() {
                 {/* Main Pages */}
                 <Route 
                   path="dashboard" 
-                  element={<Dashboard user={user} />} 
+                  element={
+                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
+                    <Navigate to="/users" replace /> : 
+                    <Dashboard user={user} />
+                  } 
                 />
                 
                 <Route 
                   path="tasks" 
-                  element={<Tasks user={user} />} 
+                  element={
+                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
+                    <Navigate to="/users" replace /> : 
+                    <Tasks user={user} />
+                  } 
                 />
                 
                 <Route 
                   path="communications" 
-                  element={<Communications user={user} />} 
+                  element={
+                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
+                    <Navigate to="/users" replace /> : 
+                    <Communications user={user} />
+                  } 
                 />
                 
                 <Route 
                   path="reports" 
-                  element={<Reports user={user} />} 
+                  element={
+                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
+                    <Navigate to="/users" replace /> : 
+                    <Reports user={user} />
+                  } 
                 />
                 
                 <Route 
                   path="users" 
-                  element={<UserManagement user={user} />} 
+                  element={
+                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
+                    <UserManagement user={user} /> : 
+                    <Navigate to="/dashboard" replace />
+                  } 
                 />
                 
                 <Route 
                   path="appreciation" 
-                  element={<Appreciation user={user} />} 
+                  element={
+                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
+                    <Navigate to="/users" replace /> : 
+                    <Appreciation user={user} />
+                  } 
                 />
 
                 <Route 
                   path="notifications" 
-                  element={<Notifications user={user} />} 
+                  element={
+                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
+                    <Navigate to="/users" replace /> : 
+                    <Notifications user={user} />
+                  } 
                 />
 
-                {/* Change Password Page */}
+                {/* Change Password Page (Accessible to all) */}
                 <Route 
                   path="change-password" 
                   element={
@@ -256,7 +284,7 @@ function App() {
                 />
 
                 {/* Catch all unmatched routes */}
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                <Route path="*" element={<Navigate to={user?.role === 'SYSTEM_ADMINISTRATOR' ? "/users" : "/dashboard"} replace />} />
               </Route>
 
               {/* Redirect root to appropriate page */}

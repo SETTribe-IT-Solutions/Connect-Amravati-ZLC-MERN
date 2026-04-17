@@ -51,7 +51,7 @@ import { toast } from 'react-hot-toast';
 const TaskDashboard = ({ user }) => {
   const role = user?.role || 'user';
   const roleLower = role.toLowerCase();
-  const canCreateTask = ['collector', 'additional collector', 'sdo', 'tehsildar', 'admin'].some(r => roleLower.includes(r));
+  const canCreateTask = ['collector', 'additional_deputy_collector', 'additional collector', 'sdo', 'tehsildar'].some(r => roleLower.includes(r));
 
   const [activeTab, setActiveTab] = useState(canCreateTask ? 'create' : 'tracking');
   const [searchTerm, setSearchTerm] = useState('');

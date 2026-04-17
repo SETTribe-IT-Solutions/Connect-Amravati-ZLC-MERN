@@ -308,7 +308,7 @@ const UserManagementComponent = ({ user }) => {
 
 const UserModal = ({ user, initialIsEditing, allUsers, roles, talukas, villages, fetchVillages, onClose, onSave }) => {
   const roleLimits = {
-    'Collector': 1, 'Addl. Collector': 8, 'SDO': 6, 'Tehsildar': 30, 'BDO': 14, 'Talathi': 600, 'Gram Sevak': 900, 'Admin': Infinity
+    'Collector': 1, 'Addl. Collector': 2, 'SDO': 6, 'Tehsildar': 14, 'BDO': 14, 'Talathi': 600, 'Gram Sevak': 900, 'Admin': 1
   };
 
   const [isEditing, setIsEditing] = useState(initialIsEditing);
