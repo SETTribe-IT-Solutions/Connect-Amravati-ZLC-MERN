@@ -83,8 +83,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/talukas/**", "/api/villages/**")
-                        .hasAnyRole("BDO", "TALATHI", "GRAMSEVAK", "TEHSILDAR")
+                        .requestMatchers("/api/talukas/**")
+                        .hasAnyRole("BDO", "TALATHI", "GRAMSEVAK", "TEHSILDAR", "COLLECTOR", "SDO", "ADDITIONAL_DEPUTY_COLLECTOR", "SYSTEM_ADMINISTRATOR")
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/tasks/**")

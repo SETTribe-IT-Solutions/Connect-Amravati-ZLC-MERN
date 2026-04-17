@@ -17,7 +17,7 @@ public class TalukaVillageController {
     private TalukaVillageService service;
 
     @GetMapping("/talukas")
-    @PreAuthorize("hasAnyRole('BDO', 'TALATHI', 'GRAMSEVAK', 'TEHSILDAR')")
+    @PreAuthorize("hasAnyRole('BDO', 'TALATHI', 'GRAMSEVAK', 'TEHSILDAR', 'COLLECTOR', 'SDO', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SYSTEM_ADMINISTRATOR')")
     public List<TalukaDTO> getTalukas(@RequestParam(required = false) Role role) {
         if (role != null) {
             return service.getTalukasByRole(role);
@@ -26,7 +26,7 @@ public class TalukaVillageController {
     }
 
     @GetMapping("/villages/{taluka}")
-    @PreAuthorize("hasAnyRole('BDO', 'TALATHI', 'GRAMSEVAK', 'TEHSILDAR')")
+    @PreAuthorize("hasAnyRole('BDO', 'TALATHI', 'GRAMSEVAK', 'TEHSILDAR', 'COLLECTOR', 'SDO', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SYSTEM_ADMINISTRATOR')")
     public List<VillageDTO> getVillages(
             @PathVariable String taluka,
             @RequestParam(required = false) Role role) {

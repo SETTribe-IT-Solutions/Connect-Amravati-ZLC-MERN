@@ -108,11 +108,11 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
                 className="img-fluid"
                 style={{ height: '48px', width: 'auto', objectFit: 'contain' }}
               />
-              <div className="d-none d-sm-block border-start ps-2 ms-1 border-light">
-                <h1 className="h4 mb-0 fw-bold tracking-tight text-dark" style={{ letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+              <div className="border-start ps-2 ms-1 border-light">
+                <h1 className="h5 h4-sm mb-0 fw-bold tracking-tight text-dark" style={{ letterSpacing: '-0.02em', lineHeight: 1.2 }}>
                   District <span className="text-primary">Connect</span>
                 </h1>
-                <p className="mb-0 text-muted" style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <p className="mb-0 text-muted d-none d-md-block" style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Official Communication Portal
                 </p>
               </div>
