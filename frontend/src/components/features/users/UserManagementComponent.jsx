@@ -25,11 +25,22 @@ const UserManagementComponent = ({ user }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [isEditing, setIsEditing] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, roleFilter]);
+  }, [debouncedSearchTerm, roleFilter]);
 
   const showToast = (title, value) => { setToast({ title, value }); setTimeout(() => setToast(null), 3000); };
   const showIconTooltip = (message, event) => {
@@ -41,13 +52,28 @@ const UserManagementComponent = ({ user }) => {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const requesterId = user?.userID;
-      const data = await getAllUsers(requesterId);
+      
+      const roleMap = {
+        'Collector': 'COLLECTOR', 'Addl. Collector': 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO': 'SDO',
+        'Tehsildar': 'TEHSILDAR', 'BDO': 'BDO', 'Talathi': 'TALATHI', 'Gram Sevak': 'GRAMSEVAK', 'Admin': 'SYSTEM_ADMINISTRATOR'
+      };
+
+      const params = {
+          page: currentPage - 1,
+          size: itemsPerPage,
+          requesterId: user?.userID,
+          searchTerm: debouncedSearchTerm,
+          role: roleFilter !== 'all' ? roleMap[roleFilter] : null
+      };
+
+      const data = await getAllUsers(params);
+      
       const revRoleMap = {
         'COLLECTOR': 'Collector', 'ADDITIONAL_DEPUTY_COLLECTOR': 'Addl. Collector', 'SDO': 'SDO',
         'TEHSILDAR': 'Tehsildar', 'BDO': 'BDO', 'TALATHI': 'Talathi', 'GRAMSEVAK': 'Gram Sevak', 'SYSTEM_ADMINISTRATOR': 'Admin'
       };
-      const mapped = (data || []).map(u => ({
+
+      const mapped = (data.content || []).map(u => ({
         id: u.userID, name: u.name || 'Unknown', role: revRoleMap[u.role?.toUpperCase()] || u.role || 'User',
         email: u.email || 'N/A', phone: u.phone || '+91 00000 00000', village: u.village || '', taluka: u.taluka || '',
         district: u.district || '', jurisdiction: u.village ? `${u.village}, ${u.taluka}` : (u.taluka || u.district || 'Amravati'),
@@ -56,13 +82,21 @@ const UserManagementComponent = ({ user }) => {
         createdAt: u.createdAt || new Date().toISOString(),
         _rawActive: u.active
       }));
-      setUsers(mapped.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-    } catch (error) { console.error("Fetch Users Error:", error); } finally { setLoading(false); }
-  }, []);
+
+      setUsers(mapped);
+      setTotalPages(data.totalPages || 0);
+      setTotalItems(data.totalElements || 0);
+
+    } catch (error) { 
+        console.error("Fetch Users Error:", error); 
+    } finally { 
+        setLoading(false); 
+    }
+  }, [currentPage, itemsPerPage, debouncedSearchTerm, roleFilter, user?.userID]);
 
   const fetchTalukas = useCallback(async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/talukas", { withCredentials: true });
+      const response = await axiosInstance.get("/talukas");
       setTalukas(response.data.map(t => (t?.taluka ?? t)).filter(Boolean));
     } catch (error) { console.error("Fetch Talukas Error:", error); }
   }, []);
@@ -72,16 +106,16 @@ const UserManagementComponent = ({ user }) => {
   const fetchVillages = useCallback(async (talukaName) => {
     if (!talukaName) { setVillages([]); return; }
     try {
-      const response = await axios.get(`http://localhost:8080/api/villages/${encodeURIComponent(talukaName)}`, { withCredentials: true });
+      const response = await axiosInstance.get(`/villages/${encodeURIComponent(talukaName)}`);
       setVillages(response.data.map(v => (v?.village ?? v)).filter(Boolean));
     } catch (error) { console.error("Fetch Villages Error:", error); setVillages([]); }
   }, []);
 
   const roles = ['Collector', 'Addl. Collector', 'SDO', 'Tehsildar', 'BDO', 'Talathi', 'Gram Sevak', 'Admin'];
   const stats = [
-    { label: 'Total Users', value: users.length, icon: UserCircleIcon, color: 'primary', msg: 'Total Users Count' },
+    { label: 'Total Users', value: totalItems, icon: UserCircleIcon, color: 'primary', msg: 'Total Users Count' },
     { label: 'Active Users', value: users.filter(u => u.status === 'Active').length, icon: ShieldCheckIcon, color: 'success', msg: 'Currently Active Users' },
-    { label: 'New This Month', value: users.filter(u => new Date(u.joinDate).getMonth() === new Date().getMonth()).length, icon: TrophyIcon, color: 'info', msg: 'New Users This Month' }
+    { label: 'Results Count', value: users.length, icon: TrophyIcon, color: 'info', msg: 'Users on this page' }
   ];
 
   const getRoleColor = (role) => ({
@@ -90,11 +124,6 @@ const UserManagementComponent = ({ user }) => {
     'BDO': 'warning', 'Talathi': 'danger',
     'Gram Sevak': 'info', 'Admin': 'secondary'
   }[role] || 'secondary');
-
-  const filteredUsers = users.filter(user => 
-    (user.name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase()) || user.role.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (roleFilter === 'all' || user.role === roleFilter)
-  );
 
   return (
     <div className="p-4 bg-light min-vh-100">
@@ -168,13 +197,13 @@ const UserManagementComponent = ({ user }) => {
           <div className="spinner-border text-primary mb-3" role="status"></div>
           <p className="text-secondary fw-medium">Loading user data...</p>
         </div>
-      ) : filteredUsers.length === 0 ? (
+      ) : users.length === 0 ? (
         <div className="text-center py-5 bg-white rounded-4 border shadow-sm">
           <div className="p-4 bg-light rounded-circle d-inline-block mb-3">
             <UserCircleIcon style={{ width: '3rem' }} className="text-secondary opacity-50" />
           </div>
           <h3 className="h5 fw-bold text-dark">No Users Found</h3>
-          <p className="text-secondary small mb-0">No users match your search criteria.</p>
+          <p className="text-secondary small mb-0">No users match your criteria.</p>
         </div>
       ) : (
         <div className="bg-white rounded-4 shadow-sm border overflow-hidden">
@@ -192,9 +221,7 @@ const UserManagementComponent = ({ user }) => {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers
-                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                  .map(member => (
+                {users.map(member => (
                     <tr key={member.id}>
                       <td className="px-4 py-3">
                         <div className="d-flex align-items-center gap-3">
@@ -250,7 +277,7 @@ const UserManagementComponent = ({ user }) => {
           </div>
           <div className="p-3 border-top">
             <Pagination 
-              totalItems={filteredUsers.length}
+              totalItems={totalItems}
               itemsPerPage={itemsPerPage}
               currentPage={currentPage}
               onPageChange={setCurrentPage}

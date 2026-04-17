@@ -1,8 +1,8 @@
 import axiosInstance from "../../config/axiosConfig";
 
-export const getAllUsers = async (requesterId) => {
+export const getAllUsers = async (params) => {
   const response = await axiosInstance.get("/users/all", {
-    params: { requesterId }
+    params: params
   });
   return response.data;
 };

@@ -34,6 +34,9 @@ function App() {
       console.error("Logout error", error);
     }
     
+    // Clear all local storage data
+    localStorage.clear();
+    
     setIsAuthenticated(false);
     setUser(null);
     

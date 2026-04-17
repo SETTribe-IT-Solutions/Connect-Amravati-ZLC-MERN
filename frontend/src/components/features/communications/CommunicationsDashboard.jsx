@@ -55,6 +55,7 @@ const CommunicationsDashboard = ({ user }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Reset pagination when tab or filters change
   useEffect(() => {
@@ -70,20 +71,25 @@ const CommunicationsDashboard = ({ user }) => {
 
   const isSeniorOfficial = user?.role && roleLevels[user.role] <= 4;
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = async (page = 1) => {
     try {
       setLoading(true);
-      const promises = [getAnnouncements(user?.userID)];
-      
-      if (isSeniorOfficial) {
-        promises.push(getSentAnnouncements(user?.userID));
-      }
-      
-      const results = await Promise.all(promises);
-      setAnnouncements(results[0]);
-      
-      if (isSeniorOfficial && results[1]) {
-        setSentAnnouncements(results[1]);
+      const params = {
+        userId: user?.userID,
+        page: page - 1,
+        size: itemsPerPage,
+        sortBy: 'createdAt',
+        direction: 'desc'
+      };
+
+      if (activeTab === 'inbox') {
+        const data = await getAnnouncements(params);
+        setAnnouncements(data.content || []);
+        setTotalItems(data.totalElements || 0);
+      } else {
+        const data = await getSentAnnouncements(params);
+        setSentAnnouncements(data.content || []);
+        setTotalItems(data.totalElements || 0);
       }
     } catch (error) {
       console.error("Error fetching communications:", error);
@@ -95,9 +101,9 @@ const CommunicationsDashboard = ({ user }) => {
 
   useEffect(() => {
     if (user?.userID) {
-      fetchAnnouncements();
+      fetchAnnouncements(currentPage);
     }
-  }, [user?.userID, isSeniorOfficial]);
+  }, [user?.userID, activeTab, currentPage]);
 
   const handleAcknowledge = async (id) => {
     try {
@@ -205,7 +211,7 @@ const CommunicationsDashboard = ({ user }) => {
     });
   };
 
-  const currentDisplayList = applyFilters(activeTab === 'inbox' ? announcements : sentAnnouncements);
+  const currentDisplayList = activeTab === 'inbox' ? announcements : sentAnnouncements;
 
   const months = [
     { value: '1', label: 'January' },
@@ -363,9 +369,7 @@ const CommunicationsDashboard = ({ user }) => {
         </Card>
       ) : (
         <div className="d-flex flex-column gap-4">
-          {currentDisplayList
-            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-            .map((item, index) => (
+          {currentDisplayList.map((item, index) => (
             <Card 
               key={`${activeTab}-${item.id}`}
               className="premium-card border-0 shadow-sm overflow-hidden hover-shadow-lg transition-all"
@@ -527,7 +531,7 @@ const CommunicationsDashboard = ({ user }) => {
           
           <div className="mt-4">
             <Pagination 
-              totalItems={currentDisplayList.length}
+              totalItems={totalItems}
               itemsPerPage={itemsPerPage}
               currentPage={currentPage}
               onPageChange={setCurrentPage}

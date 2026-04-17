@@ -1,12 +1,6 @@
-import axios from 'axios';
 import axiosInstance from "../../config/axiosConfig";
 
-const API_URL = 'http://localhost:8080/api/announcements';
-
-const getAuthHeader = () => {
-  const token = localStorage.getItem('sessionToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+const API_URL = '/announcements';
 
 export const createAnnouncement = async (announcementData, file) => {
   const formData = new FormData();
@@ -18,58 +12,46 @@ export const createAnnouncement = async (announcementData, file) => {
     formData.append('file', file);
   }
 
-  const response = await axios.post(`${API_URL}/create`, formData, {
+  const response = await axiosInstance.post(`${API_URL}/create`, formData, {
     headers: {
-      ...getAuthHeader(),
       'Content-Type': 'multipart/form-data',
     },
   });
   return response.data;
 };
 
-export const getAnnouncements = async (userId) => {
-  const response = await axios.get(`${API_URL}/list`, {
-    params: { userId },
-    headers: getAuthHeader(),
-  });
+export const getAnnouncements = async (params) => {
+  const response = await axiosInstance.get("/announcements/list", { params });
   return response.data;
 };
 
-export const getSentAnnouncements = async (userId) => {
-  const response = await axios.get(`${API_URL}/sent`, {
-    params: { userId },
-    headers: getAuthHeader(),
-  });
+export const getSentAnnouncements = async (params) => {
+  const response = await axiosInstance.get("/announcements/sent", { params });
   return response.data;
 };
 
 export const getAnnouncementAcknowledgments = async (id) => {
-  const response = await axios.get(`${API_URL}/${id}/acknowledgments`, {
-    headers: getAuthHeader(),
-  });
+  const response = await axiosInstance.get(`${API_URL}/${id}/acknowledgments`);
   return response.data;
 };
 
 export const acknowledgeAnnouncement = async (id, userId) => {
-  const response = await axios.post(`${API_URL}/${id}/acknowledge`, null, {
-    params: { userId },
-    headers: getAuthHeader(),
+  const response = await axiosInstance.post(`${API_URL}/${id}/acknowledge`, null, {
+    params: { userId }
   });
   return response.data;
 };
 
 export const updateAnnouncement = async (id, userId, data) => {
-  const response = await axios.put(`${API_URL}/${id}`, data, {
-    params: { userId },
-    headers: getAuthHeader(),
+  const response = await axiosInstance.put(`${API_URL}/${id}`, data, {
+    params: { userId }
   });
   return response.data;
 };
 
 export const deleteAnnouncement = async (id, userId) => {
-  const response = await axios.delete(`${API_URL}/${id}`, {
-    params: { userId },
-    headers: getAuthHeader(),
+  const response = await axiosInstance.delete(`${API_URL}/${id}`, {
+    params: { userId }
   });
   return response.data;
 };

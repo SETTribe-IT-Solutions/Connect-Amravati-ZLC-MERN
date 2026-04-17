@@ -5,13 +5,13 @@ import { Dropdown, Badge, Button, ListGroup, Card } from 'react-bootstrap';
 import { fetchNotifications, markAsRead } from '../../services/notifications/notificationService';
 import { toast } from 'react-hot-toast';
 
-const NotificationBell = () => {
+const NotificationBell = ({ user }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
   const navigate = useNavigate();
-  const userId = localStorage.getItem('userID');
+  const userId = user?.userID;
 
   const loadNotifications = async () => {
     if (!userId) return;

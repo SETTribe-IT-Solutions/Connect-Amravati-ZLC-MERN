@@ -18,7 +18,7 @@ import { GiIndiaGate } from 'react-icons/gi';
 const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed, user, onLogout }) => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const role = user?.role || localStorage.getItem('role') || 'user';
+  const role = user?.role || 'user';
   const roleLower = role.toLowerCase();
 
   const allNavItems = [
