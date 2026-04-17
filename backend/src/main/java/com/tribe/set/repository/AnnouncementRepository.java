@@ -10,6 +10,9 @@ import org.springframework.stereotype.Repository;
 import com.tribe.set.entity.Announcement;
 import com.tribe.set.entity.Role;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface AnnouncementRepository extends JpaRepository<Announcement, Long> {
 
@@ -19,12 +22,14 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
            "(a.targetTaluka IS NULL OR a.targetTaluka = :taluka) AND " +
            "(a.targetVillage IS NULL OR a.targetVillage = :village) " +
            "ORDER BY a.createdAt DESC")
-    List<Announcement> findForUser(@Param("userId") String userId,
+    Page<Announcement> findForUser(@Param("userId") String userId,
                                   @Param("role") Role role, 
                                   @Param("taluka") String taluka, 
-                                  @Param("village") String village);
+                                  @Param("village") String village,
+                                  Pageable pageable);
 
-    List<Announcement> findByCreatedBy_UserIDOrderByCreatedAtDesc(String userId);
+    @Query("SELECT a FROM Announcement a WHERE a.createdBy.userID = :userId ORDER BY a.createdAt DESC")
+    Page<Announcement> findSentByUserId(@Param("userId") String userId, Pageable pageable);
 
-    List<Announcement> findAllByOrderByCreatedAtDesc();
+    Page<Announcement> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }

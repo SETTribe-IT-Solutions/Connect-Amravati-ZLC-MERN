@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.tribe.set.entity.Appreciation;
@@ -56,31 +58,25 @@ public class AppreciationService {
                 return AppreciationResponse.from(appreciationRepository.save(app));
         }
 
-        public List<AppreciationResponse> getAllAppreciations() {
-                return appreciationRepository.findAllByOrderByCreatedAtDesc()
-                                .stream()
-                                .map(AppreciationResponse::from)
-                                .collect(Collectors.toList());
+        public Page<AppreciationResponse> getAllAppreciations(String searchTerm, Pageable pageable) {
+                return appreciationRepository.findAllFiltered(searchTerm, pageable)
+                                .map(AppreciationResponse::from);
         }
 
-        public List<AppreciationResponse> getReceivedAppreciations(String userId) {
+        public Page<AppreciationResponse> getReceivedAppreciations(String userId, Pageable pageable) {
                 User user = userRepository.findByUserID(userId)
                                 .orElseThrow(() -> new RuntimeException("User not found: " + userId));
 
-                return appreciationRepository.findByToUserOrderByCreatedAtDesc(user)
-                                .stream()
-                                .map(AppreciationResponse::from)
-                                .collect(Collectors.toList());
+                return appreciationRepository.findByToUserOrderByCreatedAtDesc(user, pageable)
+                                .map(AppreciationResponse::from);
         }
 
-        public List<AppreciationResponse> getSentAppreciations(String userId) {
+        public Page<AppreciationResponse> getSentAppreciations(String userId, Pageable pageable) {
                 User user = userRepository.findByUserID(userId)
                                 .orElseThrow(() -> new RuntimeException("User not found: " + userId));
 
-                return appreciationRepository.findByFromUserOrderByCreatedAtDesc(user)
-                                .stream()
-                                .map(AppreciationResponse::from)
-                                .collect(Collectors.toList());
+                return appreciationRepository.findByFromUserOrderByCreatedAtDesc(user, pageable)
+                                .map(AppreciationResponse::from);
         }
 
         public List<UserResponse> getEligibleUsers() {

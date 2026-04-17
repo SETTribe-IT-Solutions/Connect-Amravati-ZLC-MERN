@@ -9,6 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import java.util.List;
 
 @RestController
@@ -43,9 +47,19 @@ public class UserManagementController {
 
     @GetMapping("/all")
     @PreAuthorize("authenticated")
-    public ResponseEntity<List<UserResponse>> getAllUsers(
+    public ResponseEntity<Page<UserResponse>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction,
+            @RequestParam(required = false, name = "searchTerm") String searchTerm,
+            @RequestParam(required = false, name = "role") Role role,
             @RequestParam(required = false, name = "requesterId") String requesterId) {
-        return ResponseEntity.ok(userService.getAllUsers(requesterId));
+        
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        
+        return ResponseEntity.ok(userService.getAllUsers(requesterId, searchTerm, role, pageable));
     }
 
     @GetMapping("/profile/{id}")
