@@ -94,7 +94,7 @@ public class AnnouncementController {
     public ResponseEntity<AnnouncementDTO> updateAnnouncement(
             @PathVariable(name = "id") Long id,
             @RequestParam(name = "userId") String userId,
-            @RequestBody UpdateRequest request) {
+            @Valid @RequestBody UpdateRequest request) {
         return ResponseEntity.ok(announcementService.updateAnnouncement(id, userId, request.getTitle(), request.getMessage()));
     }
 
@@ -108,7 +108,9 @@ public class AnnouncementController {
     }
 
     public static class UpdateRequest {
+        @NotBlank(message = "Title is required")
         private String title;
+        @NotBlank(message = "Message is required")
         private String message;
 
         public String getTitle() { return title; }

@@ -12,26 +12,16 @@ import java.util.ArrayList;
 public class User {
 
 	@Id
-	@NotBlank(message = "User ID cannot be empty")
-	@Pattern(regexp = "^[0-9]+$", message = "User ID must contain only digits")
 	@Column(name = "userid")
 	private String userID;
 	
 	
-    @NotBlank(message = "Name cannot be empty")
     @Column(nullable = false)
     private String name;
 
-    @Email(message = "Invalid email format")
-    @NotBlank(message = "Email cannot be empty")
-    @Pattern(
-        regexp = "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$",
-        message = "Email must be in lowercase only"
-    )
     @Column(unique = true, nullable = false)
     private String email;
 
-    @NotBlank(message = "Password cannot be empty")
     @com.fasterxml.jackson.annotation.JsonIgnore
     @Column(nullable = false)
     private String password;
@@ -44,12 +34,6 @@ public class User {
     private String taluka;
     private String village;
 
-    @NotBlank(message = "Phone number cannot be empty")
-    @Size(min = 10, max = 10, message = "Phone number must be exactly 10 digits")
-    @Pattern(
-        regexp = "^[6-9][0-9]{9}$",
-        message = "Invalid phone number: must start with 6, 7, 8, or 9. Numbers starting with 1, 2, 3, 4, or 5 are not allowed"
-    )
     private String phone;
 
     private Double rating = 0.0;

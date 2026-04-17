@@ -12,38 +12,39 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, Object> body = new HashMap<>();
+        Map<String, String> errors = new HashMap<>();
+        
+        ex.getBindingResult().getFieldErrors()
+                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+        
+        body.put("status", "error");
+        body.put("message", "Validation failed");
+        body.put("errors", errors);
+        
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
-        ex.printStackTrace(); // Log stack trace
-        Map<String, String> error = new HashMap<>();
+    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+        Map<String, Object> body = new HashMap<>();
         String message = ex.getMessage();
         if ("Bad credentials".equals(message)) {
             message = "Invalid credentials";
         }
-        error.put("message", message);
-        error.put("status", "error");
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        ex.printStackTrace(); // Log stack trace
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors()
-                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
-        errors.put("status", "error");
-        errors.putIfAbsent("message", "Validation failed");
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        body.put("status", "error");
+        body.put("message", message);
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> handleGeneralException(Exception ex) {
-        ex.printStackTrace(); // Log stack trace severely to console but not client
-        Map<String, String> error = new HashMap<>();
-        // Avoid exposing direct raw exceptions to client as it may reveal internal
-        // implementations
-        error.put("message", "A processing error occurred on the server.");
-        error.put("status", "error");
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
+        ex.printStackTrace(); // Log for developers
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", "error");
+        body.put("message", "A processing error occurred on the server.");
+        return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

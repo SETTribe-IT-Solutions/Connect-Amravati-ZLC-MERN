@@ -8,16 +8,16 @@ public class RegisterRequest {
 
 	private String userID;
 
-	@NotBlank(message = "Name cannot be empty")
+	@NotBlank(message = "Name is required")
 	private String name;
 
-	@Email(message = "Invalid email")
-	@NotBlank(message = "Email cannot be empty")
+	@Email(message = "Invalid email format")
+	@NotBlank(message = "Email is required")
 	private String email;
 
 
-	@NotBlank(message = "Password cannot be empty")
-	@Size(min = 8)
+	@NotBlank(message = "Password is required")
+	@Size(min = 8, message = "Password must be at least 8 characters")
 	@Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@#$%^&+=!]).{8,}$", message = "Password must contain uppercase, lowercase, number and special character")
 	private String password;
 
@@ -26,10 +26,10 @@ public class RegisterRequest {
 	private String district;
 	private String taluka;
 	private String village;
-	@NotBlank(message = "Phone number cannot be empty")
+	@NotBlank(message = "Phone number is required")
 	@Pattern(
 	    regexp = "^[6-9][0-9]{9}$",
-	    message = "Phone must start with 6-9 and be 10 digits"
+	    message = "Phone number must be exactly 10 digits starting with 6-9"
 	)
 	private String phone;
 
