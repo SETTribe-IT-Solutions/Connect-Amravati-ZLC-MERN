@@ -1,75 +1,81 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { GiIndiaGate } from 'react-icons/gi';
 import { Col } from 'react-bootstrap';
+import amravatiLandmark from '../../assets/images/amravati_landmark.png';
 
 const CulturalSection = () => {
   return (
-    <Col lg={6} className="p-0 d-flex align-items-center justify-content-center position-relative overflow-hidden min-vh-50 vh-lg-100" style={{ background: 'linear-gradient(135deg, #1e3a8a, #1d4ed8, #1e3a8a)' }}>
-      {/* Animated Background Circles */}
-      <div className="position-absolute inset-0 opacity-10">
-        {[...Array(3)].map((_, i) => (
-          <motion.div
-            key={i}
-            animate={{
-              scale: [1, 1.2, 1],
-              rotate: [0, 180, 360],
-            }}
-            transition={{
-              duration: 10 + i * 2,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="position-absolute border border-4 border-white rounded-circle"
-            style={{
-              width: `${150 + i * 50}px`,
-              height: `${150 + i * 50}px`,
-              top: `${20 + i * 10}%`,
-              left: `${20 + i * 10}%`,
-            }}
-          />
-        ))}
-      </div>
+    <Col lg={6} className="p-0 position-relative overflow-hidden d-none d-lg-block">
+      {/* Background Image with Gradient Overlay */}
+      <div 
+        className="position-absolute inset-0 w-100 h-100"
+        style={{
+          backgroundImage: `url(${amravatiLandmark})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'brightness(0.7) contrast(1.1)'
+        }}
+      />
+      
+      {/* Gradient Overlay for Text Readability */}
+      <div 
+        className="position-absolute inset-0 w-100 h-100"
+        style={{
+          background: 'linear-gradient(to right, rgba(30, 58, 138, 0.85), rgba(30, 58, 138, 0.4), transparent)'
+        }}
+      />
 
-      <div className="position-relative z-index-10 text-white text-center p-5">
+      <div className="position-relative z-index-10 h-100 d-flex flex-column justify-content-center p-5 text-white">
         <motion.div
-          animate={{ y: [0, -20, 0] }}
-          transition={{ duration: 5, repeat: Infinity }}
-          className="mb-4"
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 1, delay: 0.5 }}
         >
-          <GiIndiaGate size={120} className="mx-auto" />
+          <div className="mb-4">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: '80px' }}
+              transition={{ duration: 1, delay: 1 }}
+              className="bg-primary mb-3" 
+              style={{ height: '4px' }} 
+            />
+            <h2 className="display-3 fw-bold mb-2 font-outfit tracking-tight">
+              DISTRICT <br /> 
+              <span className="text-info">CONNECT</span>
+            </h2>
+          </div>
+
+          <div className="d-flex align-items-center gap-4 mt-auto">
+            <div className="d-flex flex-column">
+              <div className="d-flex gap-2">
+                {['A', 'MA', 'RA'].map((item, index) => (
+                  <motion.div
+                    key={item}
+                    whileHover={{ y: -5, scale: 1.1 }}
+                    className="rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                    style={{ 
+                      width: '45px', 
+                      height: '45px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      fontSize: '0.9rem',
+                      fontWeight: '700'
+                    }}
+                  >
+                    {item}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
         </motion.div>
 
-        <motion.h2
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{ duration: 3, repeat: Infinity }}
-          className="display-4 fw-bold mb-4 font-outfit"
-        >
-          CONNECT AMRAVATI
-        </motion.h2>
-
-        <div className="mx-auto mb-4" style={{ height: '4px', width: '100px', background: 'linear-gradient(to right, #f97316, #ffffff, #22c55e)' }} />
-
-        <p className="h5 text-light mb-5 fw-light opacity-75">
-          District Administration Communication Portal
-        </p>
-
-        <div className="d-flex justify-content-center gap-3">
-          {['A', 'MA', 'RA'].map((item, index) => (
-            <motion.div
-              key={item}
-              whileHover={{ scale: 1.2, rotate: 360 }}
-              className={`rounded-circle d-flex align-items-center justify-content-center shadow cursor-pointer`}
-              style={{ 
-                width: '60px', 
-                height: '60px',
-                backgroundColor: index === 0 ? '#f97316' : index === 1 ? '#ffffff' : '#22c55e',
-                color: index === 1 ? '#1e3a8a' : '#ffffff'
-              }}
-            >
-              <span className="fw-bold h4 mb-0">{item}</span>
-            </motion.div>
-          ))}
+        {/* Subtle Watermark Branding */}
+        <div className="position-absolute bottom-0 start-0 p-5 opacity-40">
+          <p className="small mb-0 font-outfit tracking-widest text-uppercase">
+            District Administration <br /> Amravati, Maharashtra
+          </p>
         </div>
       </div>
     </Col>
