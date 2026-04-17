@@ -31,3 +31,8 @@ export const changePassword = async (userID, currentPassword, newPassword) => {
   });
   return response.data;
 };
+
+export const refreshSession = async () => {
+  const response = await axiosInstance.post("/auth/refresh-token");
+  return response.data;
+};
