@@ -16,16 +16,26 @@ import CulturalSection from '../../components/landing/CulturalSection';
 const LoginPage = ({ onLogin }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ username: '', password: '' });
+  const [errors, setErrors] = useState({ username: '', password: '' });
+  const [loginError, setLoginError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isWelcomeActive, setIsWelcomeActive] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.username || !formData.password) {
-      toast.error('Please fill in all fields');
+    const newErrors = {
+      username: !formData.username ? 'Please enter your UserID' : '',
+      password: !formData.password ? 'Please enter your password' : ''
+    };
+
+    if (newErrors.username || newErrors.password) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({ username: '', password: '' });
+    setLoginError('');
     setLoading(true);
     try {
       const data = await loginUser(formData.username, formData.password);
@@ -40,13 +50,13 @@ const LoginPage = ({ onLogin }) => {
           }
         }
       } else {
-        toast.error(data.message || 'Invalid credentials');
+        setLoginError(data.message || 'Invalid credentials');
         setLoading(false);
       }
     } catch (error) {
       console.error("Login Error:", error.response || error.message);
       const errorMessage = error.response?.data?.message || 'Login failed';
-      toast.error(errorMessage);
+      setLoginError(errorMessage);
       setLoading(false);
     }
   };
@@ -89,6 +99,18 @@ const LoginPage = ({ onLogin }) => {
                       </p>
                     </div>
 
+                    {loginError && (
+                      <motion.div
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="alert alert-danger border-0 rounded-4 py-3 px-3 mb-4 d-flex align-items-center gap-3"
+                        style={{ fontSize: '0.9rem', backgroundColor: 'rgba(220, 38, 38, 0.08)', color: '#dc2626' }}
+                      >
+                        <i className="bi bi-exclamation-circle-fill"></i>
+                        <span className="fw-medium">{loginError}</span>
+                      </motion.div>
+                    )}
+
                     <Form onSubmit={handleSubmit} className="mt-4">
                       <Form.Group className="mb-4 position-relative">
                         <Form.Label className="small fw-bold text-secondary ms-1">UserID</Form.Label>
@@ -100,10 +122,17 @@ const LoginPage = ({ onLogin }) => {
                             type="text"
                             placeholder="Enter your user ID"
                             value={formData.username}
-                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                            onChange={(e) => {
+                              setFormData({ ...formData, username: e.target.value });
+                              if (errors.username) setErrors({ ...errors, username: '' });
+                            }}
+                            isInvalid={!!errors.username}
                             className="ps-5 py-3 rounded-4 border-1 bg-light glass-input"
                             style={{ fontSize: '1rem' }}
                           />
+                          <Form.Control.Feedback type="invalid" className="ps-1 mt-1">
+                            {errors.username}
+                          </Form.Control.Feedback>
                         </div>
                       </Form.Group>
 
@@ -117,9 +146,13 @@ const LoginPage = ({ onLogin }) => {
                           </div>
                           <Form.Control
                             type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
+                            placeholder="Enter your password"
                             value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            onChange={(e) => {
+                              setFormData({ ...formData, password: e.target.value });
+                              if (errors.password) setErrors({ ...errors, password: '' });
+                            }}
+                            isInvalid={!!errors.password}
                             className="ps-5 py-3 rounded-4 border-1 bg-light glass-input"
                             style={{ fontSize: '1rem' }}
                           />
@@ -127,11 +160,16 @@ const LoginPage = ({ onLogin }) => {
                             variant="link"
                             onClick={() => setShowPassword(!showPassword)}
                             className="position-absolute top-50 translate-middle-y end-0 me-2 text-secondary p-2 border-0 shadow-none hover-text-primary transition-all"
-                            style={{ zIndex: 6 }}
+                            style={{ zIndex: 6, bottom: errors.password ? '25px' : 'auto' }}
                           >
                             {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
                           </Button>
                         </div>
+                        {errors.password && (
+                          <div className="text-danger small ps-1 mt-1">
+                            {errors.password}
+                          </div>
+                        )}
                       </Form.Group>
 
                       <Button
