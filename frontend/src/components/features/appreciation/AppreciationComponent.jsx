@@ -13,7 +13,7 @@ import {
   MagnifyingGlassIcon, 
   SparklesIcon 
 } from '@heroicons/react/24/outline';
-import { getAllAppreciations, sendAppreciation, getEligibleUsers } from '../../../services/appreciation/appreciationService';
+import { getAllAppreciations, sendAppreciation, getEligibleUsers, getSentAppreciations } from '../../../services/appreciation/appreciationService';
 import { toast } from 'react-hot-toast';
 import Pagination from '../../common/Pagination';
 
@@ -24,18 +24,45 @@ const AppreciationComponent = ({ user }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
   const [appreciations, setAppreciations] = useState([]);
+  const [totalItems, setTotalItems] = useState(0);
   const [staff, setStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Debounce search term
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filter]);
+  }, [filter]);
 
   // Use props user id if available
   const currentUserID = user?.userID;
-  const fetchAppreciations = async () => {
+  const fetchAppreciations = async (page = 1, search = '') => {
     try {
-      const data = await getAllAppreciations();
-      const mapped = data.map(app => ({
+      setLoading(true);
+      const params = {
+        page: page - 1,
+        size: itemsPerPage,
+        searchTerm: search,
+        sortBy: 'createdAt',
+        direction: 'desc'
+      };
+
+      let responseData;
+      if (filter === 'all') {
+        responseData = await getAllAppreciations(params);
+      } else {
+        responseData = await getSentAppreciations(currentUserID, params);
+      }
+
+      const mapped = responseData.content.map(app => ({
         id: app.id,
         from: app.fromUserName,
         fromAvatar: app.fromUserName.substring(0, 2).toUpperCase(),
@@ -48,9 +75,12 @@ const AppreciationComponent = ({ user }) => {
         toRole: formatRole(app.toRole)
       }));
       setAppreciations(mapped);
+      setTotalItems(responseData.totalElements);
     } catch (error) {
       console.error("Fetch Appreciations Error:", error);
       toast.error("Failed to load appreciations");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -75,12 +105,15 @@ const AppreciationComponent = ({ user }) => {
   };
 
   useEffect(() => {
-    fetchAppreciations();
+    fetchAppreciations(currentPage, debouncedSearch);
+  }, [currentPage, debouncedSearch, filter]);
+
+  useEffect(() => {
     fetchStaff();
   }, []);
 
   const stats = [
-    { label: 'Total Appreciations', value: appreciations.length, icon: HeartIcon, bgColor: 'primary', textColor: 'text-primary' },
+    { label: 'Total Appreciations', value: totalItems, icon: HeartIcon, bgColor: 'primary', textColor: 'text-primary' },
     { label: 'This Month', value: appreciations.filter(a => new Date(a.date).getMonth() === new Date().getMonth()).length, icon: StarIcon, bgColor: 'success', textColor: 'text-success' },
     { label: 'Recipients', value: new Set(appreciations.map(a => a.to)).size, icon: UserGroupIcon, bgColor: 'info', textColor: 'text-info' },
     { label: 'Latest Badge', value: appreciations.length > 0 ? appreciations[0].badge.split(' ')[0] : 'None', icon: TrophyIcon, bgColor: 'warning', textColor: 'text-warning' },
@@ -112,18 +145,6 @@ const AppreciationComponent = ({ user }) => {
     return roleMap[roleStr.toUpperCase()] || roleStr;
   };
 
-  const filteredAppreciations = appreciations.filter(apt => {
-    const matchesSearch = apt.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         apt.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         apt.to.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Improved "mine" filter logic to use actual logged-in user name
-    const currentUserName = user?.name || '';
-    
-    const matchesFilter = filter === 'all' || 
-                         (filter === 'mine' && apt.from === currentUserName);
-    return matchesSearch && matchesFilter;
-  });
 
   const handleInlineSubmit = async (targetUser) => {
     const formData = formStates[targetUser.userID];
@@ -145,7 +166,7 @@ const AppreciationComponent = ({ user }) => {
       await sendAppreciation(payload);
       
       toast.success(`Appreciation sent to ${targetUser.name}!`);
-      fetchAppreciations();
+      fetchAppreciations(1, debouncedSearch);
       fetchStaff();
     } catch (error) {
       console.error("Send Appreciation Error:", error);
@@ -303,11 +324,19 @@ const AppreciationComponent = ({ user }) => {
         </Card>
 
         {/* Wall Cards */}
-        <Row className="g-4 mb-5">
-          {filteredAppreciations
-            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-            .map((apt) => (
-            <Col key={apt.id} lg={6}>
+        {loading ? (
+          <div className="text-center py-5">
+            <Spinner animation="border" variant="primary" />
+            <p className="text-secondary mt-2">Loading appreciations...</p>
+          </div>
+        ) : appreciations.length === 0 ? (
+          <div className="text-center py-5 bg-white rounded-4 border shadow-sm">
+             <h5 className="text-secondary">No appreciations found</h5>
+          </div>
+        ) : (
+          <Row className="g-4 mb-5">
+            {appreciations.map((apt) => (
+              <Col key={apt.id} lg={6}>
               <Card className="border-0 shadow-sm rounded-4 h-100 hover-shadow transition-all overflow-hidden border-top border-4 border-primary">
                 <Card.Body className="p-4">
                   <div className="d-flex align-items-center justify-content-between mb-4">
@@ -354,10 +383,11 @@ const AppreciationComponent = ({ user }) => {
               </Card>
             </Col>
           ))}
-        </Row>
+          </Row>
+        )}
 
         <Pagination 
-          totalItems={filteredAppreciations.length}
+          totalItems={totalItems}
           itemsPerPage={itemsPerPage}
           currentPage={currentPage}
           onPageChange={setCurrentPage}

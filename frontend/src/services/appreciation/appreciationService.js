@@ -5,18 +5,18 @@ export const sendAppreciation = async (appreciationData) => {
   return response.data;
 };
 
-export const getAllAppreciations = async () => {
-  const response = await axiosInstance.get("/appreciations/all");
+export const getAllAppreciations = async (params) => {
+  const response = await axiosInstance.get("/appreciation/all", { params });
   return response.data;
 };
 
-export const getReceivedAppreciations = async (userId) => {
-  const response = await axiosInstance.get(`/appreciations/received/${userId}`);
+export const getReceivedAppreciations = async (userId, params) => {
+  const response = await axiosInstance.get(`/appreciation/received/${userId}`, { params });
   return response.data;
 };
 
-export const getSentAppreciations = async (userId) => {
-  const response = await axiosInstance.get(`/appreciations/sent/${userId}`);
+export const getSentAppreciations = async (userId, params) => {
+  const response = await axiosInstance.get(`/appreciation/sent/${userId}`, { params });
   return response.data;
 };
 
