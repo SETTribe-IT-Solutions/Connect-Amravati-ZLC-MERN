@@ -38,14 +38,15 @@ const Layout = ({ user, onLogout }) => {
             onLogout={onLogout}
           />
 
-          <main className="flex-grow-1 overflow-auto p-3 p-lg-4" style={{ backgroundColor: '#f8fafc' }}>
-            <Outlet />
+          <main className="flex-grow-1 overflow-auto" style={{ backgroundColor: '#f8fafc' }}>
+            <div className="p-3 p-lg-4">
+              <Outlet />
+            </div>
+            <Footer
+              user={user}
+              onLogout={onLogout}
+            />
           </main>
-
-          <Footer
-            user={user}
-            onLogout={onLogout}
-          />
         </div>
       </div>
     </div>

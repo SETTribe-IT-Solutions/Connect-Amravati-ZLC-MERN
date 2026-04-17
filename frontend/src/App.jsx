@@ -9,16 +9,16 @@ import { AnimatePresence } from 'framer-motion';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
-// Pages
-import Login from './pages/auth/Login';
-import Dashboard from './pages/dashboard/Dashboard';
-import Tasks from './pages/tasks/Tasks';
-import Communications from './pages/communications/Communications';
-import Reports from './pages/reports/Reports';
-import UserManagement from './pages/users/UserManagement';
-import Appreciation from './pages/appreciation/Appreciation';
-import Notifications from './pages/notifications/Notifications';
-import ChangePassword from './pages/auth/ChangePassword';
+// Pages (Lazy Loaded for performance)
+const Login = React.lazy(() => import('./pages/auth/Login'));
+const Dashboard = React.lazy(() => import('./pages/dashboard/Dashboard'));
+const Tasks = React.lazy(() => import('./pages/tasks/Tasks'));
+const Communications = React.lazy(() => import('./pages/communications/Communications'));
+const Reports = React.lazy(() => import('./pages/reports/Reports'));
+const UserManagement = React.lazy(() => import('./pages/users/UserManagement'));
+const Appreciation = React.lazy(() => import('./pages/appreciation/Appreciation'));
+const Notifications = React.lazy(() => import('./pages/notifications/Notifications'));
+const ChangePassword = React.lazy(() => import('./pages/auth/ChangePassword'));
 import { changePassword, loginUser, getCurrentUser, logoutUser } from './services/auth/authService';
 
 function App() {
@@ -185,7 +185,15 @@ function App() {
           />
           
           <AnimatePresence mode="wait">
-            <Routes>
+            <React.Suspense fallback={
+              <div className="d-flex align-items-center justify-content-center vh-100" style={{ background: '#f8fafc' }}>
+                <div className="text-center">
+                  <div className="spinner-premium mx-auto mb-4" style={{ width: '3rem', height: '3rem', borderTopColor: '#2563eb' }}></div>
+                  <p className="text-primary h5 fw-medium">Loading Page...</p>
+                </div>
+              </div>
+            }>
+              <Routes>
               {/* Public Routes */}
               <Route 
                 path="/login" 
@@ -303,7 +311,8 @@ function App() {
                   />
                 } 
               />
-            </Routes>
+              </Routes>
+            </React.Suspense>
           </AnimatePresence>
 
           {/* Global Session Status (optional) */}

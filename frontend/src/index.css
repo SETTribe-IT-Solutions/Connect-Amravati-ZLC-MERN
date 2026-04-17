@@ -18,6 +18,16 @@ body {
   --sidebar-collapsed-width: 80px;
 }
 
+/* Hide scrollbars globally */
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Layout Utilities */
 .layout-content-wrapper {
   transition: padding-left 0.3s ease-in-out;

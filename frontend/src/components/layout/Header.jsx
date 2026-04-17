@@ -7,6 +7,7 @@ import LanguageSwitcher from '../common/LanguageSwitcher';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bars3Icon, BellIcon, CheckCircleIcon, EyeIcon, XMarkIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import * as notificationService from '../../services/notifications/notificationService';
+import logo1 from '../../assets/images/logo1.png';
 
 const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
 
@@ -46,6 +47,8 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
 
   // Poll for notifications every 30 seconds
   useEffect(() => {
+    if (!userID || isSystemAdministrator) return;
+
     loadNotifications();
     const interval = setInterval(loadNotifications, 30000);
 
@@ -56,7 +59,7 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
       clearInterval(interval);
       window.removeEventListener('notificationsUpdated', handleUpdate);
     };
-  }, [userID]);
+  }, [userID, isSystemAdministrator]);
   // Close dropdown when route changes so it returns to its original position
   useEffect(() => {
     setShowDropdown(false);
@@ -76,16 +79,16 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
 
   return (
     <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ type: "spring", stiffness: 100 }}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
       className="bg-white shadow-sm border-bottom sticky-top z-50"
-      style={{ backdropFilter: 'blur(12px)', backgroundColor: 'rgba(255, 255, 255, 0.95)', height: '64px' }}
+      style={{ backdropFilter: 'blur(12px)', backgroundColor: 'rgba(255, 255, 255, 0.95)', height: '76px' }}
     >
       {/* Tricolor Top Bar */}
       <div style={{ height: '4px', width: '100%', background: 'linear-gradient(90deg, #FF9933 0%, #FFFFFF 50%, #138808 100%)' }}></div>
-      
-      <div className="container-fluid px-3 px-lg-4" style={{ height: '60px' }}>
+
+      <div className="container-fluid px-3 px-lg-4" style={{ height: '72px' }}>
         <div className="d-flex align-items-center justify-content-between h-100">
           <div className="d-flex align-items-center gap-3">
             {showHamburger && (
@@ -97,11 +100,22 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
                 <Bars3Icon style={{ width: '1.5rem', height: '1.5rem' }} />
               </button>
             )}
-            
-            <div className="ms-2">
-              <h1 className="h6 mb-0 fw-bold tracking-tight text-dark" style={{ letterSpacing: '-0.01em' }}>
-                District <span className="text-primary">Connect</span>
-              </h1>
+
+            <div className="d-flex align-items-center gap-2">
+              <img
+                src={logo1}
+                alt="Connect Amravati Logo"
+                className="img-fluid"
+                style={{ height: '48px', width: 'auto', objectFit: 'contain' }}
+              />
+              <div className="d-none d-sm-block border-start ps-2 ms-1 border-light">
+                <h1 className="h4 mb-0 fw-bold tracking-tight text-dark" style={{ letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                  District <span className="text-primary">Connect</span>
+                </h1>
+                <p className="mb-0 text-muted" style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Official Communication Portal
+                </p>
+              </div>
             </div>
           </div>
 
@@ -111,9 +125,8 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
               <div className="position-relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className={`btn rounded-circle p-2 position-relative ${
-                    showDropdown ? 'btn-primary' : 'btn-light text-secondary'
-                  }`}
+                  className={`btn rounded-circle p-2 position-relative ${showDropdown ? 'btn-primary' : 'btn-light text-secondary'
+                    }`}
                   style={{ width: '40px', height: '40px' }}
                 >
                   <BellIcon style={{ width: '1.25rem', height: '1.25rem' }} className={isRefreshing && unreadCount > 0 ? 'animate-pulse' : ''} />
@@ -155,11 +168,10 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
                               style={{ transition: 'background-color 0.2s' }}
                             >
                               <div className="d-flex align-items-start gap-3">
-                                <div className={`mt-1 p-2 rounded-circle flex-shrink-0 ${
-                                  notif.type === 'OVERDUE' ? 'bg-danger bg-opacity-10 text-danger' :
-                                  notif.type === 'REMINDER' ? 'bg-warning bg-opacity-10 text-warning' :
-                                  'bg-primary bg-opacity-10 text-primary'
-                                }`} style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div className={`mt-1 p-2 rounded-circle flex-shrink-0 ${notif.type === 'OVERDUE' ? 'bg-danger bg-opacity-10 text-danger' :
+                                    notif.type === 'REMINDER' ? 'bg-warning bg-opacity-10 text-warning' :
+                                      'bg-primary bg-opacity-10 text-primary'
+                                  }`} style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                   <InformationCircleIcon style={{ width: '16px', height: '16px' }} />
                                 </div>
                                 <div className="flex-grow-1 overflow-hidden">
@@ -187,7 +199,7 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
                         )}
                       </div>
 
-                      <button 
+                      <button
                         onClick={() => navigate('/notifications')}
                         className="btn btn-link w-100 py-3 text-center text-decoration-none small fw-bold text-secondary border-top rounded-0 hover-bg-light"
                       >
@@ -198,7 +210,7 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
                 </AnimatePresence>
               </div>
             )}
-            
+
             <LanguageSwitcher />
           </div>
         </div>
