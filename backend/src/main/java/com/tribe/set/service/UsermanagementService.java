@@ -15,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
  
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
  
@@ -75,22 +78,25 @@ public class UsermanagementService {
     }
  
     // ═══════════════════════════════════════════════════
-    // GET ALL USERS
+    // GET ALL USERS (Paginated, Filtered, Searched)
     // ═══════════════════════════════════════════════════
  
-    public List<UserResponse> getAllUsers(String requesterId) {
+    public Page<UserResponse> getAllUsers(String requesterId, String searchTerm, Role filterRole, Pageable pageable) {
         User requester = (requesterId != null && !requesterId.equals("null")) ? findUser(requesterId) : null;
- 
-        return userRepository.findAll()
-                .stream()
-                .filter(u -> {
-                    if (requester != null && requester.getRole() == Role.SYSTEM_ADMINISTRATOR) {
-                        return true;
-                    }
-                    return u.getRole() != Role.SYSTEM_ADMINISTRATOR && u.getRole() != Role.COLLECTOR;
-                })
-                .map(u -> enrichWithStats(UserResponse.from(u)))
-                .collect(Collectors.toList());
+        
+        List<Role> visibleRoles;
+        if (requester != null && requester.getRole() == Role.SYSTEM_ADMINISTRATOR) {
+            visibleRoles = Arrays.asList(Role.values());
+        } else {
+            // General users see everyone except Admin and Collector (internal policy)
+            visibleRoles = Arrays.stream(Role.values())
+                    .filter(r -> r != Role.SYSTEM_ADMINISTRATOR && r != Role.COLLECTOR)
+                    .collect(Collectors.toList());
+        }
+
+        Page<User> userPage = userRepository.findAllFiltered(visibleRoles, searchTerm, filterRole, pageable);
+        
+        return userPage.map(u -> enrichWithStats(UserResponse.from(u)));
     }
  
     // ═══════════════════════════════════════════════════

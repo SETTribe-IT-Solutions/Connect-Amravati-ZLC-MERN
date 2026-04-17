@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,4 +44,15 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Modifying
     @Query("UPDATE User u SET u.isAppreciated = true, u.everAppreciated = true WHERE u.userID = :userId")
     void markUserAsAppreciated(@Param("userId") String userId);
+
+    @Query("SELECT u FROM User u WHERE " +
+           "(u.role IN :roles) AND " +
+           "(:searchTerm IS NULL OR :searchTerm = '' OR LOWER(u.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+           "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
+           "AND (:filterRole IS NULL OR u.role = :filterRole)")
+    Page<User> findAllFiltered(
+        @Param("roles") List<Role> visibleRoles,
+        @Param("searchTerm") String searchTerm,
+        @Param("filterRole") Role filterRole,
+        Pageable pageable);
 }

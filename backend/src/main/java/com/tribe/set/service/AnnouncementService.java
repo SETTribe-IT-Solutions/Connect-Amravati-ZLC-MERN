@@ -16,6 +16,8 @@ import com.tribe.set.repository.AnnouncementRepository;
 import com.tribe.set.repository.AnnouncementAcknowledgmentRepository;
 import com.tribe.set.repository.UserRepository;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -106,29 +108,29 @@ public class AnnouncementService {
         return new AnnouncementDTO(savedAnnouncement, false, 0);
     }
 
-    public List<AnnouncementDTO> getAnnouncementsForUser(String userId) {
+    public Page<AnnouncementDTO> getAnnouncementsForUser(String userId, Pageable pageable) {
         User user = userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Announcement> announcements = announcementRepository.findForUser(
-                user.getUserID(), user.getRole(), user.getTaluka(), user.getVillage());
+        Page<Announcement> announcements = announcementRepository.findForUser(
+                user.getUserID(), user.getRole(), user.getTaluka(), user.getVillage(), pageable);
 
-        return announcements.stream().map(a -> {
+        return announcements.map(a -> {
             boolean acknowledged = acknowledgmentRepository.existsByAnnouncementAndUser(a, user);
             return new AnnouncementDTO(a, acknowledged, acknowledgmentRepository.countByAnnouncement(a));
-        }).collect(Collectors.toList());
+        });
     }
 
-    public List<AnnouncementDTO> getSentAnnouncements(String userId) {
+    public Page<AnnouncementDTO> getSentAnnouncements(String userId, Pageable pageable) {
         User user = userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Announcement> announcements = announcementRepository.findByCreatedBy_UserIDOrderByCreatedAtDesc(userId);
+        Page<Announcement> announcements = announcementRepository.findSentByUserId(userId, pageable);
 
-        return announcements.stream().map(a -> {
+        return announcements.map(a -> {
             boolean acknowledged = acknowledgmentRepository.existsByAnnouncementAndUser(a, user);
             return new AnnouncementDTO(a, acknowledged, acknowledgmentRepository.countByAnnouncement(a));
-        }).collect(Collectors.toList());
+        });
     }
 
     public List<AcknowledgmentDetailDTO> getAcknowledgmentDetails(Long announcementId) {

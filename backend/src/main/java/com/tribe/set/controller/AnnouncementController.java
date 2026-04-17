@@ -22,6 +22,11 @@ import com.tribe.set.service.AnnouncementService.AnnouncementDTO;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 @RestController
 @RequestMapping("/api/announcements")
 public class AnnouncementController {
@@ -43,14 +48,30 @@ public class AnnouncementController {
 
     @GetMapping("/list")
     @PreAuthorize("authenticated")
-    public ResponseEntity<List<AnnouncementDTO>> getAnnouncements(@RequestParam(name = "userId") String userId) {
-        return ResponseEntity.ok(announcementService.getAnnouncementsForUser(userId));
+    public ResponseEntity<Page<AnnouncementDTO>> getAnnouncements(
+            @RequestParam(name = "userId") String userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+        
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return ResponseEntity.ok(announcementService.getAnnouncementsForUser(userId, pageable));
     }
 
     @GetMapping("/sent")
     @PreAuthorize("hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
-    public ResponseEntity<List<AnnouncementDTO>> getSentAnnouncements(@RequestParam(name = "userId") String userId) {
-        return ResponseEntity.ok(announcementService.getSentAnnouncements(userId));
+    public ResponseEntity<Page<AnnouncementDTO>> getSentAnnouncements(
+            @RequestParam(name = "userId") String userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return ResponseEntity.ok(announcementService.getSentAnnouncements(userId, pageable));
     }
 
     @GetMapping("/{id}/acknowledgments")
