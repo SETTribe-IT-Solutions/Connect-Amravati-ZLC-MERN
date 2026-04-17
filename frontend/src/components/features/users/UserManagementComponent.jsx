@@ -135,7 +135,7 @@ const UserManagementComponent = ({ user }) => {
       <AnimatePresence>
         {toast && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-            className="position-fixed top-0 start-50 translate-middle-x mt-4 z-3" style={{ width: 'auto', minWidth: '300px' }}>
+            className="position-fixed top-0 start-50 translate-middle-x mt-4" style={{ width: 'auto', minWidth: '300px', zIndex: 9999 }}>
             <Card className="shadow-lg border-0 bg-primary text-white p-3 rounded-4">
               <div className="d-flex align-items-center gap-3">
                 <CheckCircleIcon style={{ width: '1.5rem' }} />
