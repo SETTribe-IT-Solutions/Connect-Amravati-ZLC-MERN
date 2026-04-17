@@ -21,6 +21,7 @@ import com.tribe.set.service.AnnouncementService;
 import com.tribe.set.service.AnnouncementService.AnnouncementDTO;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

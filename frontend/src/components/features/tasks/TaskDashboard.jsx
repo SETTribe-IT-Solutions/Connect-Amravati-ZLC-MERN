@@ -388,7 +388,7 @@ const TaskDashboard = ({ user }) => {
         {toast && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
             className="position-fixed top-0 start-50 translate-middle-x mt-4 p-3 rounded-4 shadow-lg border-0 d-flex align-items-center gap-3 text-white" 
-            style={{ zIndex: 1060, backgroundColor: '#2563eb', minWidth: '240px' }}>
+            style={{ zIndex: 9999, backgroundColor: '#2563eb', minWidth: '240px' }}>
             <DocumentTextIcon style={{ width: '1.25rem', height: '1.25rem', opacity: 0.8 }} />
             <div className="flex-grow-1">
               <p className="small mb-0 opacity-80">{toast.title}</p>

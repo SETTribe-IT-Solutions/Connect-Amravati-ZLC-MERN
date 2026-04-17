@@ -188,7 +188,7 @@ const ReportsDashboard = ({ user }) => {
 
   return (
     <div className="p-4 p-lg-5 bg-light min-vh-100">
-      <ToastContainer position="top-center" className="p-3">
+      <ToastContainer position="top-center" className="p-3" style={{ zIndex: 9999 }}>
         <Toast show={!!toast} onClose={() => setToast(null)} className="shadow-lg border-0 rounded-3">
           <Toast.Body className="bg-primary text-white p-3 rounded-3 d-flex align-items-center justify-content-between">
             <div className="d-flex align-items-center gap-2">
