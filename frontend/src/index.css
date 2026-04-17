@@ -14,6 +14,73 @@ body {
   color: #0f172a; /* gray-900 equivalent */
   min-height: 100vh;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --sidebar-width: 256px;
+  --sidebar-collapsed-width: 80px;
+}
+
+/* Layout Utilities */
+.layout-content-wrapper {
+  transition: padding-left 0.3s ease-in-out;
+}
+
+@media (min-width: 1024px) {
+  .layout-content-wrapper.with-sidebar {
+    padding-left: var(--sidebar-width);
+  }
+  .layout-content-wrapper.with-sidebar-collapsed {
+    padding-left: var(--sidebar-collapsed-width);
+  }
+}
+
+@media (max-width: 1023px) {
+  .layout-content-wrapper {
+    padding-left: 0 !important;
+  }
+}
+
+.sidebar-container {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1050;
+}
+
+@media (max-width: 1023px) {
+  .sidebar-container {
+    transform: translateX(-100%);
+    width: 256px !important; /* Force full width on mobile */
+  }
+  .sidebar-container.mobile-open {
+    transform: translateX(0);
+  }
+}
+
+@media (min-width: 1024px) {
+  .sidebar-container {
+    transform: translateX(0);
+  }
+}
+
+/* Notification Dropdown */
+.notification-dropdown {
+  width: 320px;
+  min-width: 280px;
+}
+
+@media (max-width: 767px) {
+  .notification-dropdown {
+    width: calc(100vw - 2rem) !important;
+    position: fixed !important;
+    top: 68px !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    margin: 0 !important;
+    z-index: 1100 !important;
+  }
+  /* Ensure all bootstrap dropdowns stay within screen on mobile */
+  .dropdown-menu {
+    max-width: calc(100vw - 2rem) !important;
+    right: 1rem !important;
+    left: auto !important;
+  }
 }
 
 h1, h2, h3, h4, h5, h6 {

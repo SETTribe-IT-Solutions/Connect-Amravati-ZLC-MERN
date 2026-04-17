@@ -23,11 +23,10 @@ const Layout = ({ user, onLogout }) => {
 
         {/* Content Column */}
         <div
-          className="d-flex flex-column flex-grow-1 overflow-hidden transition-all"
+          className={`d-flex flex-column flex-grow-1 overflow-hidden transition-all layout-content-wrapper ${isCollapsed ? 'with-sidebar-collapsed' : 'with-sidebar'}`}
           style={{ 
             marginLeft: 0,
             transition: 'all 0.3s ease-in-out',
-            paddingLeft: window.innerWidth >= 1024 ? (isCollapsed ? '80px' : '256px') : 0
           }}
         >
           {/* Header (Now inside content column to prevent overlap) */}

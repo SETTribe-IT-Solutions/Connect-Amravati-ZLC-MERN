@@ -55,14 +55,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed, use
 
       {/* Sidebar */}
       <div
-        className="position-fixed bg-white border-end z-index-sidebar transition-all d-flex flex-column shadow-sm"
+        className={`position-fixed bg-white border-end shadow-sm d-flex flex-column sidebar-container ${sidebarOpen ? 'mobile-open' : ''}`}
         style={{
           width: sidebarWidth,
-          left: sidebarOpen ? '0' : (window.innerWidth < 1024 ? '-256px' : '0'),
+          left: 0,
           top: 0,
           bottom: 0,
-          zIndex: 1050,
-          transition: 'all 0.3s ease-in-out',
         }}
       >
         {/* Tricolor Top Bar */}
@@ -71,21 +69,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed, use
         {/* Sidebar Toggle & Logo Section */}
         <div className="d-flex align-items-center border-bottom px-3 bg-white" style={{ height: '60px', minHeight: '60px' }}>
           <div className={`d-flex align-items-center w-100 ${isCollapsed ? 'justify-content-center' : 'justify-content-between'}`}>
-            {!isCollapsed && (
-              <div className="d-flex align-items-center gap-2 overflow-hidden">
-                <div className="bg-primary bg-opacity-10 p-1 rounded">
-                   <GiIndiaGate className="text-primary" style={{ fontSize: '1.2rem' }} />
-                </div>
-                <span className="fw-bold text-dark text-truncate" style={{ fontSize: '0.9rem', letterSpacing: '0.5px' }}>
-                  AMRAVATI
-                </span>
-              </div>
-            )}
             
             {/* Toggle Button for Desktop (Collapse) and Mobile (Close) */}
             <button
               onClick={() => {
-                if (window.innerWidth < 1024) {
+                const isMobile = window.innerWidth < 1024;
+                if (isMobile) {
                   setSidebarOpen(false);
                 } else {
                   if (setIsCollapsed) setIsCollapsed(!isCollapsed);

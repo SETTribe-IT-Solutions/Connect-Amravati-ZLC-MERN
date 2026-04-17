@@ -24,6 +24,7 @@ const UserManagementComponent = ({ user }) => {
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -176,6 +177,7 @@ const UserManagementComponent = ({ user }) => {
           <p className="text-secondary small mb-0">No users match your search criteria.</p>
         </div>
       ) : (
+<<<<<<< HEAD
         <Card className="premium-card border-0 overflow-hidden shadow-sm">
           <div className="table-responsive">
             <Table hover className="align-middle mb-0">
@@ -238,6 +240,80 @@ const UserManagementComponent = ({ user }) => {
             </Table>
           </div>
           <div className="p-4 border-top">
+=======
+        <div className="bg-white rounded-4 shadow-sm border overflow-hidden">
+          <div className="table-responsive">
+            <Table hover className="align-middle mb-0">
+              <thead className="bg-light border-bottom">
+                <tr>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">User</th>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">Role</th>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">Email</th>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">Contact</th>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">Jurisdiction</th>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary text-center">Status</th>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map(member => (
+                    <tr key={member.id}>
+                      <td className="px-4 py-3">
+                        <div className="d-flex align-items-center gap-3">
+                          <div className="avatar-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center rounded-circle" style={{ width: '40px', height: '40px', fontSize: '0.8rem' }}>
+                            {member.avatar}
+                          </div>
+                          <p className="fw-bold text-dark mb-0 small">{member.name}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge bg={getRoleColor(member.role)} className="rounded-pill px-2 py-1" style={{ fontSize: '0.7rem' }}>
+                          {member.role}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="small text-muted mb-0">{member.email}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="small text-muted mb-0">{member.phone}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="small text-muted mb-0 truncate" style={{ maxWidth: '150px' }}>{member.jurisdiction}</p>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Badge bg={member.status === 'Active' ? 'success' : 'secondary'} className="rounded-pill px-2 py-1" style={{ fontSize: '0.65rem' }}>
+                          {member.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-end">
+                        <div className="d-flex gap-2 justify-content-end">
+                          <Button 
+                            variant="light" 
+                            size="sm" 
+                            className="p-2 rounded-circle hover-bg-primary-soft border-0"
+                            onClick={() => { setSelectedUser(member); setIsEditing(false); setIsModalOpen(true); }}
+                          >
+                            <EyeIcon style={{ width: '1.1rem' }} className="text-primary" />
+                          </Button>
+                          <Button 
+                            variant="light" 
+                            size="sm" 
+                            className="p-2 rounded-circle hover-bg-primary-soft border-0"
+                            onClick={() => { setSelectedUser(member); setIsEditing(true); setIsModalOpen(true); }}
+                          >
+                            <PencilIcon style={{ width: '1.1rem' }} className="text-success" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </Table>
+          </div>
+          <div className="p-3 border-top">
+>>>>>>> f5d7d98aea54a123d82de6acc86767c5c35a79e6
             <Pagination 
               totalItems={filteredUsers.length}
               itemsPerPage={itemsPerPage}
@@ -245,6 +321,7 @@ const UserManagementComponent = ({ user }) => {
               onPageChange={setCurrentPage}
             />
           </div>
+<<<<<<< HEAD
         </Card>
       )}
 
@@ -296,6 +373,42 @@ const UserManagementComponent = ({ user }) => {
       </AnimatePresence>
 
       <Modal show={showCloseConfirm} onHide={() => setShowCloseConfirm(false)} centered size="sm" className="premium-modal-sm">
+=======
+        </div>
+      )}
+
+      <AnimatePresence>{isModalOpen && <UserModal user={selectedUser} initialIsEditing={isEditing} allUsers={users} roles={roles} talukas={talukas} villages={villages}
+        fetchVillages={fetchVillages} showIconTooltip={showIconTooltip}
+        onClose={() => { setShowCloseConfirm(true); }}
+        onConfirmClose={() => { setIsModalOpen(false); setSelectedUser(null); setVillages([]); setShowCloseConfirm(false); }}
+        onCancelClose={() => setShowCloseConfirm(false)}
+        onSave={async (userData) => {
+          try {
+            const roleMap = { 'Collector': 'COLLECTOR', 'Addl. Collector': 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO': 'SDO', 'Tehsildar': 'TEHSILDAR', 'BDO': 'BDO', 'Talathi': 'TALATHI', 'Gram Sevak': 'GRAMSEVAK', 'Admin': 'SYSTEM_ADMINISTRATOR' };
+            const payload = { ...userData, role: roleMap[userData.role] || userData.role, requesterId: user?.userID || '', active: userData.status === 'Active' };
+            delete payload.status;
+            
+            if (selectedUser) {
+              delete payload.userID; // NOT present in UpdateUserRequest DTO
+              if (!payload.password) delete payload.password;
+              await updateUser(selectedUser.id, payload);
+              showToast("Success", "User updated successfully");
+            } else {
+              await addUser(payload);
+              showToast("Success", "User added successfully");
+            }
+            setIsModalOpen(false);
+            fetchUsers();
+          } catch (error) {
+            console.error("Save User Error:", error);
+            showToast("Error", error.response?.data?.message || "Failed to save user");
+          }
+        }} 
+      />}</AnimatePresence>
+
+      {/* Confirmation Modal */}
+      <Modal show={showCloseConfirm} onHide={() => setShowCloseConfirm(false)} centered size="sm">
+>>>>>>> f5d7d98aea54a123d82de6acc86767c5c35a79e6
         <Modal.Body className="p-4 text-center">
           <div className="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
             <XMarkIcon style={{ width: '2rem', height: '2rem' }} className="text-danger" />
@@ -312,12 +425,12 @@ const UserManagementComponent = ({ user }) => {
   );
 };
 
-const UserModal = ({ user, allUsers, roles, talukas, villages, fetchVillages, onClose, onSave }) => {
+const UserModal = ({ user, initialIsEditing, allUsers, roles, talukas, villages, fetchVillages, onClose, onSave }) => {
   const roleLimits = {
     'Collector': 1, 'Addl. Collector': 8, 'SDO': 6, 'Tehsildar': 30, 'BDO': 14, 'Talathi': 600, 'Gram Sevak': 900, 'Admin': Infinity
   };
 
-  const [isEditing, setIsEditing] = useState(!user);
+  const [isEditing, setIsEditing] = useState(initialIsEditing);
   const [formData, setFormData] = useState({
     id: user?.id || '',
     userID: user?.id || '', 
