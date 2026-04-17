@@ -67,7 +67,6 @@ const TaskDashboard = ({ user }) => {
   // Loading state managed silently
   const [selectedTask, setSelectedTask] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const location = useLocation();
 
   const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
@@ -136,9 +135,12 @@ const TaskDashboard = ({ user }) => {
     try {
       const requesterId = user?.userID;
       if (!requesterId) return;
-      const data = await getAllUsers(requesterId);
+      // Pass params as object and include a large size to get all relevant staff
+      const data = await getAllUsers({ requesterId, size: 1000 });
+      // Extract content array from the Page object
+      const userList = data.content || data || [];
       // Filter out self
-      const filteredStaff = (data || []).filter(u => u.userID?.toString() !== requesterId.toString());
+      const filteredStaff = userList.filter(u => u.userID?.toString() !== requesterId.toString());
       setStaff(filteredStaff);
     } catch (error) {
       console.error("Fetch Staff Error:", error);
@@ -412,7 +414,7 @@ const TaskDashboard = ({ user }) => {
         <Row className="g-3 mb-4">
           {stats.map((stat) => (
             <Col key={stat.name} xs={6} md={true}>
-              <Card className="premium-card p-3 h-100 border-0 cursor-pointer" onClick={() => showToast(stat.name, stat.value)}>
+              <Card className="premium-card p-3 h-100 border-0">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
                     <p className="small text-secondary mb-1">{stat.name}</p>
@@ -836,14 +838,14 @@ const TaskDashboard = ({ user }) => {
       </div>
 
       {/* Task Details Modal */}
-      <Modal show={showDetailsModal} onHide={() => setShowCloseConfirm(true)} centered size="md">
+      <Modal show={showDetailsModal} onHide={() => setShowDetailsModal(false)} centered size="md">
         {selectedTask && (
           <div className="modal-content border-0 overflow-hidden rounded-4">
             <Modal.Header className="border-0 p-4 pb-0 d-flex flex-column align-items-start position-relative overflow-hidden" 
               style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #312e81 100%)' }}>
               <div className="d-flex justify-content-between w-100 mb-2">
                 <h5 className="modal-title fw-bold text-white">Task Details</h5>
-                <Button variant="link" className="text-white p-0 border-0 shadow-none" onClick={() => setShowCloseConfirm(true)}><XMarkIcon style={{ width: '1.5rem', height: '1.5rem' }} /></Button>
+                <Button variant="link" className="text-white p-0 border-0 shadow-none" onClick={() => setShowDetailsModal(false)}><XMarkIcon style={{ width: '1.5rem', height: '1.5rem' }} /></Button>
               </div>
               <div className="d-flex flex-wrap gap-3 mb-3">
                 <div className="small text-white-50 d-flex align-items-center gap-1"><UserIcon style={{ width: '0.875rem' }} /> By: {selectedTask.assignedBy}</div>
@@ -902,7 +904,7 @@ const TaskDashboard = ({ user }) => {
                 ) : <p className="small text-muted italic mb-0">No remarks yet.</p>}
               </div>
               
-              <Button variant="light" className="w-100 py-3 fw-bold rounded-3 border-0 transition-all text-secondary" onClick={() => setShowCloseConfirm(true)}>
+              <Button variant="light" className="w-100 py-3 fw-bold rounded-3 border-0 transition-all text-secondary" onClick={() => setShowDetailsModal(false)}>
                 Close Details
               </Button>
             </Modal.Body>
@@ -966,20 +968,7 @@ const TaskDashboard = ({ user }) => {
         </Modal.Body>
       </Modal>
 
-      {/* Confirmation Modal */}
-      <Modal show={showCloseConfirm} onHide={() => setShowCloseConfirm(false)} centered size="sm">
-        <Modal.Body className="p-4 text-center">
-          <div className="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
-            <ExclamationTriangleIcon style={{ width: '2rem', height: '2rem' }} className="text-danger" />
-          </div>
-          <h6 className="fw-bold mb-1">Exit Without Saving?</h6>
-          <p className="small text-muted mb-4">Are you sure you want to close this?</p>
-          <div className="d-flex gap-2">
-            <Button variant="light" className="flex-grow-1 small py-2 rounded-3 border fw-semibold" onClick={() => setShowCloseConfirm(false)}>Stay</Button>
-            <Button variant="danger" className="flex-grow-1 small py-2 rounded-3 fw-semibold shadow-sm" onClick={() => { setShowCloseConfirm(false); setShowDetailsModal(false); }}>Exit</Button>
-          </div>
-        </Modal.Body>
-      </Modal>
+
     </div>
   );
 };

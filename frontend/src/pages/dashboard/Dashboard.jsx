@@ -25,7 +25,6 @@ const Dashboard = ({ user }) => {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const [selectedTask, setSelectedTask] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [toast, setToast] = useState(null);
   const [dashboardData, setDashboardData] = useState({
     totalTasks: 0, pending: 0, inProgress: 0, completed: 0, overdue: 0
@@ -109,7 +108,7 @@ const Dashboard = ({ user }) => {
       <div className="row g-3 mb-4">
         {stats.map((stat) => (
           <div key={stat.name} className="col-6 col-md-4 col-lg">
-            <div className="premium-card p-3 h-100 cursor-pointer border-0" onClick={() => showToast(stat.name, stat.value)}>
+            <div className="premium-card p-3 h-100 border-0">
               <div className="d-flex align-items-center justify-content-between">
                 <div>
                   <p className="small text-secondary mb-1">{stat.name}</p>
@@ -227,14 +226,14 @@ const Dashboard = ({ user }) => {
       </AnimatePresence>
 
       {/* Task Details Modal */}
-      <Modal show={showDetailsModal} onHide={() => setShowCloseConfirm(true)} centered size="md" className="fade">
+      <Modal show={showDetailsModal} onHide={() => setShowDetailsModal(false)} centered size="md" className="fade">
         {selectedTask && (
           <>
             <Modal.Header className="border-0 p-4 pb-0 d-flex flex-column align-items-start position-relative overflow-hidden rounded-top-4" 
               style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #312e81 100%)' }}>
               <div className="d-flex justify-content-between w-100 mb-2">
                 <h5 className="modal-title fw-bold text-white">Task Details</h5>
-                <Button variant="link" className="text-white p-0" onClick={() => setShowCloseConfirm(true)}><XMarkIcon style={{ width: '1.5rem', height: '1.5rem' }} /></Button>
+                <Button variant="link" className="text-white p-0" onClick={() => setShowDetailsModal(false)}><XMarkIcon style={{ width: '1.5rem', height: '1.5rem' }} /></Button>
               </div>
               <div className="d-flex flex-wrap gap-3 mb-3">
                 <div className="small text-white-50 d-flex align-items-center gap-1"><UserIcon style={{ width: '0.875rem' }} /> By: {selectedTask.createdBy || 'Admin'}</div>
@@ -275,7 +274,7 @@ const Dashboard = ({ user }) => {
                 <div className="progress-bar bg-primary" role="progressbar" style={{ width: `${selectedTask.progress || 0}%` }} aria-valuenow={selectedTask.progress || 0} aria-valuemin="0" aria-valuemax="100"></div>
               </div>
               
-              <Button variant="light" className="w-100 py-3 fw-bold rounded-3 border-0 mt-2 bg-hover-danger-soft transition-all text-secondary text-hover-danger" onClick={() => setShowCloseConfirm(true)}>
+              <Button variant="light" className="w-100 py-3 fw-bold rounded-3 border-0 mt-2 bg-hover-danger-soft transition-all text-secondary text-hover-danger" onClick={() => setShowDetailsModal(false)}>
                 Close Details
               </Button>
             </Modal.Body>
@@ -283,20 +282,7 @@ const Dashboard = ({ user }) => {
         )}
       </Modal>
 
-      {/* Confirmation Modal */}
-      <Modal show={showCloseConfirm} onHide={() => setShowCloseConfirm(false)} centered size="sm">
-        <Modal.Body className="p-4 text-center">
-          <div className="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
-            <ExclamationTriangleIcon style={{ width: '2rem', height: '2rem' }} className="text-danger" />
-          </div>
-          <h6 className="fw-bold mb-1">Exit Without Saving?</h6>
-          <p className="small text-muted mb-4">Are you sure you want to close this?</p>
-          <div className="d-flex gap-2">
-            <Button variant="light" className="flex-grow-1 small py-2 rounded-3 border fw-semibold" onClick={() => setShowCloseConfirm(false)}>Stay</Button>
-            <Button variant="danger" className="flex-grow-1 small py-2 rounded-3 fw-semibold shadow-sm" onClick={() => { setShowCloseConfirm(false); setShowDetailsModal(false); }}>Exit</Button>
-          </div>
-        </Modal.Body>
-      </Modal>
+
     </div>
   );
 };

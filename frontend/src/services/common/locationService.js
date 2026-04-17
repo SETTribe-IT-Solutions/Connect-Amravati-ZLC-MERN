@@ -7,7 +7,7 @@ import axiosInstance from "../../config/axiosConfig";
  */
 export const getTalukas = async (role = null) => {
   const params = role ? { role } : {};
-  const response = await axiosInstance.get("/talukas", { params });
+  const response = await axiosInstance.get("/talukas/talukas", { params });
   // The API returns List<TalukaDTO>, extract the string
   return response.data.map(item => item.taluka);
 };
@@ -21,7 +21,7 @@ export const getTalukas = async (role = null) => {
 export const getVillagesByTaluka = async (taluka, role = null) => {
   if (!taluka) return [];
   const params = role ? { role } : {};
-  const response = await axiosInstance.get(`/villages/${taluka}`, { params });
+  const response = await axiosInstance.get(`/talukas/villages/${taluka}`, { params });
   // The API returns List<VillageDTO>, extract the string
   return response.data.map(item => item.village);
 };

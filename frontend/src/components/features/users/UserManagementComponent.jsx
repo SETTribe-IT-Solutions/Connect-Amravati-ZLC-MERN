@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getAllUsers, addUser, updateUser } from '../../../services/users/userService';
+import { getTalukas, getVillagesByTaluka } from '../../../services/common/locationService';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from "axios";
 import {
   UserPlusIcon, MagnifyingGlassIcon, FunnelIcon,
   ShieldCheckIcon, UserCircleIcon, XMarkIcon, TrophyIcon,
@@ -21,7 +21,6 @@ const UserManagementComponent = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [talukas, setTalukas] = useState([]);
   const [villages, setVillages] = useState([]);
-  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [isEditing, setIsEditing] = useState(false);
@@ -96,18 +95,24 @@ const UserManagementComponent = ({ user }) => {
 
   const fetchTalukas = useCallback(async () => {
     try {
-      const response = await axiosInstance.get("/talukas");
-      setTalukas(response.data.map(t => (t?.taluka ?? t)).filter(Boolean));
+      const data = await getTalukas();
+      setTalukas(data);
     } catch (error) { console.error("Fetch Talukas Error:", error); }
   }, []);
 
   useEffect(() => { fetchUsers(); fetchTalukas(); }, [fetchUsers, fetchTalukas]);
+ 
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+    setVillages([]);
+  };
 
   const fetchVillages = useCallback(async (talukaName) => {
     if (!talukaName) { setVillages([]); return; }
     try {
-      const response = await axiosInstance.get(`/villages/${encodeURIComponent(talukaName)}`);
-      setVillages(response.data.map(v => (v?.village ?? v)).filter(Boolean));
+      const data = await getVillagesByTaluka(talukaName);
+      setVillages(data);
     } catch (error) { console.error("Fetch Villages Error:", error); setVillages([]); }
   }, []);
 
@@ -159,7 +164,7 @@ const UserManagementComponent = ({ user }) => {
         {stats.map((stat, index) => (
           <Col key={stat.label} xs={12} sm={4}>
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
-              <Card className="premium-card border-0 p-3 h-100 shadow-sm shadow-hover cursor-pointer" onClick={() => showToast(stat.label, stat.value)}>
+              <Card className="premium-card border-0 p-3 h-100 shadow-sm shadow-hover">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <p className="small text-secondary fw-bold mb-1">{stat.label}</p>
@@ -260,14 +265,6 @@ const UserManagementComponent = ({ user }) => {
                           >
                             <EyeIcon style={{ width: '1.1rem' }} className="text-primary" />
                           </Button>
-                          <Button 
-                            variant="light" 
-                            size="sm" 
-                            className="p-2 rounded-circle hover-bg-primary-soft border-0"
-                            onClick={() => { setSelectedUser(member); setIsEditing(true); setIsModalOpen(true); }}
-                          >
-                            <PencilIcon style={{ width: '1.1rem' }} className="text-success" />
-                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -286,12 +283,24 @@ const UserManagementComponent = ({ user }) => {
         </div>
       )}
 
-      <AnimatePresence>{isModalOpen && <UserModal user={selectedUser} initialIsEditing={isEditing} allUsers={users} roles={roles} talukas={talukas} villages={villages}
-        fetchVillages={fetchVillages} showIconTooltip={showIconTooltip}
-        onClose={() => { setShowCloseConfirm(true); }}
-        onConfirmClose={() => { setIsModalOpen(false); setSelectedUser(null); setVillages([]); setShowCloseConfirm(false); }}
-        onCancelClose={() => setShowCloseConfirm(false)}
-        onSave={async (userData) => {
+      <Modal 
+        show={isModalOpen} 
+        onHide={handleCloseModal} 
+        centered 
+        size="lg"
+        contentClassName="border-0 rounded-4 shadow-lg"
+      >
+        <UserModal 
+          user={selectedUser} 
+          initialIsEditing={isEditing} 
+          allUsers={users} 
+          roles={roles} 
+          talukas={talukas} 
+          villages={villages}
+          fetchVillages={fetchVillages} 
+          showIconTooltip={showIconTooltip}
+          onClose={handleCloseModal}
+          onSave={async (userData) => {
           try {
             const roleMap = { 'Collector': 'COLLECTOR', 'Addl. Collector': 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO': 'SDO', 'Tehsildar': 'TEHSILDAR', 'BDO': 'BDO', 'Talathi': 'TALATHI', 'Gram Sevak': 'GRAMSEVAK', 'Admin': 'SYSTEM_ADMINISTRATOR' };
             const payload = { ...userData, role: roleMap[userData.role] || userData.role, requesterId: user?.userID || '', active: userData.status === 'Active' };
@@ -313,22 +322,8 @@ const UserManagementComponent = ({ user }) => {
             showToast("Error", error.response?.data?.message || "Failed to save user");
           }
         }} 
-      />}</AnimatePresence>
-
-      {/* Confirmation Modal */}
-      <Modal show={showCloseConfirm} onHide={() => setShowCloseConfirm(false)} centered size="sm">
-        <Modal.Body className="p-4 text-center">
-          <div className="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
-            <XMarkIcon style={{ width: '2rem', height: '2rem' }} className="text-danger" />
-          </div>
-          <h6 className="fw-bold mb-1">Confirm Close</h6>
-          <p className="small text-muted mb-4">Do you want to close without saving?</p>
-          <div className="d-flex gap-2">
-            <Button variant="light" className="flex-grow-1 small py-2 rounded-3 border fw-semibold" onClick={() => setShowCloseConfirm(false)}>No</Button>
-            <Button variant="danger" className="flex-grow-1 small py-2 rounded-3 fw-semibold shadow-sm" onClick={() => { setIsModalOpen(false); setSelectedUser(null); setVillages([]); setShowCloseConfirm(false); }}>Yes, Close</Button>
-          </div>
-        </Modal.Body>
-      </Modal>
+      />
+    </Modal>
     </div>
   );
 };
@@ -398,7 +393,7 @@ const UserModal = ({ user, initialIsEditing, allUsers, roles, talukas, villages,
       <div className="modal-content border-0 overflow-hidden rounded-4">
         <Modal.Header className="bg-primary text-white border-0 p-4">
           <Modal.Title className="fw-bold">User Details</Modal.Title>
-          <Button variant="link" className="text-white p-0" onClick={onClose}><XMarkIcon style={{ width: '1.5rem' }} /></Button>
+          <Button variant="link" className="text-white p-0 ms-auto" onClick={onClose}><XMarkIcon style={{ width: '1.5rem' }} /></Button>
         </Modal.Header>
         <Modal.Body className="p-4">
           <Row className="g-4 mb-4">
@@ -446,7 +441,7 @@ const UserModal = ({ user, initialIsEditing, allUsers, roles, talukas, villages,
     <div className="modal-content border-0 overflow-hidden rounded-4">
       <Modal.Header className="bg-primary text-white border-0 p-4">
         <Modal.Title className="fw-bold">{user ? 'Edit User' : 'Add New User'}</Modal.Title>
-        <Button variant="link" className="text-white p-0" onClick={onClose}><XMarkIcon style={{ width: '1.5rem' }} /></Button>
+        <Button variant="link" className="text-white p-0 ms-auto" onClick={onClose}><XMarkIcon style={{ width: '1.5rem' }} /></Button>
       </Modal.Header>
       <Modal.Body className="p-4">
         <Form onSubmit={handleSubmit}>

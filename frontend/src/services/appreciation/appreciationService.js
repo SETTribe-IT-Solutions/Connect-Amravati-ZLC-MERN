@@ -1,7 +1,7 @@
 import axiosInstance from "../../config/axiosConfig";
 
 export const sendAppreciation = async (appreciationData) => {
-  const response = await axiosInstance.post("/appreciations/send", appreciationData);
+  const response = await axiosInstance.post("/appreciation/send", appreciationData);
   return response.data;
 };
 
@@ -21,6 +21,6 @@ export const getSentAppreciations = async (userId, params) => {
 };
 
 export const getEligibleUsers = async () => {
-  const response = await axiosInstance.get("/appreciations/eligible-users");
+  const response = await axiosInstance.get("/appreciation/eligible-users");
   return response.data;
 };
