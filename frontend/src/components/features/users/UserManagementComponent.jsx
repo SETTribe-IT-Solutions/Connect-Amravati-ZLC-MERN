@@ -22,8 +22,9 @@ const UserManagementComponent = ({ user }) => {
   const [talukas, setTalukas] = useState([]);
   const [villages, setVillages] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isEditing, setIsEditing] = useState(false);
+  const [statFilter, setStatFilter] = useState('Total Users');
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -120,11 +121,32 @@ const UserManagementComponent = ({ user }) => {
   }, []);
 
   const roles = ['Collector', 'Addl. Collector', 'SDO', 'Tehsildar', 'BDO', 'Talathi', 'Gram Sevak', 'Admin'];
+  
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const newUsersCount = users.filter(u => {
+    if (!u.createdAt) return false;
+    const date = new Date(u.createdAt);
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  }).length;
+
   const stats = [
     { label: 'Total Users', value: totalItems, icon: UserCircleIcon, color: 'primary', msg: 'Total Users Count' },
     { label: 'Active Users', value: users.filter(u => u.status === 'Active').length, icon: ShieldCheckIcon, color: 'success', msg: 'Currently Active Users' },
-    { label: 'Results Count', value: users.length, icon: TrophyIcon, color: 'info', msg: 'Users on this page' }
+    { label: 'Inactive Users', value: users.filter(u => u.status === 'Inactive').length, icon: EyeSlashIcon, color: 'danger', msg: 'Currently Inactive Users' },
+    { label: 'New Users this Month', value: newUsersCount, icon: UserPlusIcon, color: 'info', msg: 'New Users Added This Month' }
   ];
+
+  const filteredUsersList = users.filter(u => {
+    if (statFilter === 'Active Users') return u.status === 'Active';
+    if (statFilter === 'Inactive Users') return u.status === 'Inactive';
+    if (statFilter === 'New Users this Month') {
+      if (!u.createdAt) return false;
+      const d = new Date(u.createdAt);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    }
+    return true;
+  });
 
   const getRoleColor = (role) => ({
     'Collector': 'secondary', 'Addl. Collector': 'dark',
@@ -143,8 +165,8 @@ const UserManagementComponent = ({ user }) => {
               <div className="d-flex align-items-center gap-3">
                 <CheckCircleIcon style={{ width: '1.5rem' }} />
                 <div>
-                  <p className="small mb-0 opacity-75">{toast.title}</p>
-                  <p className="fw-bold mb-0">{toast.value}</p>
+                  <p className={`mb-0 ${toast.value ? 'small opacity-75' : 'fw-bold'}`}>{toast.title}</p>
+                  {toast.value && <p className="fw-bold mb-0">{toast.value}</p>}
                 </div>
                 <Button variant="link" className="text-white ms-auto p-0" onClick={() => setToast(null)}><XMarkIcon style={{ width: '1rem' }} /></Button>
               </div>
@@ -165,14 +187,22 @@ const UserManagementComponent = ({ user }) => {
 
       <Row className="g-3 mb-4">
         {stats.map((stat, index) => (
-          <Col key={stat.label} xs={12} sm={4}>
+          <Col key={stat.label} xs={12} sm={6} md={3}>
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
-              <Card className="premium-card border-0 p-3 h-100 shadow-sm shadow-hover">
+              <Card 
+                className={`premium-card border-0 p-3 h-100 shadow-sm shadow-hover ${statFilter === stat.label ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                style={{ cursor: 'pointer', transform: statFilter === stat.label ? 'translateY(-2px)' : 'none', border: statFilter === stat.label ? '2px solid #0d6efd' : 'none' }}
+                onClick={() => {
+                  setStatFilter(stat.label);
+                  showToast(stat.label, '');
+                }}
+              >
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <p className="small text-secondary fw-bold mb-1">{stat.label}</p>
                     <p className="h3 fw-bold mb-0">{stat.value}</p>
                   </div>
+
                   <div className={`p-3 rounded-3 bg-${stat.color} bg-opacity-10 text-${stat.color}`}>
                     <stat.icon style={{ width: '1.5rem', height: '1.5rem' }} />
                   </div>
@@ -185,13 +215,30 @@ const UserManagementComponent = ({ user }) => {
 
       <Card className="premium-card border-0 p-4 mb-4">
         <Row className="g-3">
-          <Col md={8}>
-            <div className="position-relative">
-              <MagnifyingGlassIcon className="position-absolute translate-middle-y text-secondary" style={{ width: '1.25rem', left: '0.75rem', top: '50%', zIndex: 10 }} />
-              <Form.Control type="text" placeholder="Search users by name, email, or role..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="rounded-3 border-light-subtle ps-5 py-2" />
+          <Col lg={2} md={3}>
+            <div className="d-flex align-items-center gap-2">
+              <Form.Control 
+                type="number" 
+                min="1" 
+                value={itemsPerPage} 
+                onChange={(e) => { 
+                  const val = parseInt(e.target.value, 10); 
+                  if (!isNaN(val) && val > 0) { setItemsPerPage(val); setCurrentPage(1); } 
+                  else if (e.target.value === '') { setItemsPerPage(''); }
+                }} 
+                onBlur={() => { if (itemsPerPage === '' || itemsPerPage < 1) { setItemsPerPage(10); setCurrentPage(1); } }}
+                className="rounded-3 border-light-subtle py-2 text-center" 
+              />
+              <span className="small text-secondary fw-medium text-nowrap">per page</span>
             </div>
           </Col>
-          <Col md={4}>
+          <Col lg={7} md={5}>
+            <div className="position-relative">
+              <MagnifyingGlassIcon className="position-absolute translate-middle-y text-secondary" style={{ width: '1.25rem', left: '0.75rem', top: '50%', zIndex: 10 }} />
+              <Form.Control type="text" placeholder="Search users by name, number, role, jurisdiction..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="rounded-3 border-light-subtle ps-5 py-2" />
+            </div>
+          </Col>
+          <Col lg={3} md={4}>
             <Form.Select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="rounded-3 border-light-subtle py-2">
               <option value="all">All Roles</option>
               {roles.map(role => <option key={role} value={role}>{role}</option>)}
@@ -205,7 +252,7 @@ const UserManagementComponent = ({ user }) => {
           <div className="spinner-border text-primary mb-3" role="status"></div>
           <p className="text-secondary fw-medium">Loading user data...</p>
         </div>
-      ) : users.length === 0 ? (
+      ) : filteredUsersList.length === 0 ? (
         <div className="text-center py-5 bg-white rounded-4 border shadow-sm">
           <div className="p-4 bg-light rounded-circle d-inline-block mb-3">
             <UserCircleIcon style={{ width: '3rem' }} className="text-secondary opacity-50" />
@@ -230,7 +277,7 @@ const UserManagementComponent = ({ user }) => {
                 </tr>
               </thead>
               <tbody>
-                {users.map(member => (
+                {filteredUsersList.map(member => (
                     <tr key={member.id}>
                       <td className="px-4 py-3">
                         <div className="d-flex align-items-center gap-3">
@@ -373,13 +420,30 @@ const UserModal = ({ user, initialIsEditing, allUsers, roles, talukas, villages,
     const newErrors = {};
     if (!formData.userID) newErrors.userID = "User ID is required";
     if (!formData.name) newErrors.name = "Full Name is required";
-    if (!formData.email) newErrors.email = "Email is required";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address (e.g., abc@gmail.com)";
+    }
     
     const phoneRegex = /^[6-9]\d{9}$/;
-    if (!phoneRegex.test(formData.phone)) newErrors.phone = "Invalid 10-digit phone number";
+    if (!formData.phone) {
+      newErrors.phone = "Phone number is required";
+    } else if (!phoneRegex.test(formData.phone)) {
+      newErrors.phone = "Phone number must start with 6, 7, 8, or 9 and be exactly 10 digits";
+    }
     
-    if (!user && !formData.password) newErrors.password = "Password is required";
-    if (formData.password && formData.password.length < 8) newErrors.password = "Min 8 characters required";
+    if (!user && !formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password) {
+      const pwd = formData.password;
+      if (pwd.length < 8) newErrors.password = "Minimum 8 characters required";
+      else if (!/(?=.*[A-Z])/.test(pwd)) newErrors.password = "Must contain at least one uppercase letter (A-Z)";
+      else if (!/(?=.*[a-z])/.test(pwd)) newErrors.password = "Must contain at least one lowercase letter (a-z)";
+      else if (!/(?=.*\d)/.test(pwd)) newErrors.password = "Must contain at least one number (0-9)";
+      else if (!/(?=.*[@$!%*?&])/.test(pwd)) newErrors.password = "Must contain at least one special character (@, $, !, %, *, ?, &)";
+    }
 
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
@@ -478,36 +542,39 @@ const UserModal = ({ user, initialIsEditing, allUsers, roles, talukas, villages,
           <Row className="g-3 mb-3">
             <Col md={6}>
               <Form.Group>
-                <Form.Label className="small fw-bold text-secondary">User ID (Digits) *</Form.Label>
-                <Form.Control type="text" disabled={!!user} value={formData.userID} isInvalid={!!errors.userID} 
+                <Form.Label className="small fw-bold text-secondary">User ID <span className="text-danger">*</span></Form.Label>
+                <Form.Control type="text" placeholder="Enter ID number" disabled={!!user} value={formData.userID} isInvalid={!!errors.userID} 
                   onChange={(e) => setFormData({...formData, userID: e.target.value.replace(/\D/g, '')})} className="rounded-3 border-light-subtle" />
                 <Form.Control.Feedback type="invalid">{errors.userID}</Form.Control.Feedback>
               </Form.Group>
             </Col>
             <Col md={6}>
               <Form.Group>
-                <Form.Label className="small fw-bold text-secondary">Full Name *</Form.Label>
-                <Form.Control type="text" value={formData.name} isInvalid={!!errors.name} 
+                <Form.Label className="small fw-bold text-secondary">Full Name <span className="text-danger">*</span></Form.Label>
+                <Form.Control type="text" placeholder="Enter your full name" value={formData.name} isInvalid={!!errors.name} 
                   onChange={(e) => setFormData({...formData, name: e.target.value})} className="rounded-3 border-light-subtle" />
+                <Form.Control.Feedback type="invalid">{errors.name}</Form.Control.Feedback>
               </Form.Group>
             </Col>
             <Col md={6}>
               <Form.Group>
-                <Form.Label className="small fw-bold text-secondary">Email *</Form.Label>
-                <Form.Control type="email" value={formData.email} isInvalid={!!errors.email} 
+                <Form.Label className="small fw-bold text-secondary">Email <span className="text-danger">*</span></Form.Label>
+                <Form.Control type="email" placeholder="e.g., abc@gmail.com" value={formData.email} isInvalid={!!errors.email} 
                   onChange={(e) => setFormData({...formData, email: e.target.value})} className="rounded-3 border-light-subtle" />
+                <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
               </Form.Group>
             </Col>
             <Col md={6}>
               <Form.Group>
-                <Form.Label className="small fw-bold text-secondary">Phone (10-digit) *</Form.Label>
-                <Form.Control type="tel" value={formData.phone} isInvalid={!!errors.phone} 
+                <Form.Label className="small fw-bold text-secondary">Phone Number <span className="text-danger">*</span></Form.Label>
+                <Form.Control type="tel" placeholder="Enter 10-digit number" value={formData.phone} isInvalid={!!errors.phone} 
                   onChange={(e) => setFormData({...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10)})} className="rounded-3 border-light-subtle" />
+                <Form.Control.Feedback type="invalid">{errors.phone}</Form.Control.Feedback>
               </Form.Group>
             </Col>
             <Col md={6}>
               <Form.Group>
-                <Form.Label className="small fw-bold text-secondary">Role *</Form.Label>
+                <Form.Label className="small fw-bold text-secondary">Role <span className="text-danger">*</span></Form.Label>
                 <Form.Select value={formData.role} isInvalid={!!errors.role} onChange={(e) => setFormData({...formData, role: e.target.value})} className="rounded-3 border-light-subtle">
                   <option value="">Select Role</option>
                   {availableRoles.map(r => <option key={r} value={r}>{r}</option>)}
@@ -550,9 +617,9 @@ const UserModal = ({ user, initialIsEditing, allUsers, roles, talukas, villages,
             </Col>
             <Col xs={12}>
               <Form.Group className="position-relative">
-                <Form.Label className="small fw-bold text-secondary">{user ? 'New Password (Optional)' : 'Password *'}</Form.Label>
-                <Form.Control type={showPassword ? "text" : "password"} value={formData.password} isInvalid={!!errors.password} 
-                  onChange={(e) => setFormData({...formData, password: e.target.value})} className="rounded-3 border-light-subtle pe-5" />
+                <Form.Label className="small fw-bold text-secondary">{user ? 'New Password (Optional)' : <>Password <span className="text-danger">*</span></>}</Form.Label>
+                <Form.Control type={showPassword ? "text" : "password"} placeholder="Password must contain 1 upper letter, 1 lower letter, 1 special character and 1 number (min 8 chars)" value={formData.password} isInvalid={!!errors.password} 
+                  onChange={(e) => setFormData({...formData, password: e.target.value})} className="rounded-3 border-light-subtle pe-5" style={{ backgroundImage: 'none' }} />
                 <Button variant="link" className="position-absolute end-0 top-50 translate-middle-y text-secondary p-2 mt-2" onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? <EyeSlashIcon style={{ width: '1.25rem' }} /> : <EyeIcon style={{ width: '1.25rem' }} />}
                 </Button>
