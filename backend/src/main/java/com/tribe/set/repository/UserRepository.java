@@ -48,7 +48,12 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Query("SELECT u FROM User u WHERE " +
            "(u.role IN :roles) AND " +
            "(:searchTerm IS NULL OR :searchTerm = '' OR LOWER(u.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
-           "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
+           "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+           "OR u.phone LIKE CONCAT('%', :searchTerm, '%') " +
+           "OR LOWER(u.district) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+           "OR LOWER(u.taluka) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+           "OR LOWER(u.village) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+           "OR LOWER(CAST(u.role AS string)) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
            "AND (:filterRole IS NULL OR u.role = :filterRole)")
     Page<User> findAllFiltered(
         @Param("roles") List<Role> visibleRoles,
