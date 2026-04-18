@@ -30,20 +30,17 @@ public class RefreshTokenService {
 
     @Transactional
     public RefreshToken createRefreshToken(String userId) {
-        var user = userRepository.findByUserID(userId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
-
         // ✅ Check if token exists for user
-        Optional<RefreshToken> existingToken = refreshTokenRepository.findByUser(user);
+        Optional<RefreshToken> existingToken = refreshTokenRepository.findByUserId(userId);
 
         RefreshToken refreshToken;
         if (existingToken.isPresent()) {
-            // ✅ Update existing token instead of deleting/re-inserting
+            // ✅ Update existing token
             refreshToken = existingToken.get();
         } else {
             // ✅ Create new token if none exists
             refreshToken = new RefreshToken();
-            refreshToken.setUser(user);
+            refreshToken.setUserId(userId);
         }
 
         refreshToken.setToken(UUID.randomUUID().toString());
@@ -64,6 +61,6 @@ public class RefreshTokenService {
 
     @Transactional
     public int deleteByUserId(String userId) {
-        return refreshTokenRepository.deleteByUser(userRepository.findByUserID(userId).get());
+        return refreshTokenRepository.deleteByUserId(userId);
     }
 }

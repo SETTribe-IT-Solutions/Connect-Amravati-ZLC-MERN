@@ -3,6 +3,7 @@ package com.tribe.set.dto;
 import java.time.LocalDateTime;
 
 import com.tribe.set.entity.Appreciation;
+import com.tribe.set.entity.User;
 
 public class AppreciationResponse {
 
@@ -19,17 +20,21 @@ public class AppreciationResponse {
     public AppreciationResponse() {
     }
 
-    public static AppreciationResponse from(Appreciation app) {
+    public static AppreciationResponse from(Appreciation app, User fromUser, User toUser) {
         AppreciationResponse res = new AppreciationResponse();
         res.setId(app.getId());
-        res.setFromUserName(app.getFromUser().getName());
-        res.setToUserName(app.getToUser().getName());
-        res.setFromRole(app.getFromUser().getRole() != null ? app.getFromUser().getRole().name() : "N/A");
-        res.setToRole(app.getToUser().getRole() != null ? app.getToUser().getRole().name() : "N/A");
+        if (fromUser != null) {
+            res.setFromUserName(fromUser.getName());
+            res.setFromRole(fromUser.getRole() != null ? fromUser.getRole().name() : "N/A");
+        }
+        if (toUser != null) {
+            res.setToUserName(toUser.getName());
+            res.setToRole(toUser.getRole() != null ? toUser.getRole().name() : "N/A");
+            res.setToUserEverAppreciated(toUser.getEverAppreciated());
+        }
         res.setMessage(app.getMessage());
         res.setBadge(app.getBadge());
         res.setCreatedAt(app.getCreatedAt());
-        res.setToUserEverAppreciated(app.getToUser().getEverAppreciated());
         return res;
     }
 

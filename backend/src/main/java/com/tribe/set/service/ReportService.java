@@ -50,14 +50,20 @@ public class ReportService {
 
         // Group tasks by which user they are assigned to
         Map<String, List<Task>> tasksByUser = allTasks.stream()
-                .filter(t -> t.getAssignedTo() != null)
-                .collect(Collectors.groupingBy(t -> t.getAssignedTo().getUserID()));
+                .filter(t -> t.getAssignedToUserId() != null)
+                .collect(Collectors.groupingBy(Task::getAssignedToUserId));
+
+        // Fetch all assignees in bulk to avoid N+1 queries
+        java.util.Set<String> assigneeIds = tasksByUser.keySet();
+        java.util.Map<String, User> userMap = userRepository.findAllByUserIDIn(assigneeIds).stream()
+                .collect(Collectors.toMap(User::getUserID, u -> u));
 
         List<PerformanceReportDTO> performanceList = new ArrayList<>();
 
         for (Entry<String, List<Task>> entry : tasksByUser.entrySet()) {
+            String assigneeId = entry.getKey();
             List<Task> userTasks = entry.getValue();
-            User assignee = userTasks.get(0).getAssignedTo();
+            User assignee = userMap.get(assigneeId);
 
             long total = userTasks.size();
             long completed = userTasks.stream().filter(t -> t.getStatus() == TaskStatus.COMPLETED).count();
@@ -67,9 +73,9 @@ public class ReportService {
             efficiency = Math.round(efficiency * 100.0) / 100.0;
 
             performanceList.add(new PerformanceReportDTO(
-                assignee.getUserID(),
-                assignee.getName(),
-                assignee.getRole(),
+                assigneeId,
+                assignee != null ? assignee.getName() : "Unknown",
+                assignee != null ? assignee.getRole() : null,
                 total,
                 completed,
                 overdue,

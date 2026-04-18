@@ -10,11 +10,16 @@ public class RemarkResponse {
     private String remark;
     private LocalDateTime createdAt;
 
-    public static RemarkResponse from(TaskRemark remark) {
+    public static RemarkResponse from(TaskRemark remark, com.tribe.set.entity.User addedBy) {
         RemarkResponse response = new RemarkResponse();
         response.setId(remark.getId());
-        response.setAddedBy(remark.getAddedBy().getName());
-        response.setAddedByRole(remark.getAddedBy().getRole().name());
+        if (addedBy != null) {
+            response.setAddedBy(addedBy.getName());
+            response.setAddedByRole(addedBy.getRole().name());
+        } else {
+            response.setAddedBy("System");
+            response.setAddedByRole("N/A");
+        }
         response.setRemark(remark.getRemark());
         response.setCreatedAt(remark.getCreatedAt());
         return response;

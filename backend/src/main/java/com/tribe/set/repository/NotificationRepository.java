@@ -17,16 +17,16 @@ import jakarta.transaction.Transactional;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    List<Notification> findByUserOrderByCreatedAtDesc(User user);
+    List<Notification> findByUserIdOrderByCreatedAtDesc(String userId);
 
-    List<Notification> findByUserAndIsReadOrderByCreatedAtDesc(User user, Boolean isRead);
+    List<Notification> findByUserIdAndIsReadOrderByCreatedAtDesc(String userId, Boolean isRead);
 
-    long countByUserAndIsRead(User user, Boolean isRead);
+    long countByUserIdAndIsRead(String userId, Boolean isRead);
 
-    @Query("SELECT n FROM Notification n WHERE n.user = :user AND (n.isRead = false OR (n.isRead = true AND n.readAt >= :expiryDate)) ORDER BY n.createdAt DESC")
-    List<Notification> findActiveNotificationsForUser(@Param("user") User user, @Param("expiryDate") LocalDateTime expiryDate);
+    @Query("SELECT n FROM Notification n WHERE n.userId = :userId AND (n.isRead = false OR (n.isRead = true AND n.readAt >= :expiryDate)) ORDER BY n.createdAt DESC")
+    List<Notification> findActiveNotificationsForUser(@Param("userId") String userId, @Param("expiryDate") LocalDateTime expiryDate);
 
-    boolean existsByUserAndTypeAndTaskId(User user, com.tribe.set.entity.NotificationType type, Long taskId);
+    boolean existsByUserIdAndTypeAndTaskId(String userId, com.tribe.set.entity.NotificationType type, Long taskId);
 
     @Modifying
     @Transactional
@@ -35,6 +35,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     @Modifying
     @Transactional
-    @Query("UPDATE Notification n SET n.isRead = true, n.readAt = CURRENT_TIMESTAMP WHERE n.user = :user AND n.isRead = false")
-    void markAllAsReadForUser(@Param("user") User user);
+    @Query("UPDATE Notification n SET n.isRead = true, n.readAt = CURRENT_TIMESTAMP WHERE n.userId = :userId AND n.isRead = false")
+    void markAllAsReadForUser(@Param("userId") String userId);
 }

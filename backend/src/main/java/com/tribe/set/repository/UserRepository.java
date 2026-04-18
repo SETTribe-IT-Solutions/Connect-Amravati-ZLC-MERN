@@ -20,9 +20,13 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByPhone(String phone);
+
     List<User> findByRole(Role role);
 
     List<User> findByActive(Boolean active);
+
+    List<User> findAllByUserIDIn(java.util.Collection<String> userIds);
 
     boolean existsByEmail(String email);
 
@@ -38,7 +42,8 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Query("UPDATE User u SET u.active = :active WHERE u.userID = :userId")
     int updateActiveStatus(@Param("userId") String userId, @Param("active") Boolean active);
 
-    @Query("SELECT DISTINCT u FROM User u JOIN u.assignedTasks t WHERE u.isAppreciated = false AND t.status = com.tribe.set.entity.TaskStatus.COMPLETED")
+    @Query("SELECT DISTINCT u FROM User u WHERE u.isAppreciated = false AND " +
+           "EXISTS (SELECT 1 FROM Task t WHERE t.assignedToUserId = u.userID AND t.status = com.tribe.set.entity.TaskStatus.COMPLETED)")
     List<User> findEligibleForAppreciation();
 
     @Modifying

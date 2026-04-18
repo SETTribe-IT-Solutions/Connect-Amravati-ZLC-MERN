@@ -66,7 +66,7 @@ public class AnnouncementService {
         announcement.setTargetRole(request.getTargetRole());
         announcement.setTargetTaluka(request.getTargetTaluka());
         announcement.setTargetVillage(request.getTargetVillage());
-        announcement.setCreatedBy(creator);
+        announcement.setCreatedByUserId(request.getRequesterId());
         announcement.setCircular(request.isCircular());
 
         // Handle file upload
@@ -105,7 +105,7 @@ public class AnnouncementService {
         }
         
         Announcement savedAnnouncement = announcementRepository.save(announcement);
-        return new AnnouncementDTO(savedAnnouncement, false, 0);
+        return new AnnouncementDTO(savedAnnouncement, creator, false, 0);
     }
 
     public Page<AnnouncementDTO> getAnnouncementsForUser(String userId, Pageable pageable) {
@@ -115,9 +115,15 @@ public class AnnouncementService {
         Page<Announcement> announcements = announcementRepository.findForUser(
                 user.getUserID(), user.getRole(), user.getTaluka(), user.getVillage(), pageable);
 
+        // Fetch all creators in bulk to avoid N+1
+        java.util.Set<String> creatorIds = announcements.stream().map(Announcement::getCreatedByUserId).collect(Collectors.toSet());
+        java.util.Map<String, User> creatorMap = userRepository.findAllByUserIDIn(creatorIds).stream()
+                .collect(Collectors.toMap(User::getUserID, u -> u));
+
         return announcements.map(a -> {
-            boolean acknowledged = acknowledgmentRepository.existsByAnnouncementAndUser(a, user);
-            return new AnnouncementDTO(a, acknowledged, acknowledgmentRepository.countByAnnouncement(a));
+            boolean acknowledged = acknowledgmentRepository.existsByAnnouncementIdAndUserId(a.getId(), userId);
+            User creator = creatorMap.get(a.getCreatedByUserId());
+            return new AnnouncementDTO(a, creator, acknowledged, acknowledgmentRepository.countByAnnouncementId(a.getId()));
         });
     }
 
@@ -128,26 +134,25 @@ public class AnnouncementService {
         Page<Announcement> announcements = announcementRepository.findSentByUserId(userId, pageable);
 
         return announcements.map(a -> {
-            boolean acknowledged = acknowledgmentRepository.existsByAnnouncementAndUser(a, user);
-            return new AnnouncementDTO(a, acknowledged, acknowledgmentRepository.countByAnnouncement(a));
+            boolean acknowledged = acknowledgmentRepository.existsByAnnouncementIdAndUserId(a.getId(), userId);
+            return new AnnouncementDTO(a, user, acknowledged, acknowledgmentRepository.countByAnnouncementId(a.getId()));
         });
     }
 
     public List<AcknowledgmentDetailDTO> getAcknowledgmentDetails(Long announcementId) {
         List<AnnouncementAcknowledgment> acks = acknowledgmentRepository.findByAnnouncementIdOrderByAcknowledgedAtDesc(announcementId);
-        return acks.stream().map(AcknowledgmentDetailDTO::new).collect(Collectors.toList());
+        
+        java.util.Set<String> userIds = acks.stream().map(AnnouncementAcknowledgment::getUserId).collect(Collectors.toSet());
+        java.util.Map<String, User> userMap = userRepository.findAllByUserIDIn(userIds).stream()
+                .collect(Collectors.toMap(User::getUserID, u -> u));
+
+        return acks.stream().map(ack -> new AcknowledgmentDetailDTO(ack, userMap.get(ack.getUserId()))).collect(Collectors.toList());
     }
 
     @Transactional
     public void acknowledgeAnnouncement(Long announcementId, String userId) {
-        User user = userRepository.findByUserID(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        Announcement announcement = announcementRepository.findById(announcementId)
-                .orElseThrow(() -> new RuntimeException("Announcement not found"));
-
-        if (!acknowledgmentRepository.existsByAnnouncementAndUser(announcement, user)) {
-            AnnouncementAcknowledgment acknowledgment = new AnnouncementAcknowledgment(announcement, user);
+        if (!acknowledgmentRepository.existsByAnnouncementIdAndUserId(announcementId, userId)) {
+            AnnouncementAcknowledgment acknowledgment = new AnnouncementAcknowledgment(announcementId, userId);
             acknowledgmentRepository.save(acknowledgment);
         }
     }
@@ -157,18 +162,18 @@ public class AnnouncementService {
         Announcement announcement = announcementRepository.findById(announcementId)
                 .orElseThrow(() -> new RuntimeException("Announcement not found"));
                 
-        if (!announcement.getCreatedBy().getUserID().equals(userId)) {
+        if (!announcement.getCreatedByUserId().equals(userId)) {
             throw new RuntimeException("Unauthorized: You can only update your own communications");
         }
         
         announcement.setTitle(title);
         announcement.setMessage(message);
         Announcement updated = announcementRepository.save(announcement);
-        // We know it's acknowledged by creator (they updated it), but usually creator doesn't acknowledge their own in the same way.
-        // We check if an ack exists or just return 0/false for simplicity in update response as per current logic.
-        boolean acknowledged = acknowledgmentRepository.existsByAnnouncementAndUser(updated, updated.getCreatedBy());
-        long count = acknowledgmentRepository.countByAnnouncement(updated);
-        return new AnnouncementDTO(updated, acknowledged, count);
+        
+        User creator = userRepository.findByUserID(userId).orElse(null);
+        boolean acknowledged = acknowledgmentRepository.existsByAnnouncementIdAndUserId(updated.getId(), userId);
+        long count = acknowledgmentRepository.countByAnnouncementId(updated.getId());
+        return new AnnouncementDTO(updated, creator, acknowledged, count);
     }
 
     @Transactional
@@ -176,7 +181,7 @@ public class AnnouncementService {
         Announcement announcement = announcementRepository.findById(announcementId)
                 .orElseThrow(() -> new RuntimeException("Announcement not found"));
                 
-        if (!announcement.getCreatedBy().getUserID().equals(userId)) {
+        if (!announcement.getCreatedByUserId().equals(userId)) {
             throw new RuntimeException("Unauthorized: You can only delete your own communications");
         }
         
@@ -203,12 +208,12 @@ public class AnnouncementService {
         private boolean isCircular;
         private String attachment;
 
-        public AnnouncementDTO(Announcement a, boolean acknowledged, long acknowledgmentCount) {
+        public AnnouncementDTO(Announcement a, User creator, boolean acknowledged, long acknowledgmentCount) {
             this.id = a.getId();
             this.title = a.getTitle();
             this.message = a.getMessage();
-            this.creatorName = a.getCreatedBy() != null ? a.getCreatedBy().getName() : "System";
-            this.creatorRole = a.getCreatedBy() != null ? a.getCreatedBy().getRole().toString() : "ADMIN";
+            this.creatorName = creator != null ? creator.getName() : "System";
+            this.creatorRole = creator != null ? creator.getRole().toString() : "ADMIN";
             this.createdAt = a.getCreatedAt().toString();
             this.acknowledged = acknowledged;
             this.acknowledgmentCount = acknowledgmentCount;
@@ -241,11 +246,11 @@ public class AnnouncementService {
         private String village;
         private String acknowledgedAt;
 
-        public AcknowledgmentDetailDTO(AnnouncementAcknowledgment ack) {
-            this.userName = ack.getUser().getName();
-            this.userRole = ack.getUser().getRole().toString();
-            this.taluka = ack.getUser().getTaluka() != null ? ack.getUser().getTaluka() : "N/A";
-            this.village = ack.getUser().getVillage() != null ? ack.getUser().getVillage() : "N/A";
+        public AcknowledgmentDetailDTO(AnnouncementAcknowledgment ack, User user) {
+            this.userName = user != null ? user.getName() : "Unknown";
+            this.userRole = user != null ? user.getRole().toString() : "N/A";
+            this.taluka = (user != null && user.getTaluka() != null) ? user.getTaluka() : "N/A";
+            this.village = (user != null && user.getVillage() != null) ? user.getVillage() : "N/A";
             this.acknowledgedAt = ack.getAcknowledgedAt().toString();
         }
 

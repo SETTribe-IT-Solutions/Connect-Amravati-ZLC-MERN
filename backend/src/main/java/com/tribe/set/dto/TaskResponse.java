@@ -36,7 +36,7 @@ public class TaskResponse {
     private List<String> remarks;
 
     // ─── Static factory method ───
-    public static TaskResponse from(Task task) {
+    public static TaskResponse from(Task task, com.tribe.set.entity.User creator, com.tribe.set.entity.User assignee, List<com.tribe.set.entity.TaskRemark> remarks, java.util.Map<String, com.tribe.set.entity.User> remarkAuthors) {
         TaskResponse res = new TaskResponse();
 
         res.id = task.getId();
@@ -54,21 +54,22 @@ public class TaskResponse {
         res.createdAt = task.getCreatedAt() != null ? task.getCreatedAt().toString() : null;
         res.updatedAt = task.getUpdatedAt() != null ? task.getUpdatedAt().toString() : null;
 
-        if (task.getCreatedBy() != null) {
-            res.createdById = task.getCreatedBy().getUserID();
-            res.createdByName = task.getCreatedBy().getName();
-            res.createdByRole = task.getCreatedBy().getRole().name();
+        if (creator != null) {
+            res.createdById = creator.getUserID();
+            res.createdByName = creator.getName();
+            res.createdByRole = creator.getRole().name();
         }
 
-        if (task.getAssignedTo() != null) {
-            res.assignedToId = task.getAssignedTo().getUserID();
-            res.assignedToName = task.getAssignedTo().getName();
-            res.assignedToRole = task.getAssignedTo().getRole().name();
+        if (assignee != null) {
+            res.assignedToId = assignee.getUserID();
+            res.assignedToName = assignee.getName();
+            res.assignedToRole = assignee.getRole().name();
         }
 
-        if (task.getRemarks() != null && !task.getRemarks().isEmpty()) {
-            res.remarks = task.getRemarks().stream().map(r -> {
-                String addedBy = r.getAddedBy() != null ? r.getAddedBy().getName() + " (" + r.getAddedBy().getRole() + ")" : "System";
+        if (remarks != null && !remarks.isEmpty()) {
+            res.remarks = remarks.stream().map(r -> {
+                com.tribe.set.entity.User author = (remarkAuthors != null) ? remarkAuthors.get(r.getAddedByUserId()) : null;
+                String addedBy = author != null ? author.getName() + " (" + author.getRole() + ")" : "System";
                 return addedBy + ": " + r.getRemark();
             }).collect(Collectors.toList());
         } else {

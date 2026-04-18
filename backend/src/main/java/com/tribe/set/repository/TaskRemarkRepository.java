@@ -11,8 +11,8 @@ import java.util.List;
 public interface TaskRemarkRepository extends JpaRepository<TaskRemark, Long> {
 
     // Get all remarks for a specific task, newest first
-    List<TaskRemark> findByTaskOrderByCreatedAtDesc(Task task);
+    List<TaskRemark> findByTaskIdOrderByCreatedAtDesc(Long taskId);
 
     // Count how many remarks a task has
-    long countByTask(Task task);
+    long countByTaskId(Long taskId);
 }

@@ -41,42 +41,49 @@ public class AppreciationService {
                                                 "Receiver not found: " + request.getToUserId()));
 
                 Appreciation app = new Appreciation();
-                app.setFromUser(fromUser);
-                app.setToUser(toUser);
+                app.setFromUserId(request.getFromUserId());
+                app.setToUserId(request.getToUserId());
                 app.setMessage(request.getMessage());
                 app.setBadge(request.getBadge());
                 app.setCreatedAt(LocalDateTime.now());
 
                 // Update user appreciation status bypass validation by directly querying.
-                userRepository.markUserAsAppreciated(toUser.getUserID());
+                userRepository.markUserAsAppreciated(request.getToUserId());
 
                 // Send notification including sender's Role
                 String roleName = fromUser.getRole() != null ? fromUser.getRole().name() : "Member";
                 String message = "You received a '" + request.getBadge() + "' appreciation from " + fromUser.getName() + " (" + roleName + ")";
-                notificationServices.send(toUser, "New Appreciation", message, NotificationType.APPRECIATION, null);
+                notificationServices.send(request.getToUserId(), "New Appreciation", message, NotificationType.APPRECIATION, null);
 
-                return AppreciationResponse.from(appreciationRepository.save(app));
+                return AppreciationResponse.from(appreciationRepository.save(app), fromUser, toUser);
         }
 
         public Page<AppreciationResponse> getAllAppreciations(String searchTerm, Pageable pageable) {
-                return appreciationRepository.findAllFiltered(searchTerm, pageable)
-                                .map(AppreciationResponse::from);
+                Page<Appreciation> apps = appreciationRepository.findAllFiltered(searchTerm, pageable);
+                return mapToResponsePage(apps, pageable);
         }
 
         public Page<AppreciationResponse> getReceivedAppreciations(String userId, Pageable pageable) {
-                User user = userRepository.findByUserID(userId)
-                                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
-
-                return appreciationRepository.findByToUserOrderByCreatedAtDesc(user, pageable)
-                                .map(AppreciationResponse::from);
+                Page<Appreciation> apps = appreciationRepository.findByToUserIdOrderByCreatedAtDesc(userId, pageable);
+                return mapToResponsePage(apps, pageable);
         }
 
         public Page<AppreciationResponse> getSentAppreciations(String userId, Pageable pageable) {
-                User user = userRepository.findByUserID(userId)
-                                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+                Page<Appreciation> apps = appreciationRepository.findByFromUserIdOrderByCreatedAtDesc(userId, pageable);
+                return mapToResponsePage(apps, pageable);
+        }
 
-                return appreciationRepository.findByFromUserOrderByCreatedAtDesc(user, pageable)
-                                .map(AppreciationResponse::from);
+        private Page<AppreciationResponse> mapToResponsePage(Page<Appreciation> apps, Pageable pageable) {
+                java.util.Set<String> userIds = new java.util.HashSet<>();
+                apps.forEach(a -> {
+                        userIds.add(a.getFromUserId());
+                        userIds.add(a.getToUserId());
+                });
+
+                java.util.Map<String, User> userMap = userRepository.findAllByUserIDIn(userIds).stream()
+                        .collect(Collectors.toMap(User::getUserID, u -> u));
+
+                return apps.map(a -> AppreciationResponse.from(a, userMap.get(a.getFromUserId()), userMap.get(a.getToUserId())));
         }
 
         public List<UserResponse> getEligibleUsers() {
