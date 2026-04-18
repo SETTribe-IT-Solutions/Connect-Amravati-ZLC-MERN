@@ -50,6 +50,10 @@ public class User {
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    private LocalDateTime lastLogin;
+    private String lastLoginIP;
+    private String lastLoginDevice;
+
     // Relationships
     @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -249,5 +253,29 @@ public class User {
 
     public void setCreatedAnnouncements(List<Announcement> createdAnnouncements) {
         this.createdAnnouncements = createdAnnouncements;
+    }
+
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
+    public String getLastLoginIP() {
+        return lastLoginIP;
+    }
+
+    public void setLastLoginIP(String lastLoginIP) {
+        this.lastLoginIP = lastLoginIP;
+    }
+
+    public String getLastLoginDevice() {
+        return lastLoginDevice;
+    }
+
+    public void setLastLoginDevice(String lastLoginDevice) {
+        this.lastLoginDevice = lastLoginDevice;
     }
 }

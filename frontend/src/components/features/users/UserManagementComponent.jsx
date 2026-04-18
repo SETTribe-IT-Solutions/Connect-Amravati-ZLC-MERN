@@ -78,6 +78,9 @@ const UserManagementComponent = ({ user }) => {
         district: u.district || '', jurisdiction: u.village ? `${u.village}, ${u.taluka}` : (u.taluka || u.district || 'Amravati'),
         status: u.active ? 'Active' : 'Inactive', avatar: (u.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2),
         joinDate: u.createdAt ? u.createdAt.toString().split('T')[0] : 'N/A',
+        lastLogin: u.lastLogin,
+        lastLoginIP: u.lastLoginIP || 'N/A',
+        lastLoginDevice: u.lastLoginDevice || 'N/A',
         createdAt: u.createdAt || new Date().toISOString(),
         _rawActive: u.active
       }));
@@ -221,6 +224,7 @@ const UserManagementComponent = ({ user }) => {
                   <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">Email</th>
                   <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">Contact</th>
                   <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">Jurisdiction</th>
+                  <th className="px-4 py-3 text-uppercase small fw-bold text-secondary">Last Login</th>
                   <th className="px-4 py-3 text-uppercase small fw-bold text-secondary text-center">Status</th>
                   <th className="px-4 py-3 text-uppercase small fw-bold text-secondary text-end">Actions</th>
                 </tr>
@@ -249,6 +253,9 @@ const UserManagementComponent = ({ user }) => {
                       </td>
                       <td className="px-4 py-3">
                         <p className="small text-muted mb-0 truncate" style={{ maxWidth: '150px' }}>{member.jurisdiction}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="small text-dark fw-medium mb-0">{member.lastLogin ? new Date(member.lastLogin).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Never'}</p>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <Badge bg={member.status === 'Active' ? 'success' : 'secondary'} className="rounded-pill px-2 py-1" style={{ fontSize: '0.65rem' }}>
@@ -424,6 +431,29 @@ const UserModal = ({ user, initialIsEditing, allUsers, roles, talukas, villages,
             <Col xs={12}>
               <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.65rem' }}>Jurisdiction</div>
               <p className="fw-medium text-dark mb-0">{user.jurisdiction}</p>
+            </Col>
+            <Col xs={12}>
+               <hr className="my-2 opacity-10" />
+               <div className="bg-light p-3 rounded-3 border">
+                 <div className="d-flex align-items-center gap-2 mb-2 text-primary">
+                    <CheckCircleIcon style={{ width: '1.1rem' }} />
+                    <span className="small fw-bold text-uppercase" style={{ fontSize: '0.7rem' }}>Login Tracking</span>
+                 </div>
+                 <Row className="g-3">
+                   <Col xs={12}>
+                     <div className="small text-muted mb-1" style={{ fontSize: '0.65rem' }}>LAST LOGIN TIME</div>
+                     <p className="fw-bold text-dark mb-0">{user.lastLogin ? new Date(user.lastLogin).toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short' }) : 'No login recorded yet'}</p>
+                   </Col>
+                   <Col sm={6}>
+                     <div className="small text-muted mb-1" style={{ fontSize: '0.65rem' }}>IP ADDRESS</div>
+                     <p className="small fw-medium text-dark mb-0">{user.lastLoginIP || 'N/A'}</p>
+                   </Col>
+                   <Col sm={6}>
+                     <div className="small text-muted mb-1" style={{ fontSize: '0.65rem' }}>DEVICE / BROWSER</div>
+                     <p className="small fw-medium text-dark mb-0 text-truncate" title={user.lastLoginDevice}>{user.lastLoginDevice || 'N/A'}</p>
+                   </Col>
+                 </Row>
+               </div>
             </Col>
           </Row>
           <div className="d-flex gap-2">

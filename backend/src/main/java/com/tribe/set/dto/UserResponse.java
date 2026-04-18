@@ -16,6 +16,9 @@ public class UserResponse {
     private Boolean active;
     private int level;
     private String createdAt;
+    private String lastLogin;
+    private String lastLoginIP;
+    private String lastLoginDevice;
 
     // Real-time calculated stats
     private Long tasksCompleted = 0L;
@@ -36,6 +39,9 @@ public class UserResponse {
         res.active = user.getActive();
         res.level = user.getRole().getLevel();
         res.createdAt = user.getCreatedAt() != null ? user.getCreatedAt().toString() : null;
+        res.lastLogin = user.getLastLogin() != null ? user.getLastLogin().toString() : null;
+        res.lastLoginIP = user.getLastLoginIP();
+        res.lastLoginDevice = user.getLastLoginDevice();
         return res;
     }
 
@@ -86,6 +92,18 @@ public class UserResponse {
 
     public String getCreatedAt() {
         return createdAt;
+    }
+
+    public String getLastLogin() {
+        return lastLogin;
+    }
+
+    public String getLastLoginIP() {
+        return lastLoginIP;
+    }
+
+    public String getLastLoginDevice() {
+        return lastLoginDevice;
     }
 
     public Long getTasksCompleted() {
@@ -147,6 +165,18 @@ public class UserResponse {
 
     public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setLastLogin(String lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
+    public void setLastLoginIP(String lastLoginIP) {
+        this.lastLoginIP = lastLoginIP;
+    }
+
+    public void setLastLoginDevice(String lastLoginDevice) {
+        this.lastLoginDevice = lastLoginDevice;
     }
 
     public void setTasksCompleted(Long tasksCompleted) {
