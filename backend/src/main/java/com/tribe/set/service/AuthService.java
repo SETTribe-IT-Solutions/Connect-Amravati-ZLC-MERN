@@ -59,6 +59,12 @@ public class AuthService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             
+            // Update last login metadata
+            user.setLastLogin(java.time.LocalDateTime.now());
+            user.setLastLoginIP(ip);
+            user.setLastLoginDevice(httpRequest.getHeader("User-Agent"));
+            userRepository.save(user);
+            
             auditLogRepository.save(new AuditLog("LOGIN_SUCCESS", request.getUserID(), ip, "SUCCESS", "User logged in successfully"));
             
             return authentication;
