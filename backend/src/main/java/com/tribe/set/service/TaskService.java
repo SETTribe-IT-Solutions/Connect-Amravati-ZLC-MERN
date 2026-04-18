@@ -74,8 +74,7 @@ public class TaskService {
             throw new RuntimeException("Validation Error: Due date cannot be in the past.");
         }
 
-        // Build Task object — use setAssignedTo() and setCreatedBy() NOT
-        // setAssignedToId()
+        // Build Task object
         Task task = new Task();
         task.setTitle(request.getTitle());
         task.setDescription(request.getDescription());
@@ -87,8 +86,8 @@ public class TaskService {
         task.setAchievement(request.getAchievement());
         task.setLocation(request.getLocation());
         task.setStatus(TaskStatus.PENDING);
-        task.setCreatedBy(creator); // ← pass User object directly
-        task.setAssignedTo(assignee); // ← pass User object directly
+        task.setCreatedByUserId(creatorId);
+        task.setAssignedToUserId(request.getAssignedTo());
 
         // Handle file upload
         if (file != null && !file.isEmpty()) {
@@ -127,14 +126,26 @@ public class TaskService {
 
         // Auto-notify assignee
         notificationService.send(
-                assignee,
+                request.getAssignedTo(),
                 "New Task Assigned",
                 "New task assigned to you by " + creator.getName() +
                         " (" + creator.getRole() + "): " + task.getTitle(),
                 NotificationType.TASK_ASSIGNED,
                 saved.getId());
 
-        return TaskResponse.from(saved);
+        return convertToResponse(saved);
+    }
+
+    private TaskResponse convertToResponse(Task task) {
+        User creator = userRepository.findByUserID(task.getCreatedByUserId()).orElse(null);
+        User assignee = userRepository.findByUserID(task.getAssignedToUserId()).orElse(null);
+        List<TaskRemark> remarks = remarkRepository.findByTaskIdOrderByCreatedAtDesc(task.getId());
+
+        java.util.Set<String> authorIds = remarks.stream().map(TaskRemark::getAddedByUserId).collect(Collectors.toSet());
+        java.util.Map<String, User> authors = userRepository.findAllByUserIDIn(authorIds).stream()
+                .collect(Collectors.toMap(User::getUserID, u -> u));
+
+        return TaskResponse.from(task, creator, assignee, remarks, authors);
     }
 
     // ═══════════════════════════════════════════════════
@@ -147,9 +158,14 @@ public class TaskService {
         Task task = findTask(taskId);
         User newAssignee = findUser(newAssigneeId);
 
-        boolean isCreator = task.getCreatedBy().getUserID().equals(requesterId);
+        boolean isCreator = task.getCreatedByUserId().equals(requesterId);
+        
+        // Fetch current assignee to check hierarchy
+        User currentAssignee = userRepository.findByUserID(task.getAssignedToUserId())
+                .orElseThrow(() -> new RuntimeException("Current assignee not found"));
+                
         boolean isHigher = requester.getRole().canAllocateTask() &&
-                requester.getRole().canAssignTo(task.getAssignedTo().getRole());
+                requester.getRole().canAssignTo(currentAssignee.getRole());
 
         if (!isCreator && !isHigher) {
             throw new RuntimeException("Access Denied: You cannot reassign this task");
@@ -161,8 +177,8 @@ public class TaskService {
                             " cannot assign tasks to " + newAssignee.getRole());
         }
 
-        User oldAssignee = task.getAssignedTo();
-        task.setAssignedTo(newAssignee);
+        String oldAssigneeId = task.getAssignedToUserId();
+        task.setAssignedToUserId(newAssigneeId);
         task.setStatus(TaskStatus.PENDING);
 
         // Reset appreciation status for new assignee
@@ -173,7 +189,7 @@ public class TaskService {
 
         // Notify old assignee
         notificationService.send(
-                oldAssignee,
+                oldAssigneeId,
                 "Task Reassigned",
                 "Task reassigned away from you: " + task.getTitle(),
                 NotificationType.TASK_REASSIGNED,
@@ -181,14 +197,14 @@ public class TaskService {
 
         // Notify new assignee
         notificationService.send(
-                newAssignee,
+                newAssigneeId,
                 "New Task Assigned",
                 "Task reassigned to you by " + requester.getName() +
                         ": " + task.getTitle(),
                 NotificationType.TASK_ASSIGNED,
                 saved.getId());
 
-        return TaskResponse.from(saved);
+        return convertToResponse(saved);
     }
 
     // ═══════════════════════════════════════════════════
@@ -206,7 +222,7 @@ public class TaskService {
         }
 
         // Verify that the task is assigned to the requester
-        boolean isAssignee = task.getAssignedTo().getUserID().equals(requesterId);
+        boolean isAssignee = task.getAssignedToUserId().equals(requesterId);
 
         if (!isAssignee) {
             throw new RuntimeException("Access Denied: You cannot forward this task because you are not the current assignee");
@@ -224,8 +240,8 @@ public class TaskService {
             throw new RuntimeException("Cannot forward task to an inactive user");
         }
 
-        User oldAssignee = task.getAssignedTo();
-        task.setAssignedTo(newAssignee);
+        String oldAssigneeId = task.getAssignedToUserId();
+        task.setAssignedToUserId(newAssigneeId);
 
         // Reset appreciation status for new assignee
         newAssignee.setIsAppreciated(false);
@@ -235,16 +251,16 @@ public class TaskService {
 
         // Add a remark that it was forwarded
         TaskRemark remark = new TaskRemark();
-        remark.setTask(saved);
-        remark.setAddedBy(requester);
+        remark.setTaskId(saved.getId());
+        remark.setAddedByUserId(requesterId);
         remark.setRemark(
                 requester.getName() + " (" + requester.getRole() + ") forwarded this task to " + newAssignee.getName());
         remarkRepository.save(remark);
 
         // Notify old assignee (if not the requester)
-        if (!oldAssignee.getUserID().equals(requesterId)) {
+        if (!oldAssigneeId.equals(requesterId)) {
             notificationService.send(
-                    oldAssignee,
+                    oldAssigneeId,
                     "Task Forwarded",
                     "Your task was forwarded to someone else: " + task.getTitle(),
                     NotificationType.TASK_REASSIGNED,
@@ -253,13 +269,13 @@ public class TaskService {
 
         // Notify new assignee
         notificationService.send(
-                newAssignee,
+                newAssigneeId,
                 "Task Forwarded",
                 requester.getRole() + " " + requester.getName() + " forwarded a task to you: " + task.getTitle(),
                 NotificationType.TASK_ASSIGNED,
                 saved.getId());
 
-        return TaskResponse.from(saved);
+        return convertToResponse(saved);
     }
 
     // ═══════════════════════════════════════════════════
@@ -277,10 +293,10 @@ public class TaskService {
             tasks = taskRepository.findAll(pageable);
         } else {
             // Everyone else sees only tasks assigned to them or forwarded/created by them
-            tasks = taskRepository.findByAssignedToOrCreatedByOrderByCreatedAtDesc(requester, requester, pageable);
+            tasks = taskRepository.findByAssignedToUserIdOrCreatedByUserIdOrderByCreatedAtDesc(finalUserId, finalUserId, pageable);
         }
 
-        return tasks.map(TaskResponse::from);
+        return tasks.map(this::convertToResponse);
     }
 
     // ═══════════════════════════════════════════════════
@@ -293,12 +309,12 @@ public class TaskService {
 
         // Field officers can only see their own tasks
         if (requester.getRole().isFieldOfficer() &&
-                !task.getAssignedTo().getUserID().equals(requesterId)) {
+                !task.getAssignedToUserId().equals(requesterId)) {
             throw new RuntimeException(
                     "Access Denied: This task is not assigned to you");
         }
 
-        return TaskResponse.from(task);
+        return convertToResponse(task);
     }
 
     // ═══════════════════════════════════════════════════
@@ -311,7 +327,7 @@ public class TaskService {
 
         // Field officers can only update their OWN tasks
         if (requester.getRole().isFieldOfficer() &&
-                !task.getAssignedTo().getUserID().equals(requesterId)) {
+                !task.getAssignedToUserId().equals(requesterId)) {
             throw new RuntimeException(
                     "Access Denied: This task is not assigned to you");
         }
@@ -331,7 +347,7 @@ public class TaskService {
         if (newStatus == TaskStatus.COMPLETED &&
                 oldStatus != TaskStatus.COMPLETED) {
             notificationService.send(
-                    task.getCreatedBy(),
+                    task.getCreatedByUserId(),
                     "Task Completed",
                     "Task completed by " + requester.getName() +
                             " (" + requester.getRole() + "): " + task.getTitle(),
@@ -339,7 +355,7 @@ public class TaskService {
                     task.getId());
         }
 
-        return TaskResponse.from(saved);
+        return convertToResponse(saved);
     }
 
     // ═══════════════════════════════════════════════════
@@ -358,13 +374,12 @@ public class TaskService {
         }
         int achievedWork = achievedWorkInput.intValue();
 
-        boolean isAssignedTo = task.getAssignedTo().getUserID().equals(requesterId);
-        boolean isCreatedBy = task.getCreatedBy().getUserID().equals(requesterId);
+        boolean isAssignedTo = task.getAssignedToUserId().equals(requesterId);
+        boolean isCreatedBy = task.getCreatedByUserId().equals(requesterId);
 
         // ONLY the assigned user or the creator can update the progress
         if (!isAssignedTo && !isCreatedBy) {
-            throw new RuntimeException("Access Denied: Only the assigned user (" +
-                    task.getAssignedTo().getName() + ") or the assigner can update this task's progress.");
+            throw new RuntimeException("Access Denied: Only the assigned user or the assigner can update this task's progress.");
         }
 
         if (achievedWork < 0) {
@@ -412,7 +427,7 @@ public class TaskService {
             if (isAssignedTo && !isCreatedBy) {
                 // Assignee updated it, notify creator
                 notificationService.send(
-                        task.getCreatedBy(),
+                        task.getCreatedByUserId(),
                         "Task Progress Updated",
                         "Progress update by " + requester.getName() + " on task '" + task.getTitle() +
                                 "': " + achievedWork + "/" + (target != null ? target : "NA") +
@@ -423,7 +438,7 @@ public class TaskService {
             } else if (isCreatedBy && !isAssignedTo) {
                 // Creator updated it, notify assignee
                 notificationService.send(
-                        task.getAssignedTo(),
+                        task.getAssignedToUserId(),
                         "Task Progress Modified",
                         "Progress update modified by Assigner on task '" + task.getTitle() +
                                 "': " + achievedWork + "/" + (target != null ? target : "NA") +
@@ -438,7 +453,7 @@ public class TaskService {
             System.err.println("Notification failed (DB Schema mismatch): " + e.getMessage());
         }
 
-        return TaskResponse.from(saved);
+        return convertToResponse(saved);
     }
 
     // ═══════════════════════════════════════════════════
@@ -451,17 +466,17 @@ public class TaskService {
 
         // Field officers can only remark on their OWN tasks
         if (requester.getRole().isFieldOfficer() &&
-                !task.getAssignedTo().getUserID().equals(requesterId)) {
+                !task.getAssignedToUserId().equals(requesterId)) {
             throw new RuntimeException(
                     "Access Denied: This task is not assigned to you");
         }
 
         TaskRemark remark = new TaskRemark();
-        remark.setTask(task);
-        remark.setAddedBy(requester);
+        remark.setTaskId(taskId);
+        remark.setAddedByUserId(requesterId);
         remark.setRemark(remarkText);
 
-        return RemarkResponse.from(remarkRepository.save(remark));
+        return RemarkResponse.from(remarkRepository.save(remark), requester);
     }
 
     // ═══════════════════════════════════════════════════
@@ -469,9 +484,14 @@ public class TaskService {
     // ═══════════════════════════════════════════════════
 
     public List<RemarkResponse> getRemarks(Long taskId) {
-        Task task = findTask(taskId);
-        return remarkRepository.findByTaskOrderByCreatedAtDesc(task).stream()
-                .map(RemarkResponse::from)
+        List<TaskRemark> remarks = remarkRepository.findByTaskIdOrderByCreatedAtDesc(taskId);
+        
+        java.util.Set<String> authorIds = remarks.stream().map(TaskRemark::getAddedByUserId).collect(Collectors.toSet());
+        java.util.Map<String, User> userMap = userRepository.findAllByUserIDIn(authorIds).stream()
+                .collect(Collectors.toMap(User::getUserID, u -> u));
+
+        return remarks.stream()
+                .map(r -> RemarkResponse.from(r, userMap.get(r.getAddedByUserId())))
                 .collect(Collectors.toList());
     }
 
@@ -496,11 +516,11 @@ public class TaskService {
         } else {
 
             // Everyone else sees stats only for their own associated tasks
-            total = taskRepository.countAssociatedTasks(requester);
-            pending = taskRepository.countAssociatedTasksByStatus(requester, TaskStatus.PENDING);
-            inProgress = taskRepository.countAssociatedTasksByStatus(requester, TaskStatus.IN_PROGRESS);
-            completed = taskRepository.countAssociatedTasksByStatus(requester, TaskStatus.COMPLETED);
-            overdue = taskRepository.countAssociatedTasksByStatus(requester, TaskStatus.OVERDUE);
+            total = taskRepository.countAssociatedTasks(finalUserId);
+            pending = taskRepository.countAssociatedTasksByStatus(finalUserId, TaskStatus.PENDING);
+            inProgress = taskRepository.countAssociatedTasksByStatus(finalUserId, TaskStatus.IN_PROGRESS);
+            completed = taskRepository.countAssociatedTasksByStatus(finalUserId, TaskStatus.COMPLETED);
+            overdue = taskRepository.countAssociatedTasksByStatus(finalUserId, TaskStatus.OVERDUE);
         }
 
         return new DashboardResponse(total, pending, inProgress, completed, overdue);
@@ -517,22 +537,28 @@ public class TaskService {
             task.setStatus(TaskStatus.OVERDUE);
             taskRepository.save(task);
 
+            // Fetch assignee and creator for notification messages
+            User assignee = userRepository.findByUserID(task.getAssignedToUserId()).orElse(null);
+            User creator = userRepository.findByUserID(task.getCreatedByUserId()).orElse(null);
+
             // Notify assignee
             notificationService.sendUnique(
-                    task.getAssignedTo(),
+                    task.getAssignedToUserId(),
                     "Task Overdue",
                     "OVERDUE: Task '" + task.getTitle() + "' has passed its due date!",
                     NotificationType.TASK_OVERDUE,
                     task.getId());
 
             // Notify creator
-            notificationService.sendUnique(
-                    task.getCreatedBy(),
-                    "Task Overdue Alert",
-                    "Task is overdue: '" + task.getTitle() +
-                            "' assigned to " + task.getAssignedTo().getName(),
-                    NotificationType.TASK_OVERDUE,
-                    task.getId());
+            if (creator != null) {
+                notificationService.sendUnique(
+                        task.getCreatedByUserId(),
+                        "Task Overdue Alert",
+                        "Task is overdue: '" + task.getTitle() +
+                                "' assigned to " + (assignee != null ? assignee.getName() : "Unknown"),
+                        NotificationType.TASK_OVERDUE,
+                        task.getId());
+            }
         }
     }
 
@@ -548,7 +574,7 @@ public class TaskService {
 
         for (Task task : dueSoon) {
             notificationService.sendUnique(
-                    task.getAssignedTo(),
+                    task.getAssignedToUserId(),
                     "Upcoming Task Due Date",
                     "Reminder: Task '" + task.getTitle() +
                             "' is due on " + task.getDueDate(),

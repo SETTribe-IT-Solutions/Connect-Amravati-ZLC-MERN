@@ -12,9 +12,9 @@ import com.tribe.set.entity.User;
 
 @Repository
 public interface AnnouncementAcknowledgmentRepository extends JpaRepository<AnnouncementAcknowledgment, Long> {
-    Optional<AnnouncementAcknowledgment> findByAnnouncementAndUser(Announcement announcement, User user);
-    List<AnnouncementAcknowledgment> findAllByUser(User user);
-    boolean existsByAnnouncementAndUser(Announcement announcement, User user);
-    long countByAnnouncement(Announcement announcement);
+    Optional<AnnouncementAcknowledgment> findByAnnouncementIdAndUserId(Long announcementId, String userId);
+    List<AnnouncementAcknowledgment> findAllByUserId(String userId);
+    boolean existsByAnnouncementIdAndUserId(Long announcementId, String userId);
+    long countByAnnouncementId(Long announcementId);
     List<AnnouncementAcknowledgment> findByAnnouncementIdOrderByAcknowledgedAtDesc(Long announcementId);
 }

@@ -291,13 +291,13 @@ public class UsermanagementService {
     }
  
     private UserResponse enrichWithStats(UserResponse res) {
-        User user = userRepository.findByUserID(res.getUserID()).orElse(null);
-        if (user != null) {
+        String userId = res.getUserID();
+        if (userId != null) {
             res.setTasksCompleted(
-                    taskRepository.countByAssignedToAndStatus(user, com.tribe.set.entity.TaskStatus.COMPLETED));
-            res.setAchievements(appreciationRepository.countByToUser(user));
+                    taskRepository.countByAssignedToUserIdAndStatus(userId, com.tribe.set.entity.TaskStatus.COMPLETED));
+            res.setAchievements(appreciationRepository.countByToUserId(userId));
  
-            long totalTasks = taskRepository.countByAssignedTo(user);
+            long totalTasks = taskRepository.countByAssignedToUserId(userId);
             res.setPendingTasks(totalTasks - res.getTasksCompleted());
         }
         return res;

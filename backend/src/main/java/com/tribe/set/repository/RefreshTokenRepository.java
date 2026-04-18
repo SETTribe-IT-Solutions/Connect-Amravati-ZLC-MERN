@@ -13,11 +13,11 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
 
     Optional<RefreshToken> findByToken(String token);
 
-    Optional<RefreshToken> findByUser(User user);
+    Optional<RefreshToken> findByUserId(String userId);
 
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.transaction.annotation.Transactional
-    int deleteByUser(User user);
+    int deleteByUserId(String userId);
     
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.transaction.annotation.Transactional

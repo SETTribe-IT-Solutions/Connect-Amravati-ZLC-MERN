@@ -54,38 +54,7 @@ public class User {
     private String lastLoginIP;
     private String lastLoginDevice;
 
-    // Relationships
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Notification> notifications = new ArrayList<>();
-
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    @OneToMany(mappedBy = "fromUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Appreciation> sentAppreciations = new ArrayList<>();
-
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    @OneToMany(mappedBy = "toUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Appreciation> receivedAppreciations = new ArrayList<>();
-
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Task> createdTasks = new ArrayList<>();
-
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    @OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Task> assignedTasks = new ArrayList<>();
-
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    @OneToMany(mappedBy = "addedBy", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TaskRemark> addedRemarks = new ArrayList<>();
-
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Announcement> createdAnnouncements = new ArrayList<>();
-
     // Getters and Setters
-
-   
 
     public String getName() {
         return name;
@@ -199,61 +168,6 @@ public class User {
         this.everAppreciated = everAppreciated;
     }
 
-    public List<Notification> getNotifications() {
-        return notifications;
-    }
-
-    public void setNotifications(List<Notification> notifications) {
-        this.notifications = notifications;
-    }
-
-    public List<Appreciation> getSentAppreciations() {
-        return sentAppreciations;
-    }
-
-    public void setSentAppreciations(List<Appreciation> sentAppreciations) {
-        this.sentAppreciations = sentAppreciations;
-    }
-
-    public List<Appreciation> getReceivedAppreciations() {
-        return receivedAppreciations;
-    }
-
-    public void setReceivedAppreciations(List<Appreciation> receivedAppreciations) {
-        this.receivedAppreciations = receivedAppreciations;
-    }
-
-    public List<Task> getCreatedTasks() {
-        return createdTasks;
-    }
-
-    public void setCreatedTasks(List<Task> createdTasks) {
-        this.createdTasks = createdTasks;
-    }
-
-    public List<Task> getAssignedTasks() {
-        return assignedTasks;
-    }
-
-    public void setAssignedTasks(List<Task> assignedTasks) {
-        this.assignedTasks = assignedTasks;
-    }
-
-    public List<TaskRemark> getAddedRemarks() {
-        return addedRemarks;
-    }
-
-    public void setAddedRemarks(List<TaskRemark> addedRemarks) {
-        this.addedRemarks = addedRemarks;
-    }
-
-    public List<Announcement> getCreatedAnnouncements() {
-        return createdAnnouncements;
-    }
-
-    public void setCreatedAnnouncements(List<Announcement> createdAnnouncements) {
-        this.createdAnnouncements = createdAnnouncements;
-    }
 
     public LocalDateTime getLastLogin() {
         return lastLogin;

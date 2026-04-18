@@ -24,9 +24,9 @@ public class NotificationServices {
     private UserRepository userRepository;
 
     // Called by OTHER services internally — not directly by controller
-    public void send(User user, String title, String message, NotificationType type, Long taskId) {
+    public void send(String userId, String title, String message, NotificationType type, Long taskId) {
         Notification notification = new Notification();
-        notification.setUser(user);
+        notification.setUserId(userId);
         notification.setTitle(title);
         notification.setMessage(message);
         notification.setType(type);
@@ -36,7 +36,7 @@ public class NotificationServices {
 
         // Optional: Send push notification (non-blocking)
         try {
-            sendPushNotification(user.getUserID(), message);
+            sendPushNotification(userId, message);
         } catch (Exception e) {
             // Ignore if push service not configured or fails
             System.err.println("Push notification failed (optional): " + e.getMessage());
@@ -46,16 +46,15 @@ public class NotificationServices {
     /**
      * Send notification only if a similar one doesn't exist for this user, type, and task.
      */
-    public void sendUnique(User user, String title, String message, NotificationType type, Long taskId) {
-        if (taskId != null && notificationRepository.existsByUserAndTypeAndTaskId(user, type, taskId)) {
+    public void sendUnique(String userId, String title, String message, NotificationType type, Long taskId) {
+        if (taskId != null && notificationRepository.existsByUserIdAndTypeAndTaskId(userId, type, taskId)) {
             return; // Skip duplicate
         }
-        send(user, title, message, type, taskId);
+        send(userId, title, message, type, taskId);
     }
 
     public List<NotificationResponse> getMyNotifications(String userId) {
-        User user = findUser(userId);
-        return notificationRepository.findByUserOrderByCreatedAtDesc(user).stream()
+        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -64,10 +63,9 @@ public class NotificationServices {
      * Get active notifications: unread + read within 15 days
      */
     public List<NotificationResponse> getActiveNotifications(String userId) {
-        User user = findUser(userId);
         // Requirement: Only return notifications where createdAt >= (current date - 7 days)
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
-        return notificationRepository.findActiveNotificationsForUser(user, sevenDaysAgo).stream()
+        return notificationRepository.findActiveNotificationsForUser(userId, sevenDaysAgo).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -76,15 +74,13 @@ public class NotificationServices {
      * Requirement: Get ONLY UNREAD notifications to show in dropdown
      */
     public List<NotificationResponse> getUnreadNotifications(String userId) {
-        User user = findUser(userId);
-        return notificationRepository.findByUserAndIsReadOrderByCreatedAtDesc(user, false).stream()
+        return notificationRepository.findByUserIdAndIsReadOrderByCreatedAtDesc(userId, false).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     public long getUnreadCount(String userId) {
-        User user = findUser(userId);
-        return notificationRepository.countByUserAndIsRead(user, false);
+        return notificationRepository.countByUserIdAndIsRead(userId, false);
     }
 
     public NotificationResponse markOneAsRead(Long notificationId, String userId) {
@@ -92,7 +88,7 @@ public class NotificationServices {
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
 
         // Security: user can only mark their OWN notifications
-        if (!notification.getUser().getUserID().equals(userId)) {
+        if (!notification.getUserId().equals(userId)) {
             throw new RuntimeException("Access Denied: This notification does not belong to you");
         }
 
@@ -102,13 +98,11 @@ public class NotificationServices {
     }
 
     public void markAllAsRead(String userId) {
-        User user = findUser(userId);
-        notificationRepository.markAllAsReadForUser(user);
+        notificationRepository.markAllAsReadForUser(userId);
     }
 
     public void createNotification(String userId, String title, String message, NotificationType type, Long taskId) {
-        User user = findUser(userId);
-        send(user, title, message, type, taskId);
+        send(userId, title, message, type, taskId);
     }
 
     /**

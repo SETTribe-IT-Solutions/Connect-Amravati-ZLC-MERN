@@ -20,14 +20,11 @@ public class TaskRemark {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "task_id", nullable = false)
-    private Task task;
+    @Column(name = "task_id", nullable = false)
+    private Long taskId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "added_by", referencedColumnName = "userID", nullable = false)
-    private User addedBy;
+    @Column(name = "added_by", nullable = false)
+    private String addedByUserId;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String remark;
@@ -43,20 +40,20 @@ public class TaskRemark {
 		this.id = id;
 	}
 
-	public Task getTask() {
-		return task;
+	public Long getTaskId() {
+		return taskId;
 	}
 
-	public void setTask(Task task) {
-		this.task = task;
+	public void setTaskId(Long taskId) {
+		this.taskId = taskId;
 	}
 
-	public User getAddedBy() {
-		return addedBy;
+	public String getAddedByUserId() {
+		return addedByUserId;
 	}
 
-	public void setAddedBy(User addedBy) {
-		this.addedBy = addedBy;
+	public void setAddedByUserId(String addedByUserId) {
+		this.addedByUserId = addedByUserId;
 	}
 
 	public String getRemark() {

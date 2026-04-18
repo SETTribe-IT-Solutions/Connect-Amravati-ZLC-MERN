@@ -10,9 +10,8 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "userid")
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private String userId;
 
     @Column(nullable = false, unique = true)
     private String token;
@@ -25,8 +24,8 @@ public class RefreshToken {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }

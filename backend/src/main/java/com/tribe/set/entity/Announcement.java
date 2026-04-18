@@ -30,9 +30,8 @@ public class Announcement {
     private String targetTaluka; // target specific area
     private String targetVillage;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", referencedColumnName = "userid")
-    private User createdBy;
+    @jakarta.persistence.Column(name = "created_by")
+    private String createdByUserId;
 
     private boolean isCircular = false;
     private String attachment;
@@ -42,13 +41,13 @@ public class Announcement {
     public Announcement() {
     }
 
-    public Announcement(String title, String message, Role targetRole, String targetTaluka, String targetVillage, User createdBy, boolean isCircular) {
+    public Announcement(String title, String message, Role targetRole, String targetTaluka, String targetVillage, String createdByUserId, boolean isCircular) {
         this.title = title;
         this.message = message;
         this.targetRole = targetRole;
         this.targetTaluka = targetTaluka;
         this.targetVillage = targetVillage;
-        this.createdBy = createdBy;
+        this.createdByUserId = createdByUserId;
         this.isCircular = isCircular;
         this.createdAt = LocalDateTime.now();
     }
@@ -101,12 +100,12 @@ public class Announcement {
         this.targetVillage = targetVillage;
     }
 
-    public User getCreatedBy() {
-        return createdBy;
+    public String getCreatedByUserId() {
+        return createdByUserId;
     }
 
-    public void setCreatedBy(User createdBy) {
-        this.createdBy = createdBy;
+    public void setCreatedByUserId(String createdByUserId) {
+        this.createdByUserId = createdByUserId;
     }
 
     public LocalDateTime getCreatedAt() {

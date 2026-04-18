@@ -4,18 +4,18 @@ import jakarta.validation.constraints.NotBlank;
 
 public class UserRequest {
 
-    @NotBlank(message = "User ID is required")
-    private String userID;
+    @NotBlank(message = "Mobile number is required")
+    private String phone;
 
     @NotBlank(message = "Password is required")
     private String password;
 
-    public String getUserID() {
-        return userID;
+    public String getPhone() {
+        return phone;
     }
 
-    public void setUserID(String userID) {
-        this.userID = userID;
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getPassword() {

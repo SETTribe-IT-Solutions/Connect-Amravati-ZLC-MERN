@@ -70,8 +70,9 @@ public class AuthController {
         if ((refreshToken != null) && (refreshToken.length() > 0)) {
             return refreshTokenService.findByToken(refreshToken)
                     .map(refreshTokenService::verifyExpiration)
-                    .map(RefreshToken::getUser)
-                    .map(user -> {
+                    .map(token -> {
+                        User user = authService.getUserById(token.getUserId());
+                        
                         UserDetailsImpl userDetails = UserDetailsImpl.build(user);
                         ResponseCookie jwtCookie = jwtUtils.generateAccessCookie(userDetails);
 

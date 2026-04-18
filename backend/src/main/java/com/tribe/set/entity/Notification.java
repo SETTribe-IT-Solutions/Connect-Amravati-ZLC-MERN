@@ -22,9 +22,8 @@ public class Notification {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", referencedColumnName = "userID", nullable = false)
-	private User user; // who receives this notification
+	@Column(name = "user_id", nullable = false)
+	private String userId; // who receives this notification
 
 	@Column(nullable = false)
 	private String title; // "New Task Assigned"
@@ -59,12 +58,12 @@ public class Notification {
 		this.title = title;
 	}
 
-	public User getUser() {
-		return user;
+	public String getUserId() {
+		return userId;
 	}
 
-	public void setUser(User user) {
-		this.user = user;
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 
 	public String getMessage() {

@@ -17,7 +17,7 @@ import org.springframework.data.domain.Pageable;
 public interface AnnouncementRepository extends JpaRepository<Announcement, Long> {
 
     @Query("SELECT a FROM Announcement a WHERE " +
-           "(a.createdBy.userID != :userId) AND " +
+           "(a.createdByUserId != :userId) AND " +
            "(a.targetRole IS NULL OR a.targetRole = :role) AND " +
            "(a.targetTaluka IS NULL OR a.targetTaluka = :taluka) AND " +
            "(a.targetVillage IS NULL OR a.targetVillage = :village) " +
@@ -28,7 +28,7 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
                                   @Param("village") String village,
                                   Pageable pageable);
 
-    @Query("SELECT a FROM Announcement a WHERE a.createdBy.userID = :userId ORDER BY a.createdAt DESC")
+    @Query("SELECT a FROM Announcement a WHERE a.createdByUserId = :userId ORDER BY a.createdAt DESC")
     Page<Announcement> findSentByUserId(@Param("userId") String userId, Pageable pageable);
 
     Page<Announcement> findAllByOrderByCreatedAtDesc(Pageable pageable);

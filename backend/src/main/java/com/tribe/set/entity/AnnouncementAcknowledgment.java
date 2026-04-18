@@ -22,22 +22,20 @@ public class AnnouncementAcknowledgment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "announcement_id", nullable = false)
-    private Announcement announcement;
+    @jakarta.persistence.Column(name = "announcement_id", nullable = false)
+    private Long announcementId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @jakarta.persistence.Column(name = "user_id", nullable = false)
+    private String userId;
 
     private LocalDateTime acknowledgedAt = LocalDateTime.now();
 
     public AnnouncementAcknowledgment() {
     }
 
-    public AnnouncementAcknowledgment(Announcement announcement, User user) {
-        this.announcement = announcement;
-        this.user = user;
+    public AnnouncementAcknowledgment(Long announcementId, String userId) {
+        this.announcementId = announcementId;
+        this.userId = userId;
         this.acknowledgedAt = LocalDateTime.now();
     }
 
@@ -49,20 +47,20 @@ public class AnnouncementAcknowledgment {
         this.id = id;
     }
 
-    public Announcement getAnnouncement() {
-        return announcement;
+    public Long getAnnouncementId() {
+        return announcementId;
     }
 
-    public void setAnnouncement(Announcement announcement) {
-        this.announcement = announcement;
+    public void setAnnouncementId(Long announcementId) {
+        this.announcementId = announcementId;
     }
 
-    public User getUser() {
-        return user;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public LocalDateTime getAcknowledgedAt() {

@@ -44,12 +44,12 @@ public class AuthService {
         String ip = httpRequest.getRemoteAddr();
         
         try {
-            // find user by ID first to get their email (username)
-            User user = userRepository.findByUserID(request.getUserID())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            // find user by phone first to get their email (username)
+            User user = userRepository.findByPhone(request.getPhone())
+                    .orElseThrow(() -> new RuntimeException("User not found with this mobile number"));
 
             if (!user.getActive()) {
-                auditLogRepository.save(new AuditLog("LOGIN_FAILED", request.getUserID(), ip, "FAILURE", "Account inactive"));
+                auditLogRepository.save(new AuditLog("LOGIN_FAILED", "Phone: " + request.getPhone(), ip, "FAILURE", "Account inactive"));
                 throw new RuntimeException("User account is inactive");
             }
 
@@ -65,11 +65,11 @@ public class AuthService {
             user.setLastLoginDevice(httpRequest.getHeader("User-Agent"));
             userRepository.save(user);
             
-            auditLogRepository.save(new AuditLog("LOGIN_SUCCESS", request.getUserID(), ip, "SUCCESS", "User logged in successfully"));
+            auditLogRepository.save(new AuditLog("LOGIN_SUCCESS", "Phone: " + request.getPhone(), ip, "SUCCESS", "User logged in successfully via mobile"));
             
             return authentication;
         } catch (Exception e) {
-            auditLogRepository.save(new AuditLog("LOGIN_FAILED", request.getUserID(), ip, "FAILURE", e.getMessage()));
+            auditLogRepository.save(new AuditLog("LOGIN_FAILED", "Phone: " + request.getPhone(), ip, "FAILURE", e.getMessage()));
             throw e;
         }
     }
@@ -132,5 +132,10 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
         return "Password changed successfully";
+    }
+
+    public User getUserById(String userId) {
+        return userRepository.findByUserID(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
     }
 }

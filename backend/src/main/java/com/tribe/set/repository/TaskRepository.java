@@ -15,28 +15,26 @@ import com.tribe.set.entity.User;
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
-    List<Task> findByAssignedToOrderByCreatedAtDesc(User assignedTo);
+    List<Task> findByAssignedToUserIdOrderByCreatedAtDesc(String assignedToUserId);
 
     @Query("SELECT t FROM Task t " +
-           "JOIN FETCH t.assignedTo " +
-           "JOIN FETCH t.createdBy " +
-           "WHERE t.assignedTo = :assignedTo OR t.createdBy = :createdBy " +
+           "WHERE t.assignedToUserId = :assignedToUserId OR t.createdByUserId = :createdByUserId " +
            "ORDER BY t.createdAt DESC")
-    org.springframework.data.domain.Page<Task> findByAssignedToOrCreatedByOrderByCreatedAtDesc(@Param("assignedTo") User assignedTo, @Param("createdBy") User createdBy, org.springframework.data.domain.Pageable pageable);
+    org.springframework.data.domain.Page<Task> findByAssignedToUserIdOrCreatedByUserIdOrderByCreatedAtDesc(@Param("assignedToUserId") String assignedToUserId, @Param("createdByUserId") String createdByUserId, org.springframework.data.domain.Pageable pageable);
 
     List<Task> findByStatusOrderByCreatedAtDesc(TaskStatus status);
 
     long countByStatus(TaskStatus status);
 
-    long countByAssignedTo(User assignedTo);
+    long countByAssignedToUserId(String assignedToUserId);
 
-    long countByAssignedToAndStatus(User assignedTo, TaskStatus status);
+    long countByAssignedToUserIdAndStatus(String assignedToUserId, TaskStatus status);
 
-    @Query("SELECT COUNT(t) FROM Task t WHERE t.assignedTo = :user OR t.createdBy = :user")
-    long countAssociatedTasks(@Param("user") User user);
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.assignedToUserId = :userId OR t.createdByUserId = :userId")
+    long countAssociatedTasks(@Param("userId") String userId);
 
-    @Query("SELECT COUNT(t) FROM Task t WHERE (t.assignedTo = :user OR t.createdBy = :user) AND t.status = :status")
-    long countAssociatedTasksByStatus(@Param("user") User user, @Param("status") TaskStatus status);
+    @Query("SELECT COUNT(t) FROM Task t WHERE (t.assignedToUserId = :userId OR t.createdByUserId = :userId) AND t.status = :status")
+    long countAssociatedTasksByStatus(@Param("userId") String userId, @Param("status") TaskStatus status);
 
     @Query("SELECT t FROM Task t WHERE t.dueDate < :today AND t.status NOT IN ('COMPLETED', 'OVERDUE')")
     List<Task> findTasksThatBecameOverdue(@Param("today") LocalDate today);

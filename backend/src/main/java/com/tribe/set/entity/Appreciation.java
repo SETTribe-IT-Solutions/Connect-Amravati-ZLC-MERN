@@ -19,13 +19,11 @@ public class Appreciation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "from_user", referencedColumnName = "userid")
-    private User fromUser; // senior officer sending
+    @jakarta.persistence.Column(name = "from_user", nullable = false)
+    private String fromUserId; // senior officer sending
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "to_user", referencedColumnName = "userid")
-    private User toUser; // field officer receiving
+    @jakarta.persistence.Column(name = "to_user", nullable = false)
+    private String toUserId; // field officer receiving
 
     private String message;
     private String badge; // e.g., "Excellence Award"
@@ -44,20 +42,20 @@ public class Appreciation {
         this.id = id;
     }
 
-    public User getFromUser() {
-        return fromUser;
+    public String getFromUserId() {
+        return fromUserId;
     }
 
-    public void setFromUser(User fromUser) {
-        this.fromUser = fromUser;
+    public void setFromUserId(String fromUserId) {
+        this.fromUserId = fromUserId;
     }
 
-    public User getToUser() {
-        return toUser;
+    public String getToUserId() {
+        return toUserId;
     }
 
-    public void setToUser(User toUser) {
-        this.toUser = toUser;
+    public void setToUserId(String toUserId) {
+        this.toUserId = toUserId;
     }
 
     public String getMessage() {

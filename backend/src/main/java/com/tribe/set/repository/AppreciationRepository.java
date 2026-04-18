@@ -15,17 +15,19 @@ import java.util.List;
 public interface AppreciationRepository extends JpaRepository<Appreciation, Long> {
 
     // Appreciations received by a user
-    Page<Appreciation> findByToUserOrderByCreatedAtDesc(User toUser, Pageable pageable);
+    Page<Appreciation> findByToUserIdOrderByCreatedAtDesc(String toUserId, Pageable pageable);
 
     // Appreciations sent by a user
-    Page<Appreciation> findByFromUserOrderByCreatedAtDesc(User fromUser, Pageable pageable);
+    Page<Appreciation> findByFromUserIdOrderByCreatedAtDesc(String fromUserId, Pageable pageable);
 
-    @Query("SELECT a FROM Appreciation a WHERE " +
-           "(:searchTerm IS NULL OR LOWER(a.message) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(a.fromUser.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(a.toUser.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+    @Query("SELECT a FROM Appreciation a " +
+           "JOIN User fu ON a.fromUserId = fu.userID " +
+           "JOIN User tu ON a.toUserId = tu.userID " +
+           "WHERE (:searchTerm IS NULL OR LOWER(a.message) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(fu.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(tu.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
     Page<Appreciation> findAllFiltered(@Param("searchTerm") String searchTerm, Pageable pageable);
 
     // Count appreciations received by a user
-    long countByToUser(User toUser);
+    long countByToUserId(String toUserId);
 }

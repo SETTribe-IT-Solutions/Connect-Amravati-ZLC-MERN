@@ -38,25 +38,20 @@ public class Task {
     private Integer achievement;
     private String location;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", referencedColumnName = "userid", nullable = false)
-    private User createdBy;
+    @Column(name = "created_by", nullable = false)
+    private String createdByUserId;
 
     // Stores the file name or path relative to the uploads directory
     @Column(name = "attachment")
     private String attachment;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_to", referencedColumnName = "userid", nullable = false)
-    private User assignedTo;
+    @Column(name = "assigned_to", nullable = false)
+    private String assignedToUserId;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime updatedAt = LocalDateTime.now();
-
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TaskRemark> remarks = new ArrayList<>();
 
     @PreUpdate
     public void onUpdate() {
@@ -112,20 +107,20 @@ public class Task {
         this.dueDate = dueDate;
     }
 
-    public User getCreatedBy() {
-        return createdBy;
+    public String getCreatedByUserId() {
+        return createdByUserId;
     }
 
-    public void setCreatedBy(User createdBy) {
-        this.createdBy = createdBy;
+    public void setCreatedByUserId(String createdByUserId) {
+        this.createdByUserId = createdByUserId;
     }
 
-    public User getAssignedTo() {
-        return assignedTo;
+    public String getAssignedToUserId() {
+        return assignedToUserId;
     }
 
-    public void setAssignedTo(User assignedTo) {
-        this.assignedTo = assignedTo;
+    public void setAssignedToUserId(String assignedToUserId) {
+        this.assignedToUserId = assignedToUserId;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -190,13 +185,5 @@ public class Task {
 
     public void setAttachment(String attachment) {
         this.attachment = attachment;
-    }
-
-    public List<TaskRemark> getRemarks() {
-        return remarks;
-    }
-
-    public void setRemarks(List<TaskRemark> remarks) {
-        this.remarks = remarks;
     }
 }
