@@ -1,8 +1,8 @@
 import axiosInstance from "../../config/axiosConfig";
 
-export const loginUser = async (userID, password) => {
+export const loginUser = async (phone, password) => {
   const response = await axiosInstance.post("/auth/login", {
-    userID,
+    phone,
     password
   });
 

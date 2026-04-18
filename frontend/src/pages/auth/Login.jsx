@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaUser, FaLock, FaArrowRight, FaShieldAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUser, FaLock, FaArrowRight, FaShieldAlt, FaEye, FaEyeSlash, FaPhoneAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner, Card } from 'react-bootstrap';
 
@@ -15,8 +15,8 @@ import CulturalSection from '../../components/landing/CulturalSection';
 
 const LoginPage = ({ onLogin }) => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ username: '', password: '' });
-  const [errors, setErrors] = useState({ username: '', password: '' });
+  const [formData, setFormData] = useState({ phone: '', password: '' });
+  const [errors, setErrors] = useState({ phone: '', password: '' });
   const [loginError, setLoginError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isWelcomeActive, setIsWelcomeActive] = useState(true);
@@ -25,20 +25,20 @@ const LoginPage = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {
-      username: !formData.username ? 'Please enter your UserID' : '',
+      phone: !formData.phone ? 'Please enter your Mobile Number' : '',
       password: !formData.password ? 'Please enter your password' : ''
     };
 
-    if (newErrors.username || newErrors.password) {
+    if (newErrors.phone || newErrors.password) {
       setErrors(newErrors);
       return;
     }
 
-    setErrors({ username: '', password: '' });
+    setErrors({ phone: '', password: '' });
     setLoginError('');
     setLoading(true);
     try {
-      const data = await loginUser(formData.username, formData.password);
+      const data = await loginUser(formData.phone, formData.password);
       if (data.message && data.message.toLowerCase() === "login successful") {
         if (onLogin) {
           const success = onLogin(data);
@@ -95,7 +95,7 @@ const LoginPage = ({ onLogin }) => {
                         Sign <span className="text-gradient-premium">In</span>
                       </h2>
                       <p className="text-muted mb-0">
-                        Enter your credentials to access the portal.
+                        Enter your mobile number and password to access the portal.
                       </p>
                     </div>
 
@@ -113,25 +113,25 @@ const LoginPage = ({ onLogin }) => {
 
                     <Form onSubmit={handleSubmit} className="mt-4">
                       <Form.Group className="mb-4 position-relative">
-                        <Form.Label className="small fw-bold text-secondary ms-1">UserID</Form.Label>
+                        <Form.Label className="small fw-bold text-secondary ms-1">Mobile Number</Form.Label>
                         <div className="position-relative">
                           <div className="position-absolute top-50 translate-middle-y ps-3 text-muted" style={{ zIndex: 5 }}>
-                            <FaUser size={16} />
+                            <FaPhoneAlt size={16} />
                           </div>
                           <Form.Control
                             type="text"
-                            placeholder="Enter your user ID"
-                            value={formData.username}
+                            placeholder="Enter your registered mobile number"
+                            value={formData.phone}
                             onChange={(e) => {
-                              setFormData({ ...formData, username: e.target.value });
-                              if (errors.username) setErrors({ ...errors, username: '' });
+                              setFormData({ ...formData, phone: e.target.value });
+                              if (errors.phone) setErrors({ ...errors, phone: '' });
                             }}
-                            isInvalid={!!errors.username}
+                            isInvalid={!!errors.phone}
                             className="ps-5 py-3 rounded-4 border-1 bg-light glass-input"
                             style={{ fontSize: '1rem' }}
                           />
                           <Form.Control.Feedback type="invalid" className="ps-1 mt-1">
-                            {errors.username}
+                            {errors.phone}
                           </Form.Control.Feedback>
                         </div>
                       </Form.Group>
