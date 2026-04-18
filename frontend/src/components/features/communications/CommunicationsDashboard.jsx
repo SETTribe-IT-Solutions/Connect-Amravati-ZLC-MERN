@@ -383,9 +383,7 @@ const CommunicationsDashboard = ({ user }) => {
                 <Card.Body className="p-4">
                   <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
                     <div className="d-flex align-items-center gap-2">
-                      <Badge bg={activeTab === 'inbox' ? 'primary-subtle' : 'info-subtle'} text={activeTab === 'inbox' ? 'primary' : 'info'} className="text-uppercase px-3 py-2 rounded-pill">
-                        {activeTab === 'inbox' ? 'Received' : 'Sent'}
-                      </Badge>
+
                       {activeTab === 'inbox' && item.acknowledged && (
                         <Badge bg="success-subtle" text="success" className="d-flex align-items-center gap-1 px-3 py-2 rounded-pill border border-success-subtle">
                           <CheckBadgeIcon style={{ width: '1rem' }} />
@@ -393,17 +391,35 @@ const CommunicationsDashboard = ({ user }) => {
                         </Badge>
                       )}
                       {activeTab === 'sent' && (
-                        <Button 
-                          variant="light" 
-                          size="sm" 
-                          onClick={() => fetchAcknowledgments(item)}
-                          className="d-flex align-items-center gap-1 px-3 py-1 bg-light text-primary rounded-pill border-0 shadow-sm small fw-bold"
-                        >
-                          <ShieldCheckIcon style={{ width: '1rem' }} />
-                          {item.acknowledgmentCount} Acknowledgments
-                          <ChevronRightIcon style={{ width: '0.75rem' }} />
-                        </Button>
+                        <div className="d-flex flex-wrap align-items-center gap-2">
+                          <Button 
+                            variant="light" 
+                            size="sm" 
+                            onClick={() => fetchAcknowledgments(item)}
+                            className="d-flex align-items-center gap-1 px-3 py-1 bg-light text-primary rounded-pill border-0 shadow-sm small fw-bold"
+                          >
+                            <ShieldCheckIcon style={{ width: '1rem' }} />
+                            {item.acknowledgmentCount} Acknowledgments
+                            <ChevronRightIcon style={{ width: '0.75rem' }} />
+                          </Button>
+                          
+                          <div className="d-flex align-items-center gap-1 px-3 py-1 bg-primary bg-opacity-10 text-primary rounded-pill border border-primary border-opacity-10 small fw-bold shadow-sm">
+                            <MapPinIcon style={{ width: '0.9rem' }} />
+                            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                              Target: {item.targetRole} 
+                              {item.targetTaluka && item.targetTaluka !== 'ALL TALUKAS' && ` | ${item.targetTaluka}`}
+                              {item.targetVillage && item.targetVillage !== 'ALL VILLAGES' && ` › ${item.targetVillage}`}
+                            </span>
+                          </div>
+                        </div>
                       )}
+
+                      <div className="d-flex align-items-center gap-1 px-3 py-1 bg-light text-dark rounded-pill border border-light-subtle small fw-bold shadow-sm">
+                        <UserIcon style={{ width: '0.9rem' }} className="text-primary" />
+                        <span style={{ fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                          {activeTab === 'inbox' ? 'By' : 'Author'}: {item.creatorName} ({item.creatorRole})
+                        </span>
+                      </div>
                     </div>
                     <div className="text-secondary small d-flex align-items-center gap-3">
                       <div className="d-flex align-items-center gap-1">
@@ -425,22 +441,7 @@ const CommunicationsDashboard = ({ user }) => {
                     {item.message}
                   </div>
 
-                  {activeTab === 'sent' && (
-                    <div className="mb-4 p-3 bg-light rounded-3 d-flex flex-wrap gap-3 align-items-center border border-light-subtle">
-                      <div className="d-flex align-items-center gap-2 small fw-bold text-secondary text-uppercase tracking-wider">
-                        <MapPinIcon style={{ width: '1rem' }} />
-                        Target:
-                      </div>
-                      <div className="d-flex flex-wrap gap-2">
-                        <Badge bg="primary" className="fw-bold px-2 py-1">{item.targetRole}</Badge>
-                        {(item.targetTaluka !== 'ALL TALUKAS' || item.targetVillage !== 'ALL VILLAGES') && (
-                           <Badge bg="light" text="dark" className="border px-2 py-1 fw-medium">
-                             {item.targetTaluka}{item.targetVillage !== 'ALL VILLAGES' ? ` > ${item.targetVillage}` : ''}
-                           </Badge>
-                        )}
-                      </div>
-                    </div>
-                  )}
+
 
                   {item.attachment && (
                     <div className="mb-4 d-flex align-items-center justify-content-between p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-10 transition-all">
@@ -470,21 +471,8 @@ const CommunicationsDashboard = ({ user }) => {
                     </div>
                   )}
 
-                  <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4 pt-4 border-top">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="rounded-3 bg-light text-primary d-flex align-items-center justify-content-center shadow-inner border border-light-subtle" style={{ width: '2.5rem', height: '2.5rem' }}>
-                        <UserIcon style={{ width: '1.5rem' }} />
-                      </div>
-                      <div>
-                        <p className="text-uppercase text-secondary fw-bold mb-0" style={{ fontSize: '0.6rem', letterSpacing: '0.05rem' }}>
-                          {activeTab === 'inbox' ? 'Sent By' : 'Author'}
-                        </p>
-                        <p className="fw-bold text-dark mb-0 small">{item.creatorName}</p>
-                        <p className="text-secondary mb-0" style={{ fontSize: '0.7rem' }}>{item.creatorRole}</p>
-                      </div>
-                    </div>
-
-                    <div className="ms-md-auto">
+                  <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-end gap-4 pt-4 border-top">
+                    <div>
                       {activeTab === 'inbox' && (
                         !item.acknowledged ? (
                           <Button

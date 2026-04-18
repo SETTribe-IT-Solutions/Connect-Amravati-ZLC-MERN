@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { getTalukas, getVillagesByTaluka } from '../../../services/common/locationService';
 import { toast } from 'react-hot-toast';
 import { Form, Button, Row, Col, Spinner, InputGroup } from 'react-bootstrap';
-import { 
-  XMarkIcon, 
-  PaperAirplaneIcon, 
-  MegaphoneIcon, 
-  MapPinIcon, 
+import {
+  XMarkIcon,
+  PaperAirplaneIcon,
+  MegaphoneIcon,
+  MapPinIcon,
   UserGroupIcon,
   PaperClipIcon
 } from '@heroicons/react/24/outline';
@@ -26,7 +26,7 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
   const [villages, setVillages] = useState([]);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [formErrors, setFormErrors] = useState({ title: '', message: '' });
+  const [formErrors, setFormErrors] = useState({ title: '', message: '', file: '' });
 
   const roleLevels = {
     'COLLECTOR': 1,
@@ -55,14 +55,9 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
 
   useEffect(() => {
     // Fetch Talukas (Filtered by targetRole if selected)
-    const url = formData.targetRole 
-      ? `http://localhost:8080/api/talukas?role=${formData.targetRole}`
-      : "http://localhost:8080/api/talukas";
-
-    axios.get(url)
+    getTalukas(formData.targetRole)
       .then(res => {
-        const talukaNames = res.data.map(t => t.taluka);
-        setTalukas(talukaNames || []);
+        setTalukas(res || []);
       })
       .catch(err => console.error("Error fetching talukas:", err));
   }, [formData.targetRole]);
@@ -73,44 +68,42 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
       return;
     }
     // Fetch Villages for selected Taluka (Filtered by targetRole if selected)
-    const url = formData.targetRole
-      ? `http://localhost:8080/api/villages/${formData.targetTaluka}?role=${formData.targetRole}`
-      : `http://localhost:8080/api/villages/${formData.targetTaluka}`;
-
-    axios.get(url)
+    getVillagesByTaluka(formData.targetTaluka, formData.targetRole)
       .then(res => {
-        const villageNames = res.data.map(v => v.village);
-        setVillages(villageNames || []);
+        setVillages(res || []);
       })
       .catch(err => console.error("Error fetching villages:", err));
   }, [formData.targetTaluka, formData.targetRole]);
-  
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
 
     const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'txt', 'jpg', 'jpeg', 'png'];
     const fileExtension = selectedFile.name.split('.').pop().toLowerCase();
-    
+
     if (!allowedExtensions.includes(fileExtension)) {
-      toast.error('Invalid file format. Allowed: pdf, doc, docx, xls, xlsx, csv, txt, jpg, jpeg, png');
+      setFormErrors(prev => ({ ...prev, file: 'Invalid format. Allowed Only: PDF, Word, Excel, CSV, TXT, Images' }));
+      setFile(null);
       e.target.value = null;
       return;
     }
 
     if (selectedFile.size > 10 * 1024 * 1024) {
-      toast.error('File size must be less than 10MB');
+      setFormErrors(prev => ({ ...prev, file: 'File size must be less than 10MB' }));
+      setFile(null);
       e.target.value = null;
       return;
     }
-    
+
+    setFormErrors(prev => ({ ...prev, file: '' }));
     setFile(selectedFile);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    let errors = { title: '', message: '' };
+    let errors = { title: '', message: '', file: '' };
     let hasError = false;
 
     if (!formData.title || !formData.title.trim()) {
@@ -128,7 +121,7 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
       return;
     }
 
-    setFormErrors({ title: '', message: '' });
+    setFormErrors({ title: '', message: '', file: '' });
     setLoading(true);
     try {
       const payload = {
@@ -150,10 +143,11 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
       if (typeof errorData === 'object' && errorData !== null) {
         setFormErrors({
           title: errorData.title || '',
-          message: errorData.message || (errorData.title ? '' : 'Validation failed')
+          message: errorData.message || (errorData.title ? '' : 'Validation failed'),
+          file: errorData.file || ''
         });
         if (!errorData.title && !errorData.message) {
-            toast.error(errorData.message_error || 'Validation failed');
+          toast.error(errorData.message_error || 'Validation failed');
         }
       } else {
         toast.error(errorData || 'Failed to send message');
@@ -237,8 +231,8 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
                 </Form.Label>
                 <Form.Select
                   value={formData.targetRole}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
+                  onChange={(e) => setFormData({
+                    ...formData,
                     targetRole: e.target.value,
                     targetTaluka: '',
                     targetVillage: ''
@@ -300,18 +294,22 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
                   <PaperClipIcon style={{ width: '1rem' }} className="text-primary" />
                   Attachment (Optional)
                 </Form.Label>
-                <div 
-                  className={`p-3 border-2 border-dashed rounded-3 bg-white transition-all d-flex align-items-center justify-content-between ${
-                    file ? 'border-success bg-success bg-opacity-10' : 'border-light-subtle'
-                  }`}
+                <div
+                  className={`p-3 border-2 border-dashed rounded-3 bg-white transition-all d-flex align-items-center justify-content-between ${formErrors.file ? 'border-danger bg-danger bg-opacity-10' :
+                      file ? 'border-success bg-success bg-opacity-10' : 'border-light-subtle'
+                    }`}
                 >
                   <div className="d-flex align-items-center gap-3">
-                    <div className={`p-2 rounded-3 ${file ? 'bg-success text-white' : 'bg-light text-secondary'}`}>
+                    <div className={`p-2 rounded-3 ${formErrors.file ? 'bg-danger text-white' :
+                        file ? 'bg-success text-white' : 'bg-light text-secondary'
+                      }`}>
                       <PaperClipIcon style={{ width: '1.25rem' }} />
                     </div>
                     <div>
-                      <p className={`small fw-bold mb-0 ${file ? 'text-success' : 'text-dark'}`}>
-                        {file ? file.name : 'Select a file to attach'}
+                      <p className={`small fw-bold mb-0 ${formErrors.file ? 'text-danger' :
+                          file ? 'text-success' : 'text-dark'
+                        }`}>
+                        {file ? file.name : (formErrors.file ? 'Upload Failed' : 'Select a file to attach')}
                       </p>
                       <p className="text-secondary mb-0" style={{ fontSize: '0.65rem' }}>
                         {file ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : 'PDF, Images, or Documents (Max 10MB)'}
@@ -326,10 +324,13 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
                       onChange={handleFileChange}
                       accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png"
                     />
-                    <Button 
-                      as="label" 
-                      htmlFor="file-upload" 
-                      variant={file ? "outline-success" : "outline-primary"}
+                    <Button
+                      as="label"
+                      htmlFor="file-upload"
+                      variant={
+                        formErrors.file ? "outline-danger" :
+                          file ? "outline-success" : "outline-primary"
+                      }
                       size="sm"
                       className="fw-bold px-3 rounded-3"
                     >
@@ -337,21 +338,27 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
                     </Button>
                   </InputGroup>
                 </div>
+                {formErrors.file && (
+                  <div className="text-danger small mt-2 d-flex align-items-center gap-1">
+                    <XMarkIcon style={{ width: '0.85rem', height: '0.85rem' }} />
+                    {formErrors.file}
+                  </div>
+                )}
               </Form.Group>
             </Col>
           </Row>
 
           <div className="d-flex gap-3 pt-5 mt-2 border-top">
-            <Button 
-              variant="light" 
-              className="px-4 py-2 fw-bold text-secondary rounded-3 border w-100" 
+            <Button
+              variant="light"
+              className="px-4 py-2 fw-bold text-secondary rounded-3 border w-100"
               onClick={onClose}
             >
               Cancel
             </Button>
-            <Button 
-              variant="primary" 
-              type="submit" 
+            <Button
+              variant="primary"
+              type="submit"
               disabled={loading}
               className="px-4 py-2 fw-bold rounded-3 shadow-sm w-100 d-flex align-items-center justify-content-center gap-2"
             >
