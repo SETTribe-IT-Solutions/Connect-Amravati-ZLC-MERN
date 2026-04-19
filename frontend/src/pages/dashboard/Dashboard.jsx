@@ -90,7 +90,6 @@ const Dashboard = ({ user }) => {
     { name: 'Overdue', value: dashboardData.overdue, color: '#ef4444' },
   ].filter(item => item.value > 0);
 
-  const handleViewAll = () => { navigate('/tasks'); };
 
   return (
     <div className="container-fluid p-3 p-md-4">
@@ -190,7 +189,6 @@ const Dashboard = ({ user }) => {
       <div className="premium-card p-4 border-0 mb-4">
         <div className="d-flex align-items-center justify-content-between mb-4">
           <h5 className="fw-bold text-dark mb-0">Recent Activities</h5>
-          <Button variant="link" size="sm" onClick={handleViewAll} className="p-0 text-decoration-none fw-bold text-primary">View All</Button>
         </div>
         <div className="d-flex flex-column gap-2">
           {recentTasks.length > 0 ? recentTasks.map((activity) => (

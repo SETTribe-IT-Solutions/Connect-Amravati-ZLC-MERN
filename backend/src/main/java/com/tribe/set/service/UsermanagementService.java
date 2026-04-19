@@ -40,14 +40,14 @@ public class UsermanagementService {
     private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     // ... helper ...
-    private User findUser(String userId) {
+    private User findUser1(String userId) {
         return userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
     }
 
     @Transactional
     public UserResponse createUser(CreateuserRequest request, String requesterId) {
-        User requester = findUser(requesterId);
+        User requester = findUser1(requesterId);
 
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
             throw new RuntimeException("Access Denied: Only System Administrator can create users");
@@ -79,7 +79,7 @@ public class UsermanagementService {
     }
 
     public Page<UserResponse> getAllUsers(String requesterId, String searchTerm, Role filterRole, Boolean active, Pageable pageable) {
-        User requester = (requesterId != null && !requesterId.equals("null")) ? findUser(requesterId) : null;
+        User requester = (requesterId != null && !requesterId.equals("null")) ? findUser1(requesterId) : null;
         
         List<Role> visibleRoles;
         if (requester != null && requester.getRole() == Role.SYSTEM_ADMINISTRATOR) {
@@ -111,7 +111,7 @@ public class UsermanagementService {
     // ═══════════════════════════════════════════════════
  
     public List<UserResponse> getUsersByRole(Role role, String requesterId) {
-        findUser(requesterId);
+        findUser1(requesterId);
  
         return userRepository.findByRole(role)
                 .stream()
@@ -125,8 +125,8 @@ public class UsermanagementService {
     // ═══════════════════════════════════════════════════
  
     public UserResponse getUserProfile(String targetUserId, String requesterId) {
-        findUser(requesterId);
-        User target = findUser(targetUserId);
+        findUser1(requesterId);
+        User target = findUser1(targetUserId);
         return enrichWithStats(UserResponse.from(target));
     }
  
@@ -138,13 +138,13 @@ public class UsermanagementService {
  
     @Transactional
     public UserResponse setActiveStatus(String targetUserId, Boolean active, String requesterId) {
-        User requester = findUser(requesterId);
+        User requester = findUser1(requesterId);
  
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
             throw new RuntimeException("Access Denied: Only System Administrator can change user status");
         }
  
-        User target = findUser(targetUserId);
+        User target = findUser1(targetUserId);
  
         if (target.getUserID().equals(requesterId)) {
             throw new RuntimeException("You cannot deactivate your own account");
@@ -166,13 +166,13 @@ public class UsermanagementService {
  
     @Transactional
     public UserResponse updateUserRole(String targetUserId, Role newRole, String requesterId) {
-        User requester = findUser(requesterId);
+        User requester = findUser1(requesterId);
  
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
             throw new RuntimeException("Access Denied: Only System Administrator can change roles");
         }
  
-        User target = findUser(targetUserId);
+        User target = findUser1(targetUserId);
         target.setRole(newRole);
         return UserResponse.from(userRepository.save(target));
     }
@@ -185,13 +185,13 @@ public class UsermanagementService {
  
     @Transactional
     public UserResponse updateUser(String targetUserId, UpdateUserRequest request, String requesterId) {
-        User requester = findUser(requesterId);
+        User requester = findUser1(requesterId);
  
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR && !requester.getUserID().equals(targetUserId)) {
             throw new RuntimeException("Access Denied: You do not have permission to update this user");
         }
  
-        User target = findUser(targetUserId);
+        User target = findUser1(targetUserId);
  
         if (request.getName() != null)
             target.setName(request.getName());
@@ -241,13 +241,13 @@ public class UsermanagementService {
  
     @Transactional
     public void deleteUser(String id, String long1) {
-        User requester = findUser(long1);
+        User requester = findUser1(long1);
  
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
             throw new RuntimeException("Access Denied: Only System Administrator can delete users");
         }
  
-        User target = findUser(id);
+        User target = findUser1(id);
  
         if (target.getUserID().equals(long1)) {
             throw new RuntimeException("You cannot delete your own account");
@@ -264,7 +264,7 @@ public class UsermanagementService {
     // GET SUBORDINATES
     // ═══════════════════════════════════════════════════
     public List<UserResponse> getSubordinates(String requesterId) {
-        User requester = findUser(requesterId);
+        User requester = findUser1(requesterId);
         int requesterLevel = requester.getRole().getLevel();
         
         return userRepository.findByActive(true)
