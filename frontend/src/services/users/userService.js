@@ -7,6 +7,11 @@ export const getAllUsers = async (params) => {
   return response.data;
 };
 
+export const getUserStats = async () => {
+  const response = await axiosInstance.get("/users/stats");
+  return response.data;
+};
+
 export const addUser = async (userData) => {
   const response = await axiosInstance.post("/users/add", userData);
   return response.data;
