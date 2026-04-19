@@ -18,10 +18,11 @@ import {
   PieChart, Pie, Cell 
 } from 'recharts';
 import { getDashboardStats, getTasks } from '../../services/tasks/taskService';
-import { Container, Row, Col, Card, Button, Form, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Modal, OverlayTrigger, Tooltip as BootstrapTooltip } from 'react-bootstrap';
 
 const Dashboard = ({ user }) => {
   const navigate = useNavigate();
+  const recentActivitiesRef = React.useRef(null);
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const [selectedTask, setSelectedTask] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -29,6 +30,8 @@ const Dashboard = ({ user }) => {
   const [dashboardData, setDashboardData] = useState({
     totalTasks: 0, pending: 0, inProgress: 0, completed: 0, overdue: 0
   });
+  const [allTasks, setAllTasks] = useState([]);
+  const [activeFilter, setActiveFilter] = useState('All');
   const [recentTasks, setRecentTasks] = useState([]);
   const [chartData, setChartData] = useState([]);
 
@@ -40,7 +43,9 @@ const Dashboard = ({ user }) => {
           const stats = await getDashboardStats(userID);
           setDashboardData(stats);
           const tasks = await getTasks(userID);
-          setRecentTasks(tasks.slice(0, 5));
+          setAllTasks(tasks || []);
+          // On initial load, show all up to 5, or if they want *all* then just tasks
+          setRecentTasks(tasks || []);
           
           if (selectedPeriod === 'week') {
             setChartData([
@@ -59,6 +64,13 @@ const Dashboard = ({ user }) => {
               { name: 'Week 3', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
               { name: 'Week 4', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
             ]);
+          } else if (selectedPeriod === 'year') {
+            setChartData([
+              { name: 'Q1', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
+              { name: 'Q2', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
+              { name: 'Q3', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
+              { name: 'Q4', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
+            ]);
           } else {
             setChartData([]); // Fallback for other periods
           }
@@ -69,6 +81,28 @@ const Dashboard = ({ user }) => {
     };
     fetchData();
   }, [user, selectedPeriod]);
+
+  useEffect(() => {
+    if (allTasks.length > 0) {
+      let filtered = allTasks;
+      if (activeFilter === 'Completed') filtered = allTasks.filter(t => t.status === 'COMPLETED' || t.status === 'Completed');
+      else if (activeFilter === 'In Progress') filtered = allTasks.filter(t => t.status === 'IN_PROGRESS' || t.status === 'In Progress');
+      else if (activeFilter === 'Pending') filtered = allTasks.filter(t => t.status === 'PENDING' || t.status === 'Pending');
+      else if (activeFilter === 'Overdue') filtered = allTasks.filter(t => t.status === 'OVERDUE' || t.status === 'Overdue');
+      
+      // If "Total Tasks", it just uses the filtered array (which is allTasks)
+      setRecentTasks(filtered);
+    }
+  }, [activeFilter, allTasks]);
+
+  const getStatusColor = (status) => {
+    const s = status?.toUpperCase() || '';
+    if (s === 'COMPLETED') return 'success';
+    if (s === 'IN_PROGRESS') return 'dark';
+    if (s === 'PENDING') return 'warning';
+    if (s === 'OVERDUE') return 'danger';
+    return 'primary';
+  };
 
   const showToast = (title, value) => {
     setToast({ title, value });
@@ -90,7 +124,7 @@ const Dashboard = ({ user }) => {
     { name: 'Overdue', value: dashboardData.overdue, color: '#ef4444' },
   ].filter(item => item.value > 0);
 
-  const handleViewAll = () => { navigate('/tasks'); };
+  const handleViewAll = () => { navigate('/tasks?tab=tracking'); };
 
   return (
     <div className="container-fluid p-3 p-md-4">
@@ -107,8 +141,14 @@ const Dashboard = ({ user }) => {
       {/* Stats Grid */}
       <div className="row g-3 mb-4">
         {stats.map((stat) => (
-          <div key={stat.name} className="col-6 col-md-4 col-lg">
-            <div className="premium-card p-3 h-100 border-0">
+          <div key={stat.name} className="col-6 col-md-4 col-lg" style={{ cursor: 'pointer' }} onClick={() => {
+            setActiveFilter(stat.name);
+            showToast(stat.name, stat.value);
+            setTimeout(() => {
+              recentActivitiesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+          }}>
+            <div className={`premium-card p-3 h-100 border-0 transition-all ${activeFilter === stat.name ? 'ring-2 ring-primary' : ''}`} style={{ outline: activeFilter === stat.name ? '2px solid #2563eb' : 'none' }}>
               <div className="d-flex align-items-center justify-content-between">
                 <div>
                   <p className="small text-secondary mb-1">{stat.name}</p>
@@ -135,6 +175,7 @@ const Dashboard = ({ user }) => {
               <Form.Select size="sm" style={{ width: 'auto' }} value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)}>
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
+                <option value="year">Yearly</option>
               </Form.Select>
             </div>
             <div style={{ height: '300px' }}>
@@ -187,7 +228,7 @@ const Dashboard = ({ user }) => {
       </div>
 
       {/* Recent Activities */}
-      <div className="premium-card p-4 border-0 mb-4">
+      <div ref={recentActivitiesRef} className="premium-card p-4 border-0 mb-4">
         <div className="d-flex align-items-center justify-content-between mb-4">
           <h5 className="fw-bold text-dark mb-0">Recent Activities</h5>
           <Button variant="link" size="sm" onClick={handleViewAll} className="p-0 text-decoration-none fw-bold text-primary">View All</Button>
@@ -198,12 +239,14 @@ const Dashboard = ({ user }) => {
               <div className="overflow-hidden">
                 <p className="small fw-bold text-dark mb-0 text-truncate">{activity.title}</p>
                 <p className="text-muted mb-0" style={{ fontSize: '0.75rem' }}>
-                  To: {activity.assignedToName} • <span className="badge bg-primary bg-opacity-10 text-primary uppercase" style={{ fontSize: '0.65rem' }}>{activity.status}</span>
+                  To: {activity.assignedToName || activity.assignedTo} • <span className={`badge bg-${getStatusColor(activity.status)} bg-opacity-10 text-${getStatusColor(activity.status)} uppercase`} style={{ fontSize: '0.65rem' }}>{activity.status}</span>
                 </p>
               </div>
-              <Button variant="light" size="sm" onClick={() => { setSelectedTask(activity); setShowDetailsModal(true); }} className="p-2 border-0 rounded-circle text-primary">
-                <EyeIcon style={{ width: '1rem', height: '1rem' }} />
-              </Button>
+              <OverlayTrigger placement="top" overlay={<BootstrapTooltip id={`tooltip-${activity.id}`}>View Task Details</BootstrapTooltip>}>
+                <Button variant="light" size="sm" onClick={() => { setSelectedTask(activity); setShowDetailsModal(true); }} className="p-2 border-0 rounded-circle text-primary">
+                  <EyeIcon style={{ width: '1rem', height: '1rem' }} />
+                </Button>
+              </OverlayTrigger>
             </div>
           )) : (<div className="text-center py-5 text-muted small italic">No recent activities found</div>)}
         </div>
@@ -217,8 +260,8 @@ const Dashboard = ({ user }) => {
             style={{ zIndex: 1060, backgroundColor: '#2563eb', minWidth: '240px' }}>
             <ClipboardDocumentListIcon style={{ width: '1.25rem', height: '1.25rem', opacity: 0.8 }} />
             <div className="flex-grow-1">
-              <p className="small mb-0 opacity-80">{toast.title}</p>
-              <p className="h5 fw-bold mb-0">{toast.value}</p>
+              <p className="h6 fw-bold mb-0 text-capitalize">{toast.title}</p>
+              <p className="small mb-0 opacity-80">{toast.value}</p>
             </div>
             <XMarkIcon className="cursor-pointer" style={{ width: '1rem', height: '1rem' }} onClick={() => setToast(null)} />
           </motion.div>

@@ -154,11 +154,29 @@ const TaskDashboard = ({ user }) => {
 
   useEffect(() => {
     const highlightId = new URLSearchParams(location.search).get('highlightId');
-    if (!highlightId || tasks.length === 0) return;
-    const targetTask = tasks.find(task => String(task.id) === highlightId);
-    if (targetTask) {
-      setSelectedTask(targetTask);
-      setShowDetailsModal(true);
+    if (highlightId && tasks.length > 0) {
+      const targetTask = tasks.find(task => String(task.id) === highlightId);
+      if (targetTask) {
+        setSelectedTask(targetTask);
+        setShowDetailsModal(true);
+      }
+    }
+
+    const tabParam = new URLSearchParams(location.search).get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+    
+    const statusParam = new URLSearchParams(location.search).get('status');
+    if (statusParam) {
+      setSelectedStatus(statusParam);
+      if (statusParam === 'PENDING' || statusParam === 'OVERDUE') {
+        setPendingStatusFilter(statusParam);
+        // Ensure pending tab gets activated if they clicked a pending/overdue
+        if (tabParam === 'pending') {
+          setActiveTab('pending');
+        }
+      }
     }
   }, [location.search, tasks]);
 
