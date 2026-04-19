@@ -28,6 +28,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.time.LocalDate;
+
 @RestController
 @RequestMapping("/api/announcements")
 public class AnnouncementController {
@@ -51,6 +53,10 @@ public class AnnouncementController {
     @PreAuthorize("authenticated")
     public ResponseEntity<Page<AnnouncementDTO>> getAnnouncements(
             @RequestParam(name = "userId") String userId,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "date", required = false) LocalDate date,
+            @RequestParam(name = "month", required = false) Integer month,
+            @RequestParam(name = "year", required = false) Integer year,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -58,13 +64,16 @@ public class AnnouncementController {
         
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return ResponseEntity.ok(announcementService.getAnnouncementsForUser(userId, pageable));
+        return ResponseEntity.ok(announcementService.getAnnouncementsForUser(userId, status, date, month, year, pageable));
     }
 
     @GetMapping("/sent")
     @PreAuthorize("hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<Page<AnnouncementDTO>> getSentAnnouncements(
             @RequestParam(name = "userId") String userId,
+            @RequestParam(name = "date", required = false) LocalDate date,
+            @RequestParam(name = "month", required = false) Integer month,
+            @RequestParam(name = "year", required = false) Integer year,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -72,7 +81,7 @@ public class AnnouncementController {
 
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return ResponseEntity.ok(announcementService.getSentAnnouncements(userId, pageable));
+        return ResponseEntity.ok(announcementService.getSentAnnouncements(userId, date, month, year, pageable));
     }
 
     @GetMapping("/{id}/acknowledgments")

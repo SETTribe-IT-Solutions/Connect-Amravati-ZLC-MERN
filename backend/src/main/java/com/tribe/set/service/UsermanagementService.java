@@ -21,45 +21,47 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
  
+import com.tribe.set.dto.UserStatsDTO;
+import java.time.LocalDateTime;
+
 @Service
 public class UsermanagementService {
- 
+
     @Autowired
     private UserRepository userRepository;
- 
+
     @Autowired
     private TaskRepository taskRepository;
- 
+
     @Autowired
     private AppreciationRepository appreciationRepository;
- 
+
     @Autowired
     private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
- 
-    // ═══════════════════════════════════════════════════
-    // CREATE USER
-    // New user is ALWAYS created as active = true.
-    // The CreateuserRequest has no 'active' field at all.
-    // ═══════════════════════════════════════════════════
- 
+
+    // ... helper ...
+    private User findUser(String userId) {
+        return userRepository.findByUserID(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+    }
+
     @Transactional
     public UserResponse createUser(CreateuserRequest request, String requesterId) {
- 
         User requester = findUser(requesterId);
- 
+
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
             throw new RuntimeException("Access Denied: Only System Administrator can create users");
         }
- 
+
         if (userRepository.existsByUserID(request.getUserID())) {
             throw new RuntimeException("User ID already exists: " + request.getUserID());
         }
- 
+
         String normalizedEmail = request.getEmail() != null ? request.getEmail().toLowerCase().trim() : null;
         if (userRepository.existsByEmail(normalizedEmail)) {
             throw new RuntimeException("Email already in use: " + normalizedEmail);
         }
- 
+
         User user = new User();
         user.setUserID(request.getUserID());
         user.setName(request.getName());
@@ -71,32 +73,37 @@ public class UsermanagementService {
         user.setVillage(request.getVillage());
         user.setPhone(request.getPhone());
         
-        // Force status to ACTIVE (true) regardless of any input from the request
         user.setActive(true); 
   
         return enrichWithStats(UserResponse.from(userRepository.save(user)));
     }
- 
-    // ═══════════════════════════════════════════════════
-    // GET ALL USERS (Paginated, Filtered, Searched)
-    // ═══════════════════════════════════════════════════
- 
-    public Page<UserResponse> getAllUsers(String requesterId, String searchTerm, Role filterRole, Pageable pageable) {
+
+    public Page<UserResponse> getAllUsers(String requesterId, String searchTerm, Role filterRole, Boolean active, Pageable pageable) {
         User requester = (requesterId != null && !requesterId.equals("null")) ? findUser(requesterId) : null;
         
         List<Role> visibleRoles;
         if (requester != null && requester.getRole() == Role.SYSTEM_ADMINISTRATOR) {
             visibleRoles = Arrays.asList(Role.values());
         } else {
-            // General users see everyone except Admin and Collector (internal policy)
             visibleRoles = Arrays.stream(Role.values())
                     .filter(r -> r != Role.SYSTEM_ADMINISTRATOR && r != Role.COLLECTOR)
                     .collect(Collectors.toList());
         }
 
-        Page<User> userPage = userRepository.findAllFiltered(visibleRoles, searchTerm, filterRole, pageable);
+        Page<User> userPage = userRepository.findAllFiltered(visibleRoles, searchTerm, filterRole, active, pageable);
         
         return userPage.map(u -> enrichWithStats(UserResponse.from(u)));
+    }
+
+    public UserStatsDTO getUserStats() {
+        long total = userRepository.countAllUsers();
+        long active = userRepository.countByActive(true);
+        long inactive = userRepository.countByActive(false);
+        
+        LocalDateTime firstDayOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        long newThisMonth = userRepository.countNewUsersThisMonth(firstDayOfMonth);
+        
+        return new UserStatsDTO(total, active, inactive, newThisMonth);
     }
  
     // ═══════════════════════════════════════════════════
