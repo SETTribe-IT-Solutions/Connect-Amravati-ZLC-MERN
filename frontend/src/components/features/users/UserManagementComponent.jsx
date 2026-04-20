@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getAllUsers, addUser, updateUser } from '../../../services/users/userService';
+import { getAllUsers, addUser, updateUser, getUserStats } from '../../../services/users/userService';
 import { getTalukas, getVillagesByTaluka } from '../../../services/common/locationService';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -28,6 +28,8 @@ const UserManagementComponent = ({ user }) => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [globalStats, setGlobalStats] = useState({ totalUsers: 0, activeUsers: 0, inactiveUsers: 0, newUsersThisMonth: 0 });
+  const [activeFilter, setActiveFilter] = useState(null); // null (all), true (active), false (inactive)
 
   // Debounce search term
   useEffect(() => {
@@ -40,7 +42,7 @@ const UserManagementComponent = ({ user }) => {
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchTerm, roleFilter]);
+  }, [debouncedSearchTerm, roleFilter, activeFilter]);
 
   const showToast = (title, value) => { setToast({ title, value }); setTimeout(() => setToast(null), 3000); };
   const showIconTooltip = (message, event) => {
@@ -63,7 +65,8 @@ const UserManagementComponent = ({ user }) => {
           size: itemsPerPage,
           requesterId: user?.userID,
           searchTerm: debouncedSearchTerm,
-          role: roleFilter !== 'all' ? roleMap[roleFilter] : null
+          role: roleFilter !== 'all' ? roleMap[roleFilter] : null,
+          active: activeFilter
       };
 
       const data = await getAllUsers(params);
@@ -95,7 +98,16 @@ const UserManagementComponent = ({ user }) => {
     } finally { 
         setLoading(false); 
     }
-  }, [currentPage, itemsPerPage, debouncedSearchTerm, roleFilter, user?.userID]);
+  }, [currentPage, itemsPerPage, debouncedSearchTerm, roleFilter, activeFilter, user?.userID]);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const data = await getUserStats();
+      setGlobalStats(data);
+    } catch (error) {
+      console.error("Fetch Stats Error:", error);
+    }
+  }, []);
 
   const fetchTalukas = useCallback(async () => {
     try {
@@ -104,7 +116,11 @@ const UserManagementComponent = ({ user }) => {
     } catch (error) { console.error("Fetch Talukas Error:", error); }
   }, []);
 
-  useEffect(() => { fetchUsers(); fetchTalukas(); }, [fetchUsers, fetchTalukas]);
+  useEffect(() => { 
+    fetchUsers(); 
+    fetchStats();
+    fetchTalukas(); 
+  }, [fetchUsers, fetchStats, fetchTalukas]);
  
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -131,22 +147,13 @@ const UserManagementComponent = ({ user }) => {
   }).length;
 
   const stats = [
-    { label: 'Total Users', value: totalItems, icon: UserCircleIcon, color: 'primary', msg: 'Total Users Count' },
-    { label: 'Active Users', value: users.filter(u => u.status === 'Active').length, icon: ShieldCheckIcon, color: 'success', msg: 'Currently Active Users' },
-    { label: 'Inactive Users', value: users.filter(u => u.status === 'Inactive').length, icon: EyeSlashIcon, color: 'danger', msg: 'Currently Inactive Users' },
-    { label: 'New Users this Month', value: newUsersCount, icon: UserPlusIcon, color: 'info', msg: 'New Users Added This Month' }
+    { label: 'Total Users', value: globalStats.totalUsers, icon: UserCircleIcon, color: 'primary', msg: 'Total Users Count', filter: null },
+    { label: 'Active Users', value: globalStats.activeUsers, icon: ShieldCheckIcon, color: 'success', msg: 'Currently Active Users', filter: true },
+    { label: 'Inactive Users', value: globalStats.inactiveUsers, icon: EyeSlashIcon, color: 'danger', msg: 'Currently Inactive Users', filter: false },
+    { label: 'New Users this Month', value: globalStats.newUsersThisMonth, icon: UserPlusIcon, color: 'info', msg: 'New Users Added This Month', filter: 'new' }
   ];
 
-  const filteredUsersList = users.filter(u => {
-    if (statFilter === 'Active Users') return u.status === 'Active';
-    if (statFilter === 'Inactive Users') return u.status === 'Inactive';
-    if (statFilter === 'New Users this Month') {
-      if (!u.createdAt) return false;
-      const d = new Date(u.createdAt);
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-    }
-    return true;
-  });
+  const filteredUsersList = users; // Filtering is now handled on the backend
 
   const getRoleColor = (role) => ({
     'Collector': 'secondary', 'Addl. Collector': 'dark',
@@ -194,6 +201,14 @@ const UserManagementComponent = ({ user }) => {
                 style={{ cursor: 'pointer', transform: statFilter === stat.label ? 'translateY(-2px)' : 'none', border: statFilter === stat.label ? '2px solid #0d6efd' : 'none' }}
                 onClick={() => {
                   setStatFilter(stat.label);
+                  if (stat.filter === 'new') {
+                    // Handled locally since it's a specific date range, 
+                    // or could be a separate backend filter. 
+                    // For now, let's just stick to the basic Active/Inactive/Total.
+                    setActiveFilter(null);
+                  } else {
+                    setActiveFilter(stat.filter);
+                  }
                   showToast(stat.label, '');
                 }}
               >
@@ -371,6 +386,7 @@ const UserManagementComponent = ({ user }) => {
             }
             setIsModalOpen(false);
             fetchUsers();
+            fetchStats();
           } catch (error) {
             console.error("Save User Error:", error);
             showToast("Error", error.response?.data?.message || "Failed to save user");
@@ -404,6 +420,9 @@ const UserModal = ({ user, initialIsEditing, allUsers, roles, talukas, villages,
   
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+
+  const mandatoryTalukaRoles = ['Tehsildar', 'BDO', 'Talathi', 'Gram Sevak'];
+  const isTalukaMandatory = mandatoryTalukaRoles.includes(formData.role);
 
   useEffect(() => {
     if (user?.taluka) fetchVillages(user.taluka);
@@ -443,6 +462,10 @@ const UserModal = ({ user, initialIsEditing, allUsers, roles, talukas, villages,
       else if (!/(?=.*[a-z])/.test(pwd)) newErrors.password = "Must contain at least one lowercase letter (a-z)";
       else if (!/(?=.*\d)/.test(pwd)) newErrors.password = "Must contain at least one number (0-9)";
       else if (!/(?=.*[@$!%*?&])/.test(pwd)) newErrors.password = "Must contain at least one special character (@, $, !, %, *, ?, &)";
+    }
+
+    if (isTalukaMandatory && !formData.taluka) {
+      newErrors.taluka = "Taluka is required for this role";
     }
 
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
@@ -599,11 +622,12 @@ const UserModal = ({ user, initialIsEditing, allUsers, roles, talukas, villages,
             </Col>
             <Col md={4}>
               <Form.Group>
-                <Form.Label className="small fw-bold text-secondary">Taluka</Form.Label>
-                <Form.Select value={formData.taluka} onChange={(e) => { setFormData({...formData, taluka: e.target.value, village: ''}); fetchVillages(e.target.value); }} className="rounded-3 border-light-subtle">
+                <Form.Label className="small fw-bold text-secondary">Taluka {isTalukaMandatory && <span className="text-danger">*</span>}</Form.Label>
+                <Form.Select value={formData.taluka} isInvalid={!!errors.taluka} onChange={(e) => { setFormData({...formData, taluka: e.target.value, village: ''}); fetchVillages(e.target.value); }} className="rounded-3 border-light-subtle">
                   <option value="">Select Taluka</option>
                   {talukas.map(t => <option key={t} value={t}>{t}</option>)}
                 </Form.Select>
+                <Form.Control.Feedback type="invalid">{errors.taluka}</Form.Control.Feedback>
               </Form.Group>
             </Col>
             <Col md={4}>

@@ -24,6 +24,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
+import java.time.LocalDate;
+
 @Service
 public class AnnouncementService {
 
@@ -108,12 +110,18 @@ public class AnnouncementService {
         return new AnnouncementDTO(savedAnnouncement, creator, false, 0);
     }
 
-    public Page<AnnouncementDTO> getAnnouncementsForUser(String userId, Pageable pageable) {
+    public Page<AnnouncementDTO> getAnnouncementsForUser(String userId, String status, LocalDate date, Integer month, Integer year, Pageable pageable) {
         User user = userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Page<Announcement> announcements = announcementRepository.findForUser(
-                user.getUserID(), user.getRole(), user.getTaluka(), user.getVillage(), pageable);
+        Page<Announcement> announcements;
+        if ("acknowledged".equalsIgnoreCase(status)) {
+            announcements = announcementRepository.findAcknowledgedForUser(
+                    user.getUserID(), user.getRole(), user.getTaluka(), user.getVillage(), date, month, year, pageable);
+        } else {
+            announcements = announcementRepository.findUnacknowledgedForUser(
+                    user.getUserID(), user.getRole(), user.getTaluka(), user.getVillage(), date, month, year, pageable);
+        }
 
         // Fetch all creators in bulk to avoid N+1
         java.util.Set<String> creatorIds = announcements.stream().map(Announcement::getCreatedByUserId).collect(Collectors.toSet());
@@ -127,11 +135,11 @@ public class AnnouncementService {
         });
     }
 
-    public Page<AnnouncementDTO> getSentAnnouncements(String userId, Pageable pageable) {
+    public Page<AnnouncementDTO> getSentAnnouncements(String userId, LocalDate date, Integer month, Integer year, Pageable pageable) {
         User user = userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Page<Announcement> announcements = announcementRepository.findSentByUserId(userId, pageable);
+        Page<Announcement> announcements = announcementRepository.findSentByUserId(userId, date, month, year, pageable);
 
         return announcements.map(a -> {
             boolean acknowledged = acknowledgmentRepository.existsByAnnouncementIdAndUserId(a.getId(), userId);

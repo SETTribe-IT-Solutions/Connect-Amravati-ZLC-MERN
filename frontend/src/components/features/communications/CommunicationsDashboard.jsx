@@ -39,7 +39,8 @@ const CommunicationsDashboard = ({ user }) => {
   const [sentAnnouncements, setSentAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('inbox'); // inbox, sent
+  const isCollector = user?.role === 'COLLECTOR';
+  const [activeTab, setActiveTab] = useState(isCollector ? 'sent' : 'inbox'); // inbox, sent, acknowledged
   const [filters, setFilters] = useState({
     date: '',
     month: '',
@@ -71,6 +72,8 @@ const CommunicationsDashboard = ({ user }) => {
 
   const isSeniorOfficial = user?.role && roleLevels[user.role] <= 4;
 
+  const [inboxCount, setInboxCount] = useState(0);
+
   const fetchAnnouncements = async (page = 1) => {
     try {
       setLoading(true);
@@ -82,14 +85,32 @@ const CommunicationsDashboard = ({ user }) => {
         direction: 'desc'
       };
 
+      // Add filters if they exist
+      if (filters.date) params.date = filters.date;
+      if (filters.month) params.month = filters.month;
+      if (filters.year) params.year = filters.year;
+
       if (activeTab === 'inbox') {
-        const data = await getAnnouncements(params);
+        const data = await getAnnouncements({ ...params, status: 'inbox' });
         setAnnouncements(data.content || []);
         setTotalItems(data.totalElements || 0);
+        setInboxCount(data.totalElements || 0);
+      } else if (activeTab === 'acknowledged') {
+        const data = await getAnnouncements({ ...params, status: 'acknowledged' });
+        setAnnouncements(data.content || []);
+        setTotalItems(data.totalElements || 0);
+        
+        // Also fetch total inbox count (without filters for the badge)
+        const inboxData = await getAnnouncements({ userId: user?.userID, status: 'inbox', page: 0, size: 1 });
+        setInboxCount(inboxData.totalElements || 0);
       } else {
         const data = await getSentAnnouncements(params);
         setSentAnnouncements(data.content || []);
         setTotalItems(data.totalElements || 0);
+        
+        // Also fetch total inbox count (without filters for the badge)
+        const inboxData = await getAnnouncements({ userId: user?.userID, status: 'inbox', page: 0, size: 1 });
+        setInboxCount(inboxData.totalElements || 0);
       }
     } catch (error) {
       console.error("Error fetching communications:", error);
@@ -103,7 +124,7 @@ const CommunicationsDashboard = ({ user }) => {
     if (user?.userID) {
       fetchAnnouncements(currentPage);
     }
-  }, [user?.userID, activeTab, currentPage]);
+  }, [user?.userID, activeTab, currentPage, filters]);
 
   const handleAcknowledge = async (id) => {
     try {
@@ -196,22 +217,7 @@ const CommunicationsDashboard = ({ user }) => {
     setFilters({ date: '', month: '', year: '' });
   };
 
-  const applyFilters = (list) => {
-    return list.filter(item => {
-      const date = new Date(item.createdAt);
-      const itemYear = date.getFullYear().toString();
-      const itemMonth = (date.getMonth() + 1).toString();
-      const itemDate = date.toISOString().split('T')[0];
-
-      if (filters.date && itemDate !== filters.date) return false;
-      if (filters.month && itemMonth !== filters.month) return false;
-      if (filters.year && itemYear !== filters.year) return false;
-
-      return true;
-    });
-  };
-
-  const currentDisplayList = activeTab === 'inbox' ? announcements : sentAnnouncements;
+  const currentDisplayList = (activeTab === 'inbox' || activeTab === 'acknowledged') ? announcements : sentAnnouncements;
 
   const months = [
     { value: '1', label: 'January' },
@@ -259,21 +265,35 @@ const CommunicationsDashboard = ({ user }) => {
       <div className="mb-4 d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4">
         {/* Tabs */}
         <Nav variant="pills" className="bg-light p-1 rounded-3 gap-1 shadow-sm border-0" style={{ width: 'fit-content' }}>
-          <Nav.Item>
-            <Nav.Link 
-              active={activeTab === 'inbox'} 
-              onClick={() => setActiveTab('inbox')}
-              className={`rounded-3 py-2 px-4 fw-bold d-flex align-items-center gap-2 border-0 ${activeTab === 'inbox' ? '' : 'text-secondary'}`}
-            >
-              <InboxIcon style={{ width: '1.1rem' }} />
-              Inbox
-              {announcements.length > 0 && (
-                <Badge bg={activeTab === 'inbox' ? 'light' : 'secondary'} text={activeTab === 'inbox' ? 'primary' : 'white'} className="ms-1">
-                  {announcements.length}
-                </Badge>
-              )}
-            </Nav.Link>
-          </Nav.Item>
+          {!isCollector && (
+            <>
+              <Nav.Item>
+                <Nav.Link 
+                  active={activeTab === 'inbox'} 
+                  onClick={() => setActiveTab('inbox')}
+                  className={`rounded-3 py-2 px-4 fw-bold d-flex align-items-center gap-2 border-0 ${activeTab === 'inbox' ? '' : 'text-secondary'}`}
+                >
+                  <InboxIcon style={{ width: '1.1rem' }} />
+                  Inbox
+                  {inboxCount > 0 && (
+                    <Badge bg={activeTab === 'inbox' ? 'light' : 'secondary'} text={activeTab === 'inbox' ? 'primary' : 'white'} className="ms-1">
+                      {inboxCount}
+                    </Badge>
+                  )}
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link 
+                  active={activeTab === 'acknowledged'} 
+                  onClick={() => setActiveTab('acknowledged')}
+                  className={`rounded-3 py-2 px-4 fw-bold d-flex align-items-center gap-2 border-0 ${activeTab === 'acknowledged' ? '' : 'text-secondary'}`}
+                >
+                  <CheckBadgeIcon style={{ width: '1.1rem' }} />
+                  History
+                </Nav.Link>
+              </Nav.Item>
+            </>
+          )}
           {isSeniorOfficial && (
             <Nav.Item>
               <Nav.Link 
@@ -384,7 +404,7 @@ const CommunicationsDashboard = ({ user }) => {
                   <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
                     <div className="d-flex align-items-center gap-2">
 
-                      {activeTab === 'inbox' && item.acknowledged && (
+                      {(activeTab === 'inbox' || activeTab === 'acknowledged') && item.acknowledged && (
                         <Badge bg="success-subtle" text="success" className="d-flex align-items-center gap-1 px-3 py-2 rounded-pill border border-success-subtle">
                           <CheckBadgeIcon style={{ width: '1rem' }} />
                           Acknowledged

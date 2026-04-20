@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
+import java.time.LocalDateTime;
+
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
 
@@ -59,10 +61,20 @@ public interface UserRepository extends JpaRepository<User, String> {
            "OR LOWER(u.taluka) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
            "OR LOWER(u.village) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
            "OR LOWER(CAST(u.role AS string)) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
-           "AND (:filterRole IS NULL OR u.role = :filterRole)")
+           "AND (:filterRole IS NULL OR u.role = :filterRole) " +
+           "AND (:active IS NULL OR u.active = :active)")
     Page<User> findAllFiltered(
         @Param("roles") List<Role> visibleRoles,
         @Param("searchTerm") String searchTerm,
         @Param("filterRole") Role filterRole,
+        @Param("active") Boolean active,
         Pageable pageable);
+
+    long countByActive(Boolean active);
+
+    @Query("SELECT COUNT(u) FROM User u")
+    long countAllUsers();
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :startDate")
+    long countNewUsersThisMonth(@Param("startDate") LocalDateTime startDate);
 }
