@@ -20,7 +20,7 @@ import {
   PieChart, Pie, Cell 
 } from 'recharts';
 import { getDashboardStats, getTasks, addTaskRemark } from '../../services/tasks/taskService';
-import { Container, Row, Col, Card, Button, Form, Modal, OverlayTrigger, Tooltip as BootstrapTooltip } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Modal, Badge, ProgressBar, OverlayTrigger, Tooltip as BootstrapTooltip } from 'react-bootstrap';
 
 const Dashboard = ({ user }) => {
   const navigate = useNavigate();
@@ -116,10 +116,18 @@ const Dashboard = ({ user }) => {
   const getStatusColor = (status) => {
     const s = status?.toUpperCase() || '';
     if (s === 'COMPLETED') return 'success';
-    if (s === 'IN_PROGRESS') return 'dark';
-    if (s === 'PENDING') return 'warning';
+    if (s === 'IN_PROGRESS') return 'secondary';
+    if (s === 'PENDING') return 'orange';
     if (s === 'OVERDUE') return 'danger';
-    return 'primary';
+    return 'secondary';
+  };
+
+  const getPriorityColor = (priority) => {
+    const p = priority?.toUpperCase() || '';
+    if (p === 'HIGH') return 'danger';
+    if (p === 'MEDIUM') return 'warning';
+    if (p === 'LOW') return 'success';
+    return 'secondary';
   };
 
   const showToast = (title, value) => {
@@ -131,14 +139,14 @@ const Dashboard = ({ user }) => {
     { name: 'Total Tasks', value: dashboardData.totalTasks, icon: ClipboardDocumentListIcon, bgColor: '#eff6ff', textColor: '#2563eb' },
     { name: 'Completed', value: dashboardData.completed, icon: CheckCircleIcon, bgColor: '#f0fdf4', textColor: '#16a34a' },
     { name: 'In Progress', value: dashboardData.inProgress, icon: ArrowPathIcon, bgColor: '#f8fafc', textColor: '#475569' },
-    { name: 'Pending', value: dashboardData.pending, icon: ClockIcon, bgColor: '#fffbeb', textColor: '#d97706' },
+    { name: 'Pending', value: dashboardData.pending, icon: ClockIcon, bgColor: '#fff7ed', textColor: '#f97316' },
     { name: 'Overdue', value: dashboardData.overdue, icon: ExclamationTriangleIcon, bgColor: '#fef2f2', textColor: '#dc2626' }
   ];
 
   const taskDistribution = [
     { name: 'Completed', value: dashboardData.completed, color: '#10b981' },
     { name: 'In Progress', value: dashboardData.inProgress, color: '#64748b' },
-    { name: 'Pending', value: dashboardData.pending, color: '#f59e0b' },
+    { name: 'Pending', value: dashboardData.pending, color: '#f97316' },
     { name: 'Overdue', value: dashboardData.overdue, color: '#ef4444' },
   ].filter(item => item.value > 0);
 
@@ -291,7 +299,7 @@ const Dashboard = ({ user }) => {
               <div className="overflow-hidden">
                 <p className="small fw-bold text-dark mb-0 text-truncate">{activity.title}</p>
                 <p className="text-muted mb-0" style={{ fontSize: '0.75rem' }}>
-                  To: {activity.assignedToName || activity.assignedTo} • <span className={`badge bg-${getStatusColor(activity.status)} bg-opacity-10 text-${getStatusColor(activity.status)} uppercase`} style={{ fontSize: '0.65rem' }}>{activity.status}</span>
+                  To: {activity.assignedToName || activity.assignedTo} • <span className={`badge ${getStatusColor(activity.status) === 'orange' ? 'bg-orange-opacity-10 text-orange' : `bg-${getStatusColor(activity.status)} bg-opacity-10 text-${getStatusColor(activity.status)}`} uppercase`} style={{ fontSize: '0.65rem' }}>{activity.status}</span>
                 </p>
               </div>
               <OverlayTrigger placement="top" overlay={<BootstrapTooltip id={`tooltip-${activity.id}`}>View Task Details</BootstrapTooltip>}>
@@ -321,23 +329,23 @@ const Dashboard = ({ user }) => {
       </AnimatePresence>
 
       {/* Task Details Modal */}
-      <Modal show={showDetailsModal} onHide={() => setShowDetailsModal(false)} centered size="md" className="fade">
+      <Modal show={showDetailsModal} onHide={() => setShowDetailsModal(false)} centered size="md">
         {selectedTask && (
-          <>
-            <Modal.Header className="border-0 p-4 pb-0 d-flex flex-column align-items-start position-relative overflow-hidden rounded-top-4" 
+          <div className="modal-content border-0 overflow-hidden rounded-4">
+            <Modal.Header className="border-0 p-4 pb-0 d-flex flex-column align-items-start position-relative overflow-hidden" 
               style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #312e81 100%)' }}>
               <div className="d-flex justify-content-between w-100 mb-2">
                 <h5 className="modal-title fw-bold text-white">Task Details</h5>
-                <Button variant="link" className="text-white p-0" onClick={() => setShowDetailsModal(false)}><XMarkIcon style={{ width: '1.5rem', height: '1.5rem' }} /></Button>
+                <Button variant="link" className="text-white p-0 border-0 shadow-none" onClick={() => setShowDetailsModal(false)}><XMarkIcon style={{ width: '1.5rem', height: '1.5rem' }} /></Button>
               </div>
               <div className="d-flex flex-wrap gap-3 mb-3">
                 <div className="small text-white-50 d-flex align-items-center gap-1">
                   <UserIcon style={{ width: '0.875rem' }} /> 
-                  By: {selectedTask.assignedBy} {selectedTask.createdByRole ? `(${selectedTask.createdByRole.replace(/_/g, ' ')})` : ''}
+                  Created By: {selectedTask.assignedBy} {selectedTask.createdByRole ? `(${selectedTask.createdByRole.replace(/_/g, ' ')})` : ''}
                 </div>
                 <div className="small text-white-50 d-flex align-items-center gap-1">
                   <UserIcon style={{ width: '0.875rem' }} /> 
-                  To: {selectedTask.assignedTo} {selectedTask.assignedToRole ? `(${selectedTask.assignedToRole.replace(/_/g, ' ')})` : ''}
+                  Assigned To: {selectedTask.assignedTo} {selectedTask.assignedToRole ? `(${selectedTask.assignedToRole.replace(/_/g, ' ')})` : ''}
                 </div>
                 <div className="small text-white-50 d-flex align-items-center gap-1">
                   <CalendarIcon style={{ width: '0.875rem' }} /> 
@@ -345,41 +353,58 @@ const Dashboard = ({ user }) => {
                 </div>
               </div>
             </Modal.Header>
-            <Modal.Body className="p-4 rounded-bottom-4">
+            <Modal.Body className="p-4">
               <div className="mb-4">
                 <div className="small text-muted mb-1 text-uppercase fw-bold tracking-wider" style={{ fontSize: '0.65rem' }}>Task Title</div>
                 <h6 className="fw-bold text-dark">{selectedTask.title}</h6>
               </div>
               
-              <div className="row g-3 mb-4">
-                <div className="col-6">
-                  <div className="bg-light p-3 rounded-3">
+              <Row className="g-3 mb-4">
+                <Col xs={6}>
+                  <div className="bg-light p-3 rounded-3 h-100">
                     <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Priority</div>
-                    <span className={`small fw-bold ${selectedTask.priority === 'HIGH' ? 'text-danger' : 'text-primary'}`}>{selectedTask.priority || 'MEDIUM'}</span>
+                    <Badge bg={getPriorityColor(selectedTask.priority)} className="rounded-pill px-2 py-1 uppercase" style={{ fontSize: '0.6rem' }}>{selectedTask.priority}</Badge>
                   </div>
-                </div>
-                <div className="col-6">
-                  <div className="bg-light p-3 rounded-3">
+                </Col>
+                <Col xs={6}>
+                  <div className="bg-light p-3 rounded-3 h-100">
                     <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Status</div>
-                    <span className="small fw-bold text-primary">{selectedTask.status || 'PENDING'}</span>
+                    <Badge bg={getStatusColor(selectedTask.status) === 'orange' ? '' : getStatusColor(selectedTask.status)} className={`rounded-pill px-2 py-1 uppercase ${getStatusColor(selectedTask.status) === 'orange' ? 'bg-orange' : ''}`} style={{ fontSize: '0.6rem' }}>{selectedTask.status}</Badge>
                   </div>
-                </div>
-              </div>
+                </Col>
+                <Col xs={6}>
+                  <div className="bg-light p-3 rounded-3 h-100">
+                    <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Due Date</div>
+                    <span className="small fw-bold">{new Date(selectedTask.dueDate).toLocaleDateString('en-GB')}</span>
+                  </div>
+                </Col>
+                <Col xs={6}>
+                  <div className="bg-light p-3 rounded-3 h-100">
+                    <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Progress</div>
+                    <span className="small fw-bold text-primary">{selectedTask.progress || 0}%</span>
+                    <ProgressBar now={selectedTask.progress || 0} style={{ height: '4px', marginTop: '4px' }} className="rounded-pill" />
+                  </div>
+                </Col>
+              </Row>
               
               <div className="bg-light p-3 rounded-3 mb-4">
                 <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Description</div>
                 <p className="small text-dark mb-0">{selectedTask.description || 'No description provided.'}</p>
               </div>
-              
-              <div className="d-flex align-items-center justify-content-between mb-2 mt-4">
-                <span className="small fw-bold text-dark">Progress</span>
-                <span className="small fw-bold text-primary">{selectedTask.progress || 0}%</span>
-              </div>
-              <div className="progress mb-4" style={{ height: '8px', borderRadius: '4px' }}>
-                <div className="progress-bar bg-primary" role="progressbar" style={{ width: `${selectedTask.progress || 0}%` }} aria-valuenow={selectedTask.progress || 0} aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
 
-              {/* Attachments Section */}
+              <div className="bg-light p-3 rounded-3 mb-4">
+                <div className="small text-muted mb-2 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Remarks History</div>
+                {selectedTask.remarks?.length > 0 ? (
+                  <div className="vstack gap-2 overflow-auto pr-1" style={{ maxHeight: '150px' }}>
+                    {selectedTask.remarks.map((r, idx) => (
+                      <div key={idx} className="bg-white p-2 rounded-2 border small border-light-subtle">
+                        {r.remark || r}
+                      </div>
+                    ))}
+                  </div>
+                ) : <p className="small text-muted italic mb-0">No remarks yet.</p>}
+              </div>
+              
               {selectedTask.attachments?.length > 0 && (
                 <div className="bg-light p-3 rounded-3 mb-4">
                   <div className="small text-muted mb-2 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Attachments</div>
@@ -397,52 +422,12 @@ const Dashboard = ({ user }) => {
                   </div>
                 </div>
               )}
-
-              {/* Remark History Section */}
-              <div className="bg-light p-3 rounded-3 mb-4">
-                <div className="small text-muted mb-2 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Remarks History</div>
-                {selectedTask.remarks?.length > 0 ? (
-                  <div className="vstack gap-2 overflow-auto pr-1" style={{ maxHeight: '120px' }}>
-                    {selectedTask.remarks.map((r, idx) => (
-                      <div key={idx} className="bg-white p-2 rounded-2 border small border-light-subtle">
-                        <div className="fw-bold mb-1" style={{ fontSize: '0.65rem' }}>{new Date(r.createdAt || Date.now()).toLocaleString()}</div>
-                        <div>{r.remark || r}</div>
-                      </div>
-                    ))}
-                  </div>
-                ) : <p className="small text-muted italic mb-0">No remarks yet.</p>}
-              </div>
-
-              {/* Add Remark Section */}
-              <div className="mb-4">
-                <div className="small text-muted mb-2 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Add New Remark</div>
-                <div className="d-flex gap-2">
-                  <Form.Control 
-                    type="text" 
-                    placeholder="Type your remark..." 
-                    size="sm" 
-                    className="rounded-3" 
-                    value={remarkText}
-                    onChange={(e) => setRemarkText(e.target.value)}
-                  />
-                  <Button variant="primary" size="sm" className="px-3 rounded-3" onClick={handleAddRemark} disabled={remarkLoading || !remarkText.trim()}>
-                    Add
-                  </Button>
-                </div>
-              </div>
               
-              <Button 
-                variant="danger" 
-                className="w-100 py-3 fw-bold rounded-3 border-0 mt-2 transition-all shadow-sm" 
-                onClick={() => {
-                  setShowDetailsModal(false);
-                  setRemarkText('');
-                }}
-              >
+              <Button variant="danger" className="w-100 py-3 fw-bold rounded-3 border-0 transition-all text-white" onClick={() => setShowDetailsModal(false)}>
                 Close Details
               </Button>
             </Modal.Body>
-          </>
+          </div>
         )}
       </Modal>
 

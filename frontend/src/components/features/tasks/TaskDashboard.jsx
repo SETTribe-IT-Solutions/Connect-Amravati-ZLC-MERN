@@ -34,7 +34,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { 
   Container, Row, Col, Card, Button, Form, Table, Badge, 
-  ProgressBar, Modal, Nav, Tab, Spinner, Stack
+  ProgressBar, Modal, Nav, Tab, Spinner, Stack, OverlayTrigger, Tooltip
 } from 'react-bootstrap';
 import { 
   getTasks, 
@@ -60,6 +60,7 @@ const TaskDashboard = ({ user }) => {
   const [toast, setToast] = useState(null);
   const [pendingSearchTerm, setPendingSearchTerm] = useState('');
   const [pendingStatusFilter, setPendingStatusFilter] = useState('all');
+  const [fileUploadError, setFileUploadError] = useState('');
   const fileInputRef = useRef(null);
 
   const [tasks, setTasks] = useState([]);
@@ -246,21 +247,27 @@ const TaskDashboard = ({ user }) => {
 
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
-    const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx'];
+    const validExtensions = ['jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx', 'pdf', 'txt'];
+    const MAX_SIZE = 50 * 1024 * 1024; // 50MB
     const validFiles = [];
-    let hasInvalid = false;
+    let errorMsg = '';
 
     files.forEach(file => {
       const ext = file.name.split('.').pop().toLowerCase();
-      if (validExtensions.includes(ext)) {
-        validFiles.push(file);
+      if (!validExtensions.includes(ext)) {
+        errorMsg = 'Invalid file type. Only IMG, PNG, DOCS, EXCEL, PDF, and TXT are allowed.';
+      } else if (file.size > MAX_SIZE) {
+        errorMsg = 'File size exceeds 50MB limit.';
       } else {
-        hasInvalid = true;
+        validFiles.push(file);
       }
     });
 
-    if (hasInvalid) {
-      showToast('Only Image, PDF, and DOC files are allowed', 'error');
+    if (errorMsg) {
+      showToast(errorMsg, 'error');
+      setFileUploadError(errorMsg);
+    } else {
+      setFileUploadError('');
     }
 
     if (validFiles.length === 0) {
@@ -271,7 +278,7 @@ const TaskDashboard = ({ user }) => {
     const newAttachments = validFiles.map(file => ({
       name: file.name,
       url: URL.createObjectURL(file),
-      size: (file.size / 1024).toFixed(1) + ' KB',
+      size: file.size > 1024 * 1024 ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' : (file.size / 1024).toFixed(1) + ' KB',
       file: file
     }));
     setNewTask({ ...newTask, attachments: [...newTask.attachments, ...newAttachments] });
@@ -355,9 +362,18 @@ const TaskDashboard = ({ user }) => {
 
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = searchTerm === '' ||
-      task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.assignedTo.toLowerCase().includes(searchTerm.toLowerCase());
+      task.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.assignedTo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.assignedToRole?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.assignedToRole?.replace(/_/g, ' ').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.assignedBy?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.createdByRole?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.createdByRole?.replace(/_/g, ' ').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.priority?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      new Date(task.dueDate).toLocaleDateString('en-GB').includes(searchTerm) ||
+      (task.progress || 0).toString().includes(searchTerm);
     const matchesStatus = selectedStatus === 'all' || task.status === selectedStatus.replace(/\s+/g, '_').toUpperCase();
     const matchesDept = selectedDepartment === 'all' || task.department === selectedDepartment;
     return matchesSearch && matchesStatus && matchesDept;
@@ -366,9 +382,18 @@ const TaskDashboard = ({ user }) => {
   const filteredPendingTasks = tasks.filter(t => {
     const isPending = t.status === 'PENDING' || t.status === 'OVERDUE';
     const matchesSearch = pendingSearchTerm === '' ||
-      t.title.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
-      t.description.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
-      t.assignedTo.toLowerCase().includes(pendingSearchTerm.toLowerCase());
+      t.title?.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
+      t.description?.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
+      t.assignedTo?.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
+      t.assignedToRole?.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
+      t.assignedToRole?.replace(/_/g, ' ').toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
+      t.assignedBy?.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
+      t.createdByRole?.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
+      t.createdByRole?.replace(/_/g, ' ').toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
+      t.priority?.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
+      t.status?.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
+      new Date(t.dueDate).toLocaleDateString('en-GB').includes(pendingSearchTerm) ||
+      (t.progress || 0).toString().includes(pendingSearchTerm);
     const matchesStatus = pendingStatusFilter === 'all' || t.status === pendingStatusFilter.toUpperCase();
     return isPending && matchesSearch && matchesStatus;
   });
@@ -377,7 +402,7 @@ const TaskDashboard = ({ user }) => {
     const s = status?.toUpperCase() || '';
     if (s === 'COMPLETED') return 'success';
     if (s === 'IN_PROGRESS') return 'secondary';
-    if (s === 'PENDING') return 'warning';
+    if (s === 'PENDING') return 'orange';
     if (s === 'OVERDUE') return 'danger';
     return 'secondary';
   };
@@ -395,7 +420,7 @@ const TaskDashboard = ({ user }) => {
     { name: 'Total Tasks', value: tasks.length, icon: DocumentTextIcon, bgColor: '#eff6ff', textColor: '#2563eb' },
     { name: 'Completed', value: tasks.filter(t => t.status === 'COMPLETED').length, icon: CheckCircleIcon, bgColor: '#f0fdf4', textColor: '#16a34a' },
     { name: 'In Progress', value: tasks.filter(t => t.status === 'IN_PROGRESS').length, icon: ArrowPathIcon, bgColor: '#f8fafc', textColor: '#64748b' },
-    { name: 'Pending', value: tasks.filter(t => t.status === 'PENDING').length, icon: ClockIcon, bgColor: '#fffbeb', textColor: '#d97706' },
+    { name: 'Pending', value: tasks.filter(t => t.status === 'PENDING').length, icon: ClockIcon, bgColor: '#fff7ed', textColor: '#f97316' },
     { name: 'Overdue', value: tasks.filter(t => t.status === 'OVERDUE').length, icon: ExclamationTriangleIcon, bgColor: '#fef2f2', textColor: '#dc2626' }
   ];
 
@@ -633,13 +658,23 @@ const TaskDashboard = ({ user }) => {
                     {/* Attachments */}
                     <div className="mb-4">
                       <Form.Label className="small fw-bold text-secondary">Attachments</Form.Label>
-                      <input type="file" ref={fileInputRef} onChange={handleFileUpload} multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" className="d-none" />
+                      <input type="file" ref={fileInputRef} onChange={handleFileUpload} multiple accept=".jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.pdf,.txt" className="d-none" />
                       <div onClick={() => fileInputRef.current?.click()} 
-                        className="w-100 p-4 border border-2 border-dashed rounded-4 d-flex flex-column align-items-center justify-content-center cursor-pointer bg-light-hover transition-all"
-                        style={{ borderColor: '#e2e8f0' }}>
-                        <PaperClipIcon style={{ width: '1.5rem', height: '1.5rem' }} className="text-secondary mb-2" />
-                        <span className="small text-secondary fw-medium">Click or Drag files to upload</span>
+                        className={`w-100 p-4 border border-2 border-dashed rounded-4 d-flex flex-column align-items-center justify-content-center cursor-pointer bg-light-hover transition-all gap-2 ${fileUploadError ? 'border-danger bg-danger bg-opacity-10' : ''}`}
+                        style={{ borderColor: fileUploadError ? '#dc3545' : '#e2e8f0' }}>
+                        <PaperClipIcon style={{ width: '1.5rem', height: '1.5rem' }} className={`${fileUploadError ? 'text-danger' : 'text-secondary'} mb-1`} />
+                        <span className={`small fw-bold ${fileUploadError ? 'text-danger' : 'text-secondary'}`}>Click or Drag files to upload</span>
+                        <div className="d-flex flex-column align-items-center small text-muted opacity-75" style={{ fontSize: '0.7rem' }}>
+                          <span>Accepted: Image, PDF, Docs, Excel, Txt</span>
+                          <span>Max Size: 50MB per file</span>
+                        </div>
                       </div>
+                      {fileUploadError && (
+                        <p className="text-danger small mt-2 mb-0 fw-bold d-flex align-items-center gap-1">
+                          <ExclamationTriangleIcon style={{ width: '1rem' }} />
+                          {fileUploadError}
+                        </p>
+                      )}
                       {newTask.attachments.length > 0 && (
                         <div className="mt-3 vstack gap-2">
                           {newTask.attachments.map((file, index) => (
@@ -727,7 +762,7 @@ const TaskDashboard = ({ user }) => {
                             <Badge bg={getPriorityColor(task.priority)} className="rounded-pill px-2 py-1 uppercase" style={{ fontSize: '0.65rem' }}>{task.priority}</Badge>
                           </td>
                           <td>
-                            <Badge bg={getStatusColor(task.status)} className="rounded-pill px-2 py-1 uppercase" style={{ fontSize: '0.65rem' }}>{task.status}</Badge>
+                            <Badge bg={getStatusColor(task.status) === 'orange' ? '' : getStatusColor(task.status)} className={`rounded-pill px-2 py-1 uppercase ${getStatusColor(task.status) === 'orange' ? 'bg-orange' : ''}`} style={{ fontSize: '0.65rem' }}>{task.status}</Badge>
                           </td>
                           <td>
                             <div className="d-flex flex-column">
@@ -752,21 +787,29 @@ const TaskDashboard = ({ user }) => {
                           </td>
                           <td>
                             <div className="d-flex justify-content-center gap-2">
-                              <Button variant="light" size="sm" onClick={() => { setSelectedTask(task); setShowDetailsModal(true); }} className="rounded-pill p-1 shadow-sm border-0 bg-white">
-                                <EyeIcon style={{ width: '1rem', height: '1rem' }} className="text-primary" />
-                              </Button>
-                              <Button variant="light" size="sm" onClick={() => { setRemarkTask(task); setRemarkText(''); setIsRemarkModalOpen(true); }} className="rounded-pill p-1 shadow-sm border-0 bg-white">
-                                <ChatBubbleLeftRightIcon style={{ width: '1rem', height: '1rem' }} className="text-success" />
-                              </Button>
-                              {!canCreateTask && !roleLower.includes('gramsevak') && !roleLower.includes('gram_sevak') && (
-                                <Button variant="light" size="sm" onClick={() => handleOpenForwardModal(task)} className="rounded-pill p-1 shadow-sm border-0 bg-white">
-                                  <PaperAirplaneIcon style={{ width: '1rem', height: '1rem' }} className="text-info" />
+                              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-view-${task.id}`}>View Task Details</Tooltip>}>
+                                <Button variant="light" size="sm" onClick={() => { setSelectedTask(task); setShowDetailsModal(true); }} className="rounded-pill p-1 border-0 bg-transparent">
+                                  <EyeIcon style={{ width: '1rem', height: '1rem' }} className="text-primary" />
                                 </Button>
+                              </OverlayTrigger>
+                              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-remark-${task.id}`}>Add Remark</Tooltip>}>
+                                <Button variant="light" size="sm" onClick={() => { setRemarkTask(task); setRemarkText(''); setIsRemarkModalOpen(true); }} className="rounded-pill p-1 border-0 bg-transparent">
+                                  <ChatBubbleLeftRightIcon style={{ width: '1rem', height: '1rem' }} className="text-success" />
+                                </Button>
+                              </OverlayTrigger>
+                              {!canCreateTask && !roleLower.includes('gramsevak') && !roleLower.includes('gram_sevak') && (
+                                <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-forward-${task.id}`}>Forward Task</Tooltip>}>
+                                  <Button variant="light" size="sm" onClick={() => handleOpenForwardModal(task)} className="rounded-pill p-1 border-0 bg-transparent">
+                                    <PaperAirplaneIcon style={{ width: '1rem', height: '1rem' }} className="text-info" />
+                                  </Button>
+                                </OverlayTrigger>
                               )}
                               {!canCreateTask && (
-                                <Button variant="light" size="sm" onClick={() => { setUpdateTaskObj(task); setUpdateAchievementValue(task.achievement || 0); setIsUpdateModalOpen(true); }} className="rounded-pill p-1 shadow-sm border-0 bg-white">
-                                  <ArrowPathIcon style={{ width: '1rem', height: '1rem' }} className="text-warning" />
-                                </Button>
+                                <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-progress-${task.id}`}>Update Progress</Tooltip>}>
+                                  <Button variant="light" size="sm" onClick={() => { setUpdateTaskObj(task); setUpdateAchievementValue(task.achievement || 0); setIsUpdateModalOpen(true); }} className="rounded-pill p-1 border-0 bg-transparent">
+                                    <ArrowPathIcon style={{ width: '1rem', height: '1rem' }} className="text-warning" />
+                                  </Button>
+                                </OverlayTrigger>
                               )}
                             </div>
                           </td>
@@ -798,8 +841,8 @@ const TaskDashboard = ({ user }) => {
                 <Row className="g-3 mb-4">
                   <Col>
                     <div onClick={() => setPendingStatusFilter('PENDING')} 
-                      className={`p-3 rounded-4 cursor-pointer text-center transition-all border-0 shadow-sm ${pendingStatusFilter === 'PENDING' ? 'bg-primary text-white scale-102' : 'bg-light text-primary'}`}
-                      style={{ border: pendingStatusFilter === 'PENDING' ? 'none' : '1px solid #e2e8f0' }}>
+                      className={`p-3 rounded-4 cursor-pointer text-center transition-all border-0 shadow-sm ${pendingStatusFilter === 'PENDING' ? 'bg-orange text-white scale-102' : 'bg-light text-orange'}`}
+                      style={{ border: pendingStatusFilter === 'PENDING' ? 'none' : '1px solid #ffedd5' }}>
                       <p className="small mb-1 fw-bold">Pending</p>
                       <p className="h3 fw-bold mb-0">{tasks.filter(t => t.status === 'PENDING').length}</p>
                     </div>
@@ -864,7 +907,7 @@ const TaskDashboard = ({ user }) => {
                             <Badge bg={getPriorityColor(task.priority)} className="rounded-pill px-2 py-1 uppercase" style={{ fontSize: '0.65rem' }}>{task.priority}</Badge>
                           </td>
                           <td>
-                            <Badge bg={getStatusColor(task.status)} className="rounded-pill px-2 py-1 uppercase" style={{ fontSize: '0.65rem' }}>{task.status}</Badge>
+                            <Badge bg={getStatusColor(task.status) === 'orange' ? '' : getStatusColor(task.status)} className={`rounded-pill px-2 py-1 uppercase ${getStatusColor(task.status) === 'orange' ? 'bg-orange' : ''}`} style={{ fontSize: '0.65rem' }}>{task.status}</Badge>
                           </td>
                           <td>
                             <div className="d-flex flex-column">
@@ -877,9 +920,11 @@ const TaskDashboard = ({ user }) => {
                           </td>
                           <td>
                             <div className="d-flex justify-content-center">
-                              <Button variant="light" size="sm" onClick={() => { setSelectedTask(task); setShowDetailsModal(true); }} className="rounded-pill p-1 shadow-sm border-0 bg-white">
-                                <EyeIcon style={{ width: '1rem', height: '1rem' }} className="text-primary" />
-                              </Button>
+                              <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-pending-view-${task.id}`}>View Task Details</Tooltip>}>
+                                <Button variant="light" size="sm" onClick={() => { setSelectedTask(task); setShowDetailsModal(true); }} className="rounded-pill p-1 border-0 bg-transparent">
+                                  <EyeIcon style={{ width: '1rem', height: '1rem' }} className="text-primary" />
+                                </Button>
+                              </OverlayTrigger>
                             </div>
                           </td>
                         </tr>
@@ -946,7 +991,7 @@ const TaskDashboard = ({ user }) => {
                 <Col xs={6}>
                   <div className="bg-light p-3 rounded-3 h-100">
                     <div className="small text-muted mb-1 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Status</div>
-                    <Badge bg={getStatusColor(selectedTask.status)} className="rounded-pill px-2 py-1 uppercase" style={{ fontSize: '0.6rem' }}>{selectedTask.status}</Badge>
+                    <Badge bg={getStatusColor(selectedTask.status) === 'orange' ? '' : getStatusColor(selectedTask.status)} className={`rounded-pill px-2 py-1 uppercase ${getStatusColor(selectedTask.status) === 'orange' ? 'bg-orange' : ''}`} style={{ fontSize: '0.6rem' }}>{selectedTask.status}</Badge>
                   </div>
                 </Col>
                 <Col xs={6}>
@@ -1021,7 +1066,7 @@ const TaskDashboard = ({ user }) => {
           </Form.Group>
           <div className="d-flex gap-2">
             <Button variant="light" className="flex-grow-1 fw-bold rounded-3" onClick={() => setIsRemarkModalOpen(false)}>Cancel</Button>
-            <Button variant="primary" className="flex-grow-1 fw-bold rounded-3" onClick={() => handleAddRemark(remarkTask?.id, remarkText)}>Submit</Button>
+            <Button variant="success" className="flex-grow-1 fw-bold rounded-3 text-white" onClick={() => handleAddRemark(remarkTask?.id, remarkText)}>Submit</Button>
           </div>
         </Modal.Body>
       </Modal>

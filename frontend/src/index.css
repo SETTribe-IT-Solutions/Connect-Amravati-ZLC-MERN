@@ -292,3 +292,20 @@ body {
   background: none !important;
   box-shadow: none !important;
 }
+
+/* Custom Status Colors */
+.bg-orange {
+  background-color: #f97316 !important;
+}
+.bg-orange-light {
+  background-color: #fff7ed !important;
+}
+.text-orange {
+  color: #f97316 !important;
+}
+.border-orange {
+  border-color: #f97316 !important;
+}
+.bg-orange-opacity-10 {
+  background-color: rgba(249, 115, 22, 0.1) !important;
+}
