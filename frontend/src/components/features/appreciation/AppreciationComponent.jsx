@@ -22,7 +22,7 @@ const AppreciationComponent = ({ user }) => {
   const [filter, setFilter] = useState('all');
   const [formStates, setFormStates] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(6);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
   const [appreciations, setAppreciations] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [staff, setStaff] = useState([]);
@@ -296,7 +296,25 @@ const AppreciationComponent = ({ user }) => {
         <Card className="border-0 shadow-sm rounded-4 mb-5">
           <Card.Body className="p-3">
             <Row className="g-3">
-              <Col md={8}>
+              <Col md={3}>
+                <div className="d-flex align-items-center gap-2 h-100 bg-light rounded-3 px-3">
+                  <Form.Control 
+                    type="number" 
+                    min="1" 
+                    value={itemsPerPage} 
+                    onChange={(e) => { 
+                      const val = parseInt(e.target.value, 10); 
+                      if (!isNaN(val) && val > 0) { setItemsPerPage(val); setCurrentPage(1); } 
+                      else if (e.target.value === '') { setItemsPerPage(''); }
+                    }} 
+                    onBlur={() => { if (itemsPerPage === '' || itemsPerPage < 1) { setItemsPerPage(6); setCurrentPage(1); } }}
+                    className="bg-transparent border-0 py-2 text-center" 
+                    style={{ width: '60px' }}
+                  />
+                  <span className="small text-secondary fw-medium text-nowrap">per page</span>
+                </div>
+              </Col>
+              <Col md={5}>
                 <InputGroup className="bg-light rounded-3 overflow-hidden border-0">
                   <InputGroup.Text className="bg-transparent border-0 pe-0">
                     <MagnifyingGlassIcon style={{ width: '1.25rem' }} className="text-secondary" />
