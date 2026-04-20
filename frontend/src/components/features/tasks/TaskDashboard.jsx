@@ -916,8 +916,18 @@ const TaskDashboard = ({ user }) => {
                 <Button variant="link" className="text-white p-0 border-0 shadow-none" onClick={() => setShowDetailsModal(false)}><XMarkIcon style={{ width: '1.5rem', height: '1.5rem' }} /></Button>
               </div>
               <div className="d-flex flex-wrap gap-3 mb-3">
-                <div className="small text-white-50 d-flex align-items-center gap-1"><UserIcon style={{ width: '0.875rem' }} /> By: {selectedTask.assignedBy}</div>
-                <div className="small text-white-50 d-flex align-items-center gap-1"><CalendarIcon style={{ width: '0.875rem' }} /> {new Date(selectedTask.createdAt || Date.now()).toLocaleDateString('en-GB')}</div>
+                <div className="small text-white-50 d-flex align-items-center gap-1">
+                  <UserIcon style={{ width: '0.875rem' }} /> 
+                  Created By: {selectedTask.assignedBy} {selectedTask.createdByRole ? `(${selectedTask.createdByRole.replace(/_/g, ' ')})` : ''}
+                </div>
+                <div className="small text-white-50 d-flex align-items-center gap-1">
+                  <UserIcon style={{ width: '0.875rem' }} /> 
+                  Assigned To: {selectedTask.assignedTo} {selectedTask.assignedToRole ? `(${selectedTask.assignedToRole.replace(/_/g, ' ')})` : ''}
+                </div>
+                <div className="small text-white-50 d-flex align-items-center gap-1">
+                  <CalendarIcon style={{ width: '0.875rem' }} /> 
+                  {new Date(selectedTask.createdAt || Date.now()).toLocaleDateString('en-GB')}
+                </div>
               </div>
             </Modal.Header>
             <Modal.Body className="p-4">
@@ -972,7 +982,25 @@ const TaskDashboard = ({ user }) => {
                 ) : <p className="small text-muted italic mb-0">No remarks yet.</p>}
               </div>
               
-              <Button variant="light" className="w-100 py-3 fw-bold rounded-3 border-0 transition-all text-secondary" onClick={() => setShowDetailsModal(false)}>
+              {selectedTask.attachments?.length > 0 && (
+                <div className="bg-light p-3 rounded-3 mb-4">
+                  <div className="small text-muted mb-2 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Attachments</div>
+                  <div className="vstack gap-2">
+                    {selectedTask.attachments.map((file, idx) => (
+                      <div key={idx} className="d-flex align-items-center justify-content-between p-2 bg-white rounded-3 border border-light-subtle">
+                        <div className="d-flex align-items-center gap-2 overflow-hidden">
+                          <PaperClipIcon style={{ width: '1rem', height: '1rem' }} className="text-secondary flex-shrink-0" />
+                          <a href={file.url} target="_blank" rel="noopener noreferrer" className="small text-primary text-truncate text-decoration-none fw-medium">
+                            {file.name}
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <Button variant="danger" className="w-100 py-3 fw-bold rounded-3 border-0 transition-all text-white" onClick={() => setShowDetailsModal(false)}>
                 Close Details
               </Button>
             </Modal.Body>
