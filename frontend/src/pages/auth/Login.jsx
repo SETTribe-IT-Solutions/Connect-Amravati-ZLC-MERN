@@ -123,7 +123,10 @@ const LoginPage = ({ onLogin }) => {
                             placeholder="Enter your registered mobile number"
                             value={formData.phone}
                             onChange={(e) => {
-                              setFormData({ ...formData, phone: e.target.value });
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              if (value.length <= 10) {
+                                setFormData({ ...formData, phone: value });
+                              }
                               if (errors.phone) setErrors({ ...errors, phone: '' });
                             }}
                             isInvalid={!!errors.phone}
