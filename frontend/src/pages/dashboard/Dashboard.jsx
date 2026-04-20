@@ -11,13 +11,15 @@ import {
   EyeIcon,
   XMarkIcon,
   UserIcon,
-  CalendarIcon
+  CalendarIcon,
+  PaperClipIcon,
+  ChatBubbleBottomCenterTextIcon
 } from '@heroicons/react/24/outline';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell 
 } from 'recharts';
-import { getDashboardStats, getTasks } from '../../services/tasks/taskService';
+import { getDashboardStats, getTasks, addTaskRemark } from '../../services/tasks/taskService';
 import { Container, Row, Col, Card, Button, Form, Modal, OverlayTrigger, Tooltip as BootstrapTooltip } from 'react-bootstrap';
 
 const Dashboard = ({ user }) => {
@@ -26,6 +28,8 @@ const Dashboard = ({ user }) => {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const [selectedTask, setSelectedTask] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [remarkText, setRemarkText] = useState('');
+  const [remarkLoading, setRemarkLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [dashboardData, setDashboardData] = useState({
     totalTasks: 0, pending: 0, inProgress: 0, completed: 0, overdue: 0
@@ -42,10 +46,24 @@ const Dashboard = ({ user }) => {
         if (userID) {
           const stats = await getDashboardStats(userID);
           setDashboardData(stats);
-          const tasks = await getTasks(userID);
-          setAllTasks(tasks || []);
-          // On initial load, show all up to 5, or if they want *all* then just tasks
-          setRecentTasks(tasks || []);
+          const data = await getTasks(userID);
+          
+          const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+          const serverURL = baseURL.replace('/api', '');
+          
+          const mapped = (data || []).map(t => ({
+            ...t,
+            description: t.description || '',
+            assignedTo: t.assignedToName || 'N/A',
+            assignedBy: t.createdByName || 'Admin',
+            status: t.status ? t.status.toString().toUpperCase() : 'PENDING',
+            priority: t.priority ? t.priority.toString().toUpperCase() : 'MEDIUM',
+            attachments: t.attachment ? [{ name: t.attachment, url: `${serverURL}/uploads/${t.attachment}` }] : [],
+            remarks: t.remarks || []
+          }));
+
+          setAllTasks(mapped);
+          setRecentTasks(mapped);
           
           if (selectedPeriod === 'week') {
             setChartData([
@@ -125,6 +143,34 @@ const Dashboard = ({ user }) => {
   ].filter(item => item.value > 0);
 
   const handleViewAll = () => { navigate('/tasks?tab=tracking'); };
+
+  const handleAddRemark = async () => {
+    if (!remarkText.trim()) return;
+    try {
+      setRemarkLoading(true);
+      const userID = user?.userID;
+      await addTaskRemark(selectedTask.id, remarkText, userID);
+      
+      // Update selectedTask locally with the new remark
+      const newRemark = { remark: remarkText, createdAt: new Date().toISOString() };
+      const updatedTask = {
+        ...selectedTask,
+        remarks: [newRemark, ...(selectedTask.remarks || [])]
+      };
+      setSelectedTask(updatedTask);
+      
+      // Also update in allTasks
+      setAllTasks(prev => prev.map(t => t.id === selectedTask.id ? updatedTask : t));
+      
+      setRemarkText('');
+      showToast('Remark Added', 'Success');
+    } catch (error) {
+      console.error("Add Remark Error:", error);
+      showToast('Error', 'Failed to add remark');
+    } finally {
+      setRemarkLoading(false);
+    }
+  };
 
   return (
     <div className="container-fluid p-3 p-md-4">
@@ -285,9 +331,18 @@ const Dashboard = ({ user }) => {
                 <Button variant="link" className="text-white p-0" onClick={() => setShowDetailsModal(false)}><XMarkIcon style={{ width: '1.5rem', height: '1.5rem' }} /></Button>
               </div>
               <div className="d-flex flex-wrap gap-3 mb-3">
-                <div className="small text-white-50 d-flex align-items-center gap-1"><UserIcon style={{ width: '0.875rem' }} /> By: {selectedTask.createdBy || 'Admin'}</div>
-                <div className="small text-white-50 d-flex align-items-center gap-1"><UserIcon style={{ width: '0.875rem' }} /> To: {selectedTask.assignedToName || selectedTask.assignedTo || 'N/A'}</div>
-                <div className="small text-white-50 d-flex align-items-center gap-1"><CalendarIcon style={{ width: '0.875rem' }} /> {selectedTask.createdAt?.split('T')[0]}</div>
+                <div className="small text-white-50 d-flex align-items-center gap-1">
+                  <UserIcon style={{ width: '0.875rem' }} /> 
+                  By: {selectedTask.assignedBy} {selectedTask.createdByRole ? `(${selectedTask.createdByRole.replace(/_/g, ' ')})` : ''}
+                </div>
+                <div className="small text-white-50 d-flex align-items-center gap-1">
+                  <UserIcon style={{ width: '0.875rem' }} /> 
+                  To: {selectedTask.assignedTo} {selectedTask.assignedToRole ? `(${selectedTask.assignedToRole.replace(/_/g, ' ')})` : ''}
+                </div>
+                <div className="small text-white-50 d-flex align-items-center gap-1">
+                  <CalendarIcon style={{ width: '0.875rem' }} /> 
+                  {new Date(selectedTask.createdAt || Date.now()).toLocaleDateString('en-GB')}
+                </div>
               </div>
             </Modal.Header>
             <Modal.Body className="p-4 rounded-bottom-4">
@@ -323,8 +378,67 @@ const Dashboard = ({ user }) => {
               <div className="progress mb-4" style={{ height: '8px', borderRadius: '4px' }}>
                 <div className="progress-bar bg-primary" role="progressbar" style={{ width: `${selectedTask.progress || 0}%` }} aria-valuenow={selectedTask.progress || 0} aria-valuemin="0" aria-valuemax="100"></div>
               </div>
+
+              {/* Attachments Section */}
+              {selectedTask.attachments?.length > 0 && (
+                <div className="bg-light p-3 rounded-3 mb-4">
+                  <div className="small text-muted mb-2 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Attachments</div>
+                  <div className="vstack gap-2">
+                    {selectedTask.attachments.map((file, idx) => (
+                      <div key={idx} className="d-flex align-items-center justify-content-between p-2 bg-white rounded-3 border border-light-subtle">
+                        <div className="d-flex align-items-center gap-2 overflow-hidden">
+                          <PaperClipIcon style={{ width: '1rem', height: '1rem' }} className="text-secondary flex-shrink-0" />
+                          <a href={file.url} target="_blank" rel="noopener noreferrer" className="small text-primary text-truncate text-decoration-none fw-medium">
+                            {file.name}
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Remark History Section */}
+              <div className="bg-light p-3 rounded-3 mb-4">
+                <div className="small text-muted mb-2 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Remarks History</div>
+                {selectedTask.remarks?.length > 0 ? (
+                  <div className="vstack gap-2 overflow-auto pr-1" style={{ maxHeight: '120px' }}>
+                    {selectedTask.remarks.map((r, idx) => (
+                      <div key={idx} className="bg-white p-2 rounded-2 border small border-light-subtle">
+                        <div className="fw-bold mb-1" style={{ fontSize: '0.65rem' }}>{new Date(r.createdAt || Date.now()).toLocaleString()}</div>
+                        <div>{r.remark || r}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : <p className="small text-muted italic mb-0">No remarks yet.</p>}
+              </div>
+
+              {/* Add Remark Section */}
+              <div className="mb-4">
+                <div className="small text-muted mb-2 text-uppercase fw-bold" style={{ fontSize: '0.6rem' }}>Add New Remark</div>
+                <div className="d-flex gap-2">
+                  <Form.Control 
+                    type="text" 
+                    placeholder="Type your remark..." 
+                    size="sm" 
+                    className="rounded-3" 
+                    value={remarkText}
+                    onChange={(e) => setRemarkText(e.target.value)}
+                  />
+                  <Button variant="primary" size="sm" className="px-3 rounded-3" onClick={handleAddRemark} disabled={remarkLoading || !remarkText.trim()}>
+                    Add
+                  </Button>
+                </div>
+              </div>
               
-              <Button variant="light" className="w-100 py-3 fw-bold rounded-3 border-0 mt-2 bg-hover-danger-soft transition-all text-secondary text-hover-danger" onClick={() => setShowDetailsModal(false)}>
+              <Button 
+                variant="danger" 
+                className="w-100 py-3 fw-bold rounded-3 border-0 mt-2 transition-all shadow-sm" 
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setRemarkText('');
+                }}
+              >
                 Close Details
               </Button>
             </Modal.Body>
