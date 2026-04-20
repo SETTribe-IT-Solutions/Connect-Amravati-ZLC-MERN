@@ -231,6 +231,13 @@ const Dashboard = ({ user }) => {
       <div ref={recentActivitiesRef} className="premium-card p-4 border-0 mb-4">
         <div className="d-flex align-items-center justify-content-between mb-4">
           <h5 className="fw-bold text-dark mb-0">Recent Activities</h5>
+          <span 
+            className="text-primary small fw-bold cursor-pointer hover-underline" 
+            style={{ cursor: 'pointer' }}
+            onClick={handleViewAll}
+          >
+            View All
+          </span>
         </div>
         <div className="d-flex flex-column gap-2">
           {recentTasks.length > 0 ? recentTasks.map((activity) => (
@@ -279,6 +286,7 @@ const Dashboard = ({ user }) => {
               </div>
               <div className="d-flex flex-wrap gap-3 mb-3">
                 <div className="small text-white-50 d-flex align-items-center gap-1"><UserIcon style={{ width: '0.875rem' }} /> By: {selectedTask.createdBy || 'Admin'}</div>
+                <div className="small text-white-50 d-flex align-items-center gap-1"><UserIcon style={{ width: '0.875rem' }} /> To: {selectedTask.assignedToName || selectedTask.assignedTo || 'N/A'}</div>
                 <div className="small text-white-50 d-flex align-items-center gap-1"><CalendarIcon style={{ width: '0.875rem' }} /> {selectedTask.createdAt?.split('T')[0]}</div>
               </div>
             </Modal.Header>

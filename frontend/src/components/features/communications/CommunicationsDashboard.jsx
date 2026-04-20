@@ -55,7 +55,7 @@ const CommunicationsDashboard = ({ user }) => {
   const [deletingAnnouncementId, setDeletingAnnouncementId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
 
   // Reset pagination when tab or filters change
@@ -314,6 +314,25 @@ const CommunicationsDashboard = ({ user }) => {
             <Col xs="auto" className="d-flex align-items-center gap-2 text-primary fw-bold small px-2">
               <FunnelIcon style={{ width: '1.25rem' }} />
               Filter By:
+            </Col>
+
+            <Col md="auto">
+              <div className="d-flex align-items-center gap-2 border-end pe-3 me-2">
+                <Form.Control 
+                  type="number" 
+                  min="1" 
+                  value={itemsPerPage} 
+                  onChange={(e) => { 
+                    const val = parseInt(e.target.value, 10); 
+                    if (!isNaN(val) && val > 0) { setItemsPerPage(val); setCurrentPage(1); } 
+                    else if (e.target.value === '') { setItemsPerPage(''); }
+                  }} 
+                  onBlur={() => { if (itemsPerPage === '' || itemsPerPage < 1) { setItemsPerPage(5); setCurrentPage(1); } }}
+                  className="rounded-3 border-light-subtle small py-2 text-center" 
+                  style={{ width: '70px' }}
+                />
+                <span className="small text-secondary fw-medium text-nowrap">per page</span>
+              </div>
             </Col>
             
             <Col md="auto">

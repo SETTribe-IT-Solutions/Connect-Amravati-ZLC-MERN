@@ -89,9 +89,9 @@ const TaskDashboard = ({ user }) => {
   });
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
-  const [pendingItemsPerPage] = useState(10);
+  const [pendingItemsPerPage, setPendingItemsPerPage] = useState(10);
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -432,7 +432,25 @@ const TaskDashboard = ({ user }) => {
         <Row className="g-3 mb-4">
           {stats.map((stat) => (
             <Col key={stat.name} xs={6} md={true}>
-              <Card className="premium-card p-3 h-100 border-0">
+              <Card 
+                className="premium-card p-3 h-100 border-0 shadow-sm shadow-hover" 
+                style={{ cursor: 'pointer' }}
+                onClick={() => {
+                   if (stat.name === 'Total Tasks') {
+                     setSelectedStatus('all');
+                   } else if (stat.name === 'Completed') {
+                     setSelectedStatus('COMPLETED');
+                   } else if (stat.name === 'In Progress') {
+                     setSelectedStatus('IN_PROGRESS');
+                   } else if (stat.name === 'Pending') {
+                     setSelectedStatus('PENDING');
+                   } else if (stat.name === 'Overdue') {
+                     setSelectedStatus('OVERDUE');
+                   }
+                   setActiveTab('tracking');
+                   showToast(stat.name, stat.value);
+                }}
+              >
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
                     <p className="small text-secondary mb-1">{stat.name}</p>
@@ -655,9 +673,25 @@ const TaskDashboard = ({ user }) => {
             <motion.div key="tracking" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.2 }}>
               <Card className="premium-card border-0 p-4">
                 <div className="d-flex flex-wrap gap-3 mb-4 align-items-center">
+                  <div className="d-flex align-items-center gap-2">
+                    <Form.Control 
+                      type="number" 
+                      min="1" 
+                      value={itemsPerPage} 
+                      onChange={(e) => { 
+                        const val = parseInt(e.target.value, 10); 
+                        if (!isNaN(val) && val > 0) { setItemsPerPage(val); setCurrentPage(1); } 
+                        else if (e.target.value === '') { setItemsPerPage(''); }
+                      }} 
+                      onBlur={() => { if (itemsPerPage === '' || itemsPerPage < 1) { setItemsPerPage(10); setCurrentPage(1); } }}
+                      className="rounded-3 border-light-subtle py-2 text-center" 
+                      style={{ width: '80px' }}
+                    />
+                    <span className="small text-secondary fw-medium text-nowrap">per page</span>
+                  </div>
                   <div className="flex-grow-1 position-relative" style={{ minWidth: '200px' }}>
                     <MagnifyingGlassIcon className="position-absolute translate-middle-y text-secondary" style={{ width: '1rem', left: '0.75rem', top: '50%', zIndex: 10 }} />
-                    <Form.Control type="text" placeholder="Search tasks..." className="rounded-3 border-light-subtle ps-5" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                    <Form.Control type="text" placeholder="Search tasks..." className="rounded-3 border-light-subtle ps-5 py-2" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                   </div>
                   <Form.Select className="rounded-3 border-light-subtle w-auto" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
                     <option value="all">All Status</option>
@@ -780,10 +814,26 @@ const TaskDashboard = ({ user }) => {
                   </Col>
                 </Row>
 
-                <div className="d-flex gap-3 mb-4">
+                <div className="d-flex flex-wrap gap-3 mb-4 align-items-center">
+                  <div className="d-flex align-items-center gap-2">
+                    <Form.Control 
+                      type="number" 
+                      min="1" 
+                      value={pendingItemsPerPage} 
+                      onChange={(e) => { 
+                        const val = parseInt(e.target.value, 10); 
+                        if (!isNaN(val) && val > 0) { setPendingItemsPerPage(val); setPendingCurrentPage(1); } 
+                        else if (e.target.value === '') { setPendingItemsPerPage(''); }
+                      }} 
+                      onBlur={() => { if (pendingItemsPerPage === '' || pendingItemsPerPage < 1) { setPendingItemsPerPage(10); setPendingCurrentPage(1); } }}
+                      className="rounded-3 border-light-subtle py-2 text-center" 
+                      style={{ width: '80px' }}
+                    />
+                    <span className="small text-secondary fw-medium text-nowrap">per page</span>
+                  </div>
                   <div className="flex-grow-1 position-relative">
                     <MagnifyingGlassIcon className="position-absolute translate-middle-y text-secondary" style={{ width: '1rem', left: '0.75rem', top: '50%', zIndex: 10 }} />
-                    <Form.Control type="text" placeholder="Search pending tasks..." className="rounded-3 border-light-subtle ps-5" value={pendingSearchTerm} onChange={(e) => setPendingSearchTerm(e.target.value)} />
+                    <Form.Control type="text" placeholder="Search pending tasks..." className="rounded-3 border-light-subtle ps-5 py-2" value={pendingSearchTerm} onChange={(e) => setPendingSearchTerm(e.target.value)} />
                   </div>
                   <Form.Select className="rounded-3 border-light-subtle w-auto" value={pendingStatusFilter} onChange={(e) => setPendingStatusFilter(e.target.value)}>
                     <option value="all">All Status</option>
