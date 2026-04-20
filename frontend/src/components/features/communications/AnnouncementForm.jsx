@@ -26,7 +26,7 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
   const [villages, setVillages] = useState([]);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [formErrors, setFormErrors] = useState({ title: '', message: '', file: '' });
+  const [formErrors, setFormErrors] = useState({ title: '', message: '', targetRole: '', file: '' });
 
   const roleLevels = {
     'COLLECTOR': 1,
@@ -55,7 +55,8 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
 
   useEffect(() => {
     // Fetch Talukas (Filtered by targetRole if selected)
-    getTalukas(formData.targetRole)
+    const roleForTaluka = formData.targetRole === 'ALL' ? '' : formData.targetRole;
+    getTalukas(roleForTaluka)
       .then(res => {
         setTalukas(res || []);
       })
@@ -68,7 +69,8 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
       return;
     }
     // Fetch Villages for selected Taluka (Filtered by targetRole if selected)
-    getVillagesByTaluka(formData.targetTaluka, formData.targetRole)
+    const roleForVillage = formData.targetRole === 'ALL' ? '' : formData.targetRole;
+    getVillagesByTaluka(formData.targetTaluka, roleForVillage)
       .then(res => {
         setVillages(res || []);
       })
@@ -116,19 +118,24 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
       hasError = true;
     }
 
+    if (!formData.targetRole) {
+      errors.targetRole = 'Please select a target role.';
+      hasError = true;
+    }
+
     if (hasError) {
       setFormErrors(errors);
       return;
     }
 
-    setFormErrors({ title: '', message: '', file: '' });
+    setFormErrors({ title: '', message: '', targetRole: '', file: '' });
     setLoading(true);
     try {
       const payload = {
         title: formData.title,
         message: formData.message,
         isCircular: formData.isCircular,
-        targetRole: formData.targetRole || null,
+        targetRole: (formData.targetRole === 'ALL' || !formData.targetRole) ? null : formData.targetRole,
         targetTaluka: formData.targetTaluka || null,
         targetVillage: formData.targetVillage || null,
         requesterId: currentUser?.userID
@@ -144,6 +151,7 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
         setFormErrors({
           title: errorData.title || '',
           message: errorData.message || (errorData.title ? '' : 'Validation failed'),
+          targetRole: errorData.targetRole || '',
           file: errorData.file || ''
         });
         if (!errorData.title && !errorData.message) {
@@ -231,19 +239,27 @@ const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
                 </Form.Label>
                 <Form.Select
                   value={formData.targetRole}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    targetRole: e.target.value,
-                    targetTaluka: '',
-                    targetVillage: ''
-                  })}
+                  isInvalid={!!formErrors.targetRole}
+                  onChange={(e) => {
+                    setFormData({
+                      ...formData,
+                      targetRole: e.target.value,
+                      targetTaluka: '',
+                      targetVillage: ''
+                    });
+                    if (formErrors.targetRole) setFormErrors({ ...formErrors, targetRole: '' });
+                  }}
                   className="rounded-3 border-light-subtle py-2 shadow-sm cursor-pointer"
                 >
-                  <option value="">Broadcast to All Roles</option>
+                  <option value="" disabled hidden>Select Role</option>
+                  <option value="ALL">Broadcast to All Roles</option>
                   {availableTargetRoles.map(role => (
                     <option key={role} value={role}>{roleDisplayNames[role]}</option>
                   ))}
                 </Form.Select>
+                <Form.Control.Feedback type="invalid">
+                  {formErrors.targetRole}
+                </Form.Control.Feedback>
               </Form.Group>
             </Col>
 

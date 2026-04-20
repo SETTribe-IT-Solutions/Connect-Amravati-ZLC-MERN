@@ -18,7 +18,8 @@ import {
   PaperClipIcon,
   ArrowDownTrayIcon,
   PencilSquareIcon,
-  TrashIcon
+  TrashIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import { 
   getAnnouncements, 
@@ -57,6 +58,7 @@ const CommunicationsDashboard = ({ user }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
+  const [viewingAttachment, setViewingAttachment] = useState(null);
 
   // Reset pagination when tab or filters change
   useEffect(() => {
@@ -486,7 +488,11 @@ const CommunicationsDashboard = ({ user }) => {
                     <div className="mb-4 d-flex align-items-center justify-content-between p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-10 transition-all">
                       <div className="d-flex align-items-center gap-3 overflow-hidden">
                         <div className="p-2 bg-white text-primary rounded-3 shadow-sm flex-shrink-0">
-                          <PaperClipIcon style={{ width: '1.25rem' }} />
+                          {['.jpg', '.jpeg', '.png'].some(ext => item.attachment.toLowerCase().endsWith(ext)) ? (
+                            <EyeIcon style={{ width: '1.25rem' }} />
+                          ) : (
+                            <PaperClipIcon style={{ width: '1.25rem' }} />
+                          )}
                         </div>
                         <div className="overflow-hidden">
                           <p className="small fw-bold text-dark mb-0 text-truncate">
@@ -497,16 +503,24 @@ const CommunicationsDashboard = ({ user }) => {
                           </p>
                         </div>
                       </div>
-                      <Button
-                        href={`http://localhost:8080/uploads/${item.attachment}`}
-                        download={item.attachment}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-primary d-flex align-items-center gap-2 px-4 py-2 rounded-3 text-xs fw-bold shadow-sm"
-                      >
-                        <ArrowDownTrayIcon style={{ width: '1rem' }} />
-                        Download
-                      </Button>
+                      {['.jpg', '.jpeg', '.png'].some(ext => item.attachment.toLowerCase().endsWith(ext)) ? (
+                        <Button
+                          onClick={() => setViewingAttachment(item.attachment)}
+                          className="btn-primary d-flex align-items-center gap-2 px-4 py-2 rounded-3 text-xs fw-bold shadow-sm"
+                        >
+                          <EyeIcon style={{ width: '1rem' }} />
+                          View
+                        </Button>
+                      ) : (
+                        <Button
+                          href={`http://localhost:8080/uploads/${item.attachment}`}
+                          download={item.attachment}
+                          className="btn-primary d-flex align-items-center gap-2 px-4 py-2 rounded-3 text-xs fw-bold shadow-sm"
+                        >
+                          <ArrowDownTrayIcon style={{ width: '1.1rem' }} />
+                          Download
+                        </Button>
+                      )}
                     </div>
                   )}
 
@@ -702,6 +716,89 @@ const CommunicationsDashboard = ({ user }) => {
             </Button>
           </div>
         </Modal.Body>
+      </Modal>
+
+      {/* Attachment Viewer Modal */}
+      <Modal show={!!viewingAttachment} onHide={() => setViewingAttachment(null)} centered size="xl">
+        <div className="modal-content border-0 overflow-hidden rounded-4 shadow-lg">
+          <div className="bg-primary text-white p-4 d-flex align-items-center justify-content-between">
+            <div className="d-flex align-items-center gap-3">
+              <div className="p-2 bg-white bg-opacity-20 rounded-3">
+                <EyeIcon style={{ width: '1.5rem' }} className="text-white" />
+              </div>
+              <div>
+                <h4 className="fw-bold mb-0 text-white">Attachment Viewer</h4>
+                <p className="small mb-0 opacity-75">Preview official document</p>
+              </div>
+            </div>
+            <Button variant="link" className="text-white p-0 border-0 shadow-none" onClick={() => setViewingAttachment(null)}>
+              <XMarkIcon style={{ width: '1.5rem' }} />
+            </Button>
+          </div>
+          <Modal.Body className="p-0 bg-dark" style={{ height: '75vh' }}>
+            {viewingAttachment && (
+              <div className="w-100 h-100 d-flex flex-column">
+                <div className="flex-grow-1 bg-white overflow-auto d-flex align-items-center justify-content-center">
+                  {viewingAttachment.toLowerCase().endsWith('.pdf') ? (
+                    <iframe 
+                      src={`http://localhost:8080/uploads/${viewingAttachment}#toolbar=0`} 
+                      title="PDF Viewer"
+                      className="w-100 h-100 border-0"
+                    />
+                  ) : (['.jpg', '.jpeg', '.png'].some(ext => viewingAttachment.toLowerCase().endsWith(ext))) ? (
+                    <div className="p-4 d-flex align-items-center justify-content-center w-100 h-100">
+                      <img 
+                        src={`http://localhost:8080/uploads/${viewingAttachment}`} 
+                        alt="Attachment Preview"
+                        className="img-fluid rounded-3 shadow-sm"
+                        style={{ maxHeight: '100%', objectFit: 'contain' }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center p-5">
+                      <div className="p-4 bg-light rounded-circle d-inline-flex mb-4">
+                        <PaperClipIcon style={{ width: '4rem' }} className="text-secondary opacity-25" />
+                      </div>
+                      <h4 className="text-dark fw-bold mb-2">Preview not available</h4>
+                      <p className="text-secondary small mb-0">This file type cannot be previewed directly in the browser.</p>
+                      <p className="text-secondary small">Please use the download button below.</p>
+                    </div>
+                  )}
+                </div>
+                <div className="p-4 bg-light border-top d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                   <div className="d-flex align-items-center gap-3 overflow-hidden">
+                      <div className="p-2 bg-primary bg-opacity-10 text-primary rounded-3 flex-shrink-0">
+                        <DocumentTextIcon style={{ width: '1.25rem' }} />
+                      </div>
+                      <div className="overflow-hidden">
+                        <p className="small fw-bold text-dark mb-0 text-truncate" style={{ maxWidth: '300px' }}>
+                          {viewingAttachment.split('-').slice(1).join('-')}
+                        </p>
+                        <p className="text-primary fw-medium mb-0" style={{ fontSize: '0.65rem' }}>OFFICIAL ATTACHMENT</p>
+                      </div>
+                   </div>
+                   <div className="d-flex gap-3 w-100 w-md-auto">
+                      <Button
+                        variant="outline-secondary"
+                        className="px-4 py-2 rounded-3 fw-bold small flex-grow-1 flex-md-grow-0"
+                        onClick={() => setViewingAttachment(null)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        href={`http://localhost:8080/uploads/${viewingAttachment}`}
+                        download={viewingAttachment}
+                        className="btn-primary d-flex align-items-center justify-content-center gap-2 px-4 py-2 rounded-3 fw-bold shadow-sm flex-grow-1 flex-md-grow-0"
+                      >
+                        <ArrowDownTrayIcon style={{ width: '1.1rem' }} />
+                        Download Now
+                      </Button>
+                   </div>
+                </div>
+              </div>
+            )}
+          </Modal.Body>
+        </div>
       </Modal>
     </div>
   );
