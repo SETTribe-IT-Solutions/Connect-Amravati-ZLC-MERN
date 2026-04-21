@@ -5,13 +5,14 @@ import {
 import {
   DocumentTextIcon, ArrowDownTrayIcon, CalendarIcon, CheckCircleIcon,
   ClockIcon, ExclamationTriangleIcon, TableCellsIcon, XMarkIcon,
-  ArrowPathIcon, UserGroupIcon
+  ArrowPathIcon, UserGroupIcon, MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, Legend, LineChart, Line
 } from 'recharts';
 import { getPerformanceReport, getGlobalStats } from '../../../services/reports/reportService';
+import { getTasks } from '../../../services/tasks/taskService';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import Pagination from '../../common/Pagination';
@@ -24,13 +25,19 @@ const ReportsDashboard = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [selectedDept, setSelectedDept] = useState('all');
+  const [globalDept, setGlobalDept] = useState('all');
+  const [selectedSummary, setSelectedSummary] = useState('all');
+  const [allTasks, setAllTasks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const departments = ['All Departments', 'Revenue', 'Finance', 'Administration', 'Development', 'Infrastruction', 'Other'];
 
   // Reset pagination when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedDept]);
+  }, [selectedDept, globalDept, selectedSummary]);
 
   const showToast = (title, value) => {
     setToast({ title, value });
@@ -42,12 +49,31 @@ const ReportsDashboard = ({ user }) => {
       try {
         const requesterId = user?.userID;
         if (requesterId) {
-          const [perf, global] = await Promise.all([
+          const [perf, tasks] = await Promise.all([
             getPerformanceReport(requesterId),
-            getGlobalStats(requesterId)
+            getTasks(requesterId)
           ]);
+
+          const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+          const serverURL = baseURL.replace('/api', '');
+          
+          const mappedTasks = (tasks || []).map(t => ({
+            ...t,
+            status: t.status ? t.status.toString().toUpperCase() : 'PENDING',
+            department: t.department || 'Revenue'
+          }));
+
           setPerformanceData(perf || []);
-          setGlobalStats(global);
+          setAllTasks(mappedTasks);
+          
+          // Calculate stats locally from mappedTasks
+          setGlobalStats({
+            total: mappedTasks.length,
+            completed: mappedTasks.filter(t => t.status === 'COMPLETED').length,
+            inProgress: mappedTasks.filter(t => t.status === 'IN_PROGRESS').length,
+            pending: mappedTasks.filter(t => t.status === 'PENDING').length,
+            overdue: mappedTasks.filter(t => t.status === 'OVERDUE').length
+          });
         }
       } catch (error) {
         console.error("Fetch Reports Error:", error);
@@ -56,30 +82,73 @@ const ReportsDashboard = ({ user }) => {
       }
     };
     fetchReports();
-  }, []);
+  }, [user?.userID]);
 
   // Stats cards in correct sequence
   const stats = [
-    { title: 'Total Tasks', value: globalStats?.total || 0, icon: DocumentTextIcon, bgColor: 'primary', textColor: 'text-primary' },
-    { title: 'Completed', value: globalStats?.completed || 0, icon: CheckCircleIcon, bgColor: 'success', textColor: 'text-success' },
-    { title: 'In Progress', value: globalStats?.inProgress || 0, icon: ArrowPathIcon, bgColor: 'secondary', textColor: 'text-secondary' },
-    { title: 'Pending', value: globalStats?.pending || 0, icon: ClockIcon, bgColor: 'warning', textColor: 'text-warning' },
-    { title: 'Overdue', value: globalStats?.overdue || 0, icon: ExclamationTriangleIcon, bgColor: 'danger', textColor: 'text-danger' }
+    { id: 'all', title: 'Total Tasks', value: globalStats?.total || 0, icon: DocumentTextIcon, bgColor: '#eff6ff', textColor: '#0d6efd' },
+    { id: 'completed', title: 'Completed', value: globalStats?.completed || 0, icon: CheckCircleIcon, bgColor: '#f0fdf4', textColor: '#16a34a' },
+    { id: 'inProgress', title: 'In Progress', value: globalStats?.inProgress || 0, icon: ArrowPathIcon, bgColor: '#f8fafc', textColor: '#64748b' },
+    { id: 'pending', title: 'Pending', value: globalStats?.pending || 0, icon: ClockIcon, bgColor: '#fff7ed', textColor: '#f97316' },
+    { id: 'overdue', title: 'Overdue', value: globalStats?.overdue || 0, icon: ExclamationTriangleIcon, bgColor: '#fef2f2', textColor: '#dc2626' }
   ];
 
-  const deptData = performanceData.map((p, idx) => ({
-    srNo: idx + 1,
-    name: p.userName,
-    total: p.totalTasks,
-    completed: p.completedTasks,
-    inProgress: p.totalTasks - p.completedTasks - (p.overdueTasks || 0),
-    pending: p.totalTasks - p.completedTasks,
-    overdue: p.overdueTasks || 0,
-    rate: p.efficiency || 0
-  }));
+  // Derived data based on filters
+  const activeTasks = allTasks.filter(t => {
+    const deptMatch = globalDept === 'all' || t.department === globalDept;
+    const statusMatch = selectedSummary === 'all' || t.status === selectedSummary.toUpperCase();
+    return deptMatch && statusMatch;
+  });
 
-  const filteredDeptData = selectedDept === 'all' ? deptData : deptData.filter(d => d.name === selectedDept);
-  const deptNames = [...new Set(deptData.map(d => d.name))];
+  const deptData = performanceData.map((p, idx) => {
+    const userTasks = allTasks.filter(t => t.assignedToId === p.userId || t.assignedToName === p.userName);
+    // Determine department for this user from their tasks
+    const userDept = userTasks.length > 0 ? userTasks[0].department || 'Other' : 'Other';
+    
+    const filtered = userTasks.filter(t => selectedSummary === 'all' || t.status === selectedSummary.toUpperCase());
+    
+    return {
+      srNo: idx + 1,
+      name: p.userName,
+      role: p.role || 'Staff',
+      department: userDept,
+      total: userTasks.length,
+      completed: userTasks.filter(t => t.status === 'COMPLETED').length,
+      inProgress: userTasks.filter(t => t.status === 'IN_PROGRESS').length,
+      pending: userTasks.filter(t => t.status === 'PENDING').length,
+      overdue: userTasks.filter(t => t.status === 'OVERDUE').length,
+      activeCount: filtered.length,
+      rate: userTasks.length > 0 ? Math.round((userTasks.filter(t => t.status === 'COMPLETED').length / userTasks.length) * 100) : 0
+    };
+  });
+
+  const filteredDeptData = deptData.filter(d => {
+    const deptMatch = globalDept === 'all' || d.department === globalDept || (selectedDept !== 'all' && d.department === selectedDept);
+    if (!deptMatch) return false;
+    
+    // Global Summary filter
+    if (selectedSummary !== 'all' && d.activeCount === 0) return false;
+    
+    return true;
+  });
+
+  // Separate Search filter for Table only
+  const searchedDeptData = filteredDeptData.filter(d => {
+    if (!searchTerm) return true;
+    const searchLow = searchTerm.toLowerCase();
+    return (
+      d.name.toLowerCase().includes(searchLow) ||
+      d.role.toLowerCase().includes(searchLow) ||
+      d.department.toLowerCase().includes(searchLow) ||
+      d.total.toString().includes(searchLow) ||
+      d.completed.toString().includes(searchLow) ||
+      d.inProgress.toString().includes(searchLow) ||
+      d.pending.toString().includes(searchLow) ||
+      d.overdue.toString().includes(searchLow)
+    );
+  });
+
+  const deptNames = departments.filter(d => d !== 'All Departments');
 
   const deptChartData = filteredDeptData.map(d => ({
     name: d.name,
@@ -93,56 +162,97 @@ const ReportsDashboard = ({ user }) => {
   const taskDistribution = [
     { name: 'Completed', value: globalStats?.completed || 0, color: '#198754' },
     { name: 'In Progress', value: globalStats?.inProgress || 0, color: '#6c757d' },
-    { name: 'Pending', value: globalStats?.pending || 0, color: '#ffc107' },
+    { name: 'Pending', value: globalStats?.pending || 0, color: '#f97316' },
     { name: 'Overdue', value: globalStats?.overdue || 0, color: '#dc3545' },
-  ].filter(item => item.value > 0);
+  ].filter(item => {
+    if (selectedSummary === 'all') return item.value > 0;
+    return item.name.toLowerCase() === (selectedSummary === 'inProgress' ? 'in progress' : selectedSummary) && item.value > 0;
+  });
 
   const getMonthlyData = () => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    return months.map(month => ({
-      period: month,
-      total: globalStats?.total || 0,
-      completed: globalStats?.completed || 0,
-      inProgress: globalStats?.inProgress || 0,
-      pending: globalStats?.pending || 0,
-      overdue: globalStats?.overdue || 0
-    }));
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentYear = new Date().getFullYear();
+    return months.map((month, index) => {
+      const filtered = activeTasks.filter(t => {
+        if (!t.createdAt) return false;
+        const d = new Date(t.createdAt);
+        return d.getMonth() === index && d.getFullYear() === currentYear;
+      });
+      return {
+        period: month,
+        total: filtered.length,
+        completed: filtered.filter(t => t.status === 'COMPLETED').length,
+        inProgress: filtered.filter(t => t.status === 'IN_PROGRESS').length,
+        pending: filtered.filter(t => t.status === 'PENDING').length,
+        overdue: filtered.filter(t => t.status === 'OVERDUE').length
+      };
+    });
   };
 
   const getWeeklyData = () => {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return days.map(day => ({
-      period: day,
-      total: day === 'Mon' ? (globalStats?.total || 0) : 0,
-      completed: day === 'Mon' ? (globalStats?.completed || 0) : 0,
-      inProgress: day === 'Mon' ? (globalStats?.inProgress || 0) : 0,
-      pending: day === 'Mon' ? (globalStats?.pending || 0) : 0,
-      overdue: day === 'Mon' ? (globalStats?.overdue || 0) : 0
-    }));
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const last7Days = [...Array(7)].map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      return d;
+    });
+
+    return last7Days.map(date => {
+      const filtered = activeTasks.filter(t => {
+        if (!t.createdAt) return false;
+        const td = new Date(t.createdAt);
+        return td.toDateString() === date.toDateString();
+      });
+      return {
+        period: days[date.getDay()],
+        total: filtered.length,
+        completed: filtered.filter(t => t.status === 'COMPLETED').length,
+        inProgress: filtered.filter(t => t.status === 'IN_PROGRESS').length,
+        pending: filtered.filter(t => t.status === 'PENDING').length,
+        overdue: filtered.filter(t => t.status === 'OVERDUE').length
+      };
+    });
   };
 
-  // ... (keeping other trend data functions)
   const getQuarterlyData = () => {
-    return ['Q1', 'Q2', 'Q3', 'Q4'].map(q => ({
-      period: q,
-      total: q === 'Q1' ? (globalStats?.total || 0) : 0,
-      completed: q === 'Q1' ? (globalStats?.completed || 0) : 0,
-      inProgress: q === 'Q1' ? (globalStats?.inProgress || 0) : 0,
-      pending: q === 'Q1' ? (globalStats?.pending || 0) : 0,
-      overdue: q === 'Q1' ? (globalStats?.overdue || 0) : 0
-    }));
+    const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+    const currentYear = new Date().getFullYear();
+    return quarters.map((q, idx) => {
+      const filtered = activeTasks.filter(t => {
+        if (!t.createdAt) return false;
+        const d = new Date(t.createdAt);
+        const quarter = Math.floor(d.getMonth() / 3);
+        return quarter === idx && d.getFullYear() === currentYear;
+      });
+      return {
+        period: q,
+        total: filtered.length,
+        completed: filtered.filter(t => t.status === 'COMPLETED').length,
+        inProgress: filtered.filter(t => t.status === 'IN_PROGRESS').length,
+        pending: filtered.filter(t => t.status === 'PENDING').length,
+        overdue: filtered.filter(t => t.status === 'OVERDUE').length
+      };
+    });
   };
 
   const getYearlyData = () => {
     const currentYear = new Date().getFullYear();
-    return [currentYear - 1, currentYear, currentYear + 1].map(year => ({
-      period: year.toString(),
-      total: year === currentYear ? (globalStats?.total || 0) : 0,
-      completed: year === currentYear ? (globalStats?.completed || 0) : 0,
-      inProgress: year === currentYear ? (globalStats?.inProgress || 0) : 0,
-      pending: year === currentYear ? (globalStats?.pending || 0) : 0,
-      overdue: year === currentYear ? (globalStats?.overdue || 0) : 0
-    }));
+    const years = [currentYear - 2, currentYear - 1, currentYear];
+    return years.map(year => {
+      const filtered = activeTasks.filter(t => {
+        if (!t.createdAt) return false;
+        const d = new Date(t.createdAt);
+        return d.getFullYear() === year;
+      });
+      return {
+        period: year.toString(),
+        total: filtered.length,
+        completed: filtered.filter(t => t.status === 'COMPLETED').length,
+        inProgress: filtered.filter(t => t.status === 'IN_PROGRESS').length,
+        pending: filtered.filter(t => t.status === 'PENDING').length,
+        overdue: filtered.filter(t => t.status === 'OVERDUE').length
+      };
+    });
   };
 
   const getTrendData = () => {
@@ -210,7 +320,17 @@ const ReportsDashboard = ({ user }) => {
             <h1 className="display-6 fw-bold text-primary mb-1 font-outfit">Reports & Analytics</h1>
             <p className="text-secondary mb-0">Comprehensive insights and performance metrics</p>
           </Col>
-          <Col md="auto">
+          <Col md="auto" className="d-flex gap-2">
+            <Form.Select 
+              value={globalDept} 
+              onChange={(e) => setGlobalDept(e.target.value)}
+              className="w-auto border-0 bg-white shadow-sm rounded-3 fw-bold text-dark"
+              style={{ minWidth: '180px' }}
+            >
+              {departments.map(dept => (
+                <option key={dept} value={dept === 'All Departments' ? 'all' : dept}>{dept}</option>
+              ))}
+            </Form.Select>
             <Button onClick={handleExport} variant="primary" className="fw-bold px-4 rounded-3 shadow-sm d-flex align-items-center gap-2">
               <ArrowDownTrayIcon style={{ width: '1.1rem' }} /> Export Report
             </Button>
@@ -222,15 +342,21 @@ const ReportsDashboard = ({ user }) => {
       <Row className="g-4 mb-5">
         {stats.map((stat) => (
           <Col key={stat.title} xs={6} md={3} lg={true}>
-            <Card className="border-0 shadow-sm rounded-4 h-100 hover-shadow transition-all cursor-pointer" onClick={() => showToast(stat.title, stat.value)}>
+            <Card 
+              className={`border-0 shadow-sm rounded-4 h-100 hover-shadow transition-all cursor-pointer ${selectedSummary === stat.id ? 'ring-2 ring-primary border border-primary' : ''}`} 
+              onClick={() => {
+                setSelectedSummary(stat.id === selectedSummary ? 'all' : stat.id);
+                showToast(stat.title, stat.value);
+              }}
+            >
               <Card.Body className="p-4">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
                     <p className="small text-secondary fw-medium mb-1">{stat.title}</p>
                     <h3 className="fw-bold mb-0 text-dark">{stat.value}</h3>
                   </div>
-                  <div className={`p-2 rounded-3 bg-${stat.bgColor} bg-opacity-10`}>
-                    <stat.icon style={{ width: '1.5rem' }} className={stat.textColor} />
+                  <div className="rounded-3 p-2 d-flex align-items-center justify-content-center" style={{ backgroundColor: stat.bgColor }}>
+                    <stat.icon style={{ width: '1.5rem', height: '1.5rem', color: stat.textColor }} />
                   </div>
                 </div>
               </Card.Body>
@@ -273,9 +399,12 @@ const ReportsDashboard = ({ user }) => {
                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                       />
                       <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                      <Line type="monotone" dataKey="total" name="Total" stroke="#0d6efd" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="completed" name="Completed" stroke="#198754" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="pending" name="Pending" stroke="#ffc107" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6 }} />
+                      <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                      {(selectedSummary === 'all' || selectedSummary === 'all') && <Line type="monotone" dataKey="total" name="Total" stroke="#0d6efd" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6 }} />}
+                      {(selectedSummary === 'all' || selectedSummary === 'completed') && <Line type="monotone" dataKey="completed" name="Completed" stroke="#198754" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6 }} />}
+                      {(selectedSummary === 'all' || selectedSummary === 'inProgress') && <Line type="monotone" dataKey="inProgress" name="In Progress" stroke="#6c757d" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6 }} />}
+                      {(selectedSummary === 'all' || selectedSummary === 'pending') && <Line type="monotone" dataKey="pending" name="Pending" stroke="#f97316" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6 }} />}
+                      {(selectedSummary === 'all' || selectedSummary === 'overdue') && <Line type="monotone" dataKey="overdue" name="Overdue" stroke="#dc3545" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6 }} />}
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -286,7 +415,9 @@ const ReportsDashboard = ({ user }) => {
             <Card className="border-0 shadow-sm rounded-4 h-100">
               <Card.Header className="bg-transparent border-0 pt-4 px-4 pb-0">
                 <h5 className="fw-bold text-dark mb-1">Task Distribution</h5>
-                <p className="small text-secondary mb-0">Current status breakdown ({globalStats?.total || 0} total tasks)</p>
+                <p className="small text-secondary mb-0">
+                  {selectedSummary === 'all' ? `Current status breakdown (${globalStats?.total || 0} total tasks)` : `Viewing ${selectedSummary} tasks`}
+                </p>
               </Card.Header>
               <Card.Body className="p-4 d-flex align-items-center justify-content-center">
                 <div style={{ height: '300px', width: '100%' }}>
@@ -329,7 +460,7 @@ const ReportsDashboard = ({ user }) => {
                 <Form.Select 
                   value={selectedDept} 
                   onChange={(e) => setSelectedDept(e.target.value)}
-                  className="w-auto border-0 bg-light rounded-3 fw-medium"
+                  className="w-auto border-0 bg-light rounded-3 fw-medium text-dark"
                   style={{ minWidth: '200px' }}
                 >
                   <option value="all">All Departments</option>
@@ -346,9 +477,11 @@ const ReportsDashboard = ({ user }) => {
                     <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} width={120} />
                     <Tooltip cursor={{ fill: '#f8f9fa' }} />
                     <Legend />
-                    <Bar dataKey="Total" fill="#0d6efd" radius={[0, 6, 6, 0]} barSize={20} />
-                    <Bar dataKey="Completed" fill="#198754" radius={[0, 6, 6, 0]} barSize={20} />
-                    <Bar dataKey="Overdue" fill="#dc3545" radius={[0, 6, 6, 0]} barSize={20} />
+                    {(selectedSummary === 'all') && <Bar dataKey="Total" fill="#0d6efd" radius={[0, 6, 6, 0]} barSize={20} />}
+                    {(selectedSummary === 'all' || selectedSummary === 'completed') && <Bar dataKey="Completed" fill="#198754" radius={[0, 6, 6, 0]} barSize={20} />}
+                    {(selectedSummary === 'all' || selectedSummary === 'inProgress') && <Bar dataKey="In Progress" fill="#6c757d" radius={[0, 6, 6, 0]} barSize={20} />}
+                    {(selectedSummary === 'all' || selectedSummary === 'pending') && <Bar dataKey="Pending" fill="#f97316" radius={[0, 6, 6, 0]} barSize={20} />}
+                    {(selectedSummary === 'all' || selectedSummary === 'overdue') && <Bar dataKey="Overdue" fill="#dc3545" radius={[0, 6, 6, 0]} barSize={20} />}
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -357,10 +490,25 @@ const ReportsDashboard = ({ user }) => {
 
           <Card className="border-0 shadow-sm rounded-4">
             <Card.Header className="bg-transparent border-0 p-4 pb-0">
-              <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                <TableCellsIcon style={{ width: '1.25rem' }} className="text-primary" /> 
-                Department Data Details
-              </h5>
+              <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                  <TableCellsIcon style={{ width: '1.25rem' }} className="text-primary" /> 
+                  Department Data Details
+                </h5>
+                <div className="position-relative" style={{ minWidth: '300px' }}>
+                  <Form.Control
+                    type="text"
+                    placeholder="Search by name, role or department..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="ps-5 border-0 bg-light rounded-3 fw-medium"
+                  />
+                  <MagnifyingGlassIcon 
+                    className="position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary" 
+                    style={{ width: '1.25rem' }} 
+                  />
+                </div>
+              </div>
             </Card.Header>
             <Card.Body className="p-4">
               <Table responsive hover className="align-middle border-top-0">
@@ -368,24 +516,29 @@ const ReportsDashboard = ({ user }) => {
                   <tr className="text-secondary small fw-bold text-uppercase pb-3">
                     <th className="border-0 px-3">SR NO</th>
                     <th className="border-0 px-3">Department</th>
-                    <th className="border-0 px-3">Total</th>
+                    <th className="border-0 px-3 text-primary">Total</th>
                     <th className="border-0 px-3 text-success">Completed</th>
-                    <th className="border-0 px-3 text-warning">Pending</th>
+                    <th className="border-0 px-3 text-secondary">In Progress</th>
+                    <th className="border-0 px-3 text-orange">Pending</th>
                     <th className="border-0 px-3 text-danger">Overdue</th>
                     <th className="border-0 px-3">Rate</th>
                   </tr>
                 </thead>
                 <tbody className="border-top-0">
-                  {filteredDeptData
+                  {searchedDeptData
                     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                     .map((d) => (
-                    <tr key={d.srNo}>
+                    <tr key={d.srNo} className={selectedDept === d.department ? 'table-primary bg-opacity-10' : ''}>
                       <td className="px-3 py-3 small text-secondary">{d.srNo}</td>
-                      <td className="px-3 py-3 fw-bold text-dark">{d.name}</td>
-                      <td className="px-3 py-3 fw-medium">{d.total}</td>
-                      <td className="px-3 py-3 text-success fw-medium font-outfit">{d.completed}</td>
-                      <td className="px-3 py-3 text-warning fw-medium font-outfit">{d.pending}</td>
-                      <td className="px-3 py-3 text-danger fw-medium font-outfit">{d.overdue}</td>
+                      <td className="px-3 py-3">
+                        <div className="fw-bold text-dark">{d.name}</div>
+                        <div className="small text-secondary fw-medium">{d.role}</div>
+                      </td>
+                      <td className={`px-3 py-3 fw-bold font-outfit ${selectedSummary === 'all' ? 'text-primary bg-primary bg-opacity-10' : 'text-secondary opacity-50'}`}>{d.total}</td>
+                      <td className={`px-3 py-3 fw-medium font-outfit ${selectedSummary === 'completed' ? 'text-success bg-success bg-opacity-10 fw-bold' : 'text-success'}`}>{d.completed}</td>
+                      <td className={`px-3 py-3 fw-medium font-outfit ${selectedSummary === 'inProgress' ? 'text-dark bg-light fw-bold' : 'text-secondary'}`}>{d.inProgress}</td>
+                      <td className={`px-3 py-3 fw-medium font-outfit ${selectedSummary === 'pending' ? 'text-orange bg-orange bg-opacity-10 fw-bold' : 'text-orange'}`}>{d.pending}</td>
+                      <td className={`px-3 py-3 fw-medium font-outfit ${selectedSummary === 'overdue' ? 'text-danger bg-danger bg-opacity-10 fw-bold' : 'text-danger'}`}>{d.overdue}</td>
                       <td className="px-3 py-3">
                         <Badge pill bg="success" className="bg-opacity-10 text-success fw-bold px-3 py-2">
                           {d.rate}%
@@ -397,7 +550,7 @@ const ReportsDashboard = ({ user }) => {
               </Table>
               <div className="mt-4">
                 <Pagination 
-                  totalItems={filteredDeptData.length}
+                  totalItems={searchedDeptData.length}
                   itemsPerPage={itemsPerPage}
                   currentPage={currentPage}
                   onPageChange={setCurrentPage}
@@ -418,7 +571,7 @@ const ReportsDashboard = ({ user }) => {
               <Form.Select 
                 value={dateRange} 
                 onChange={(e) => setDateRange(e.target.value)}
-                className="w-auto border-0 bg-light rounded-3 fw-medium"
+                className="w-auto border-0 bg-light rounded-3 fw-medium text-dark"
                 style={{ minWidth: '150px' }}
               >
                 <option value="week">Weekly</option>
@@ -436,7 +589,7 @@ const ReportsDashboard = ({ user }) => {
                     <th className="px-3">Period</th>
                     <th className="px-3">Total</th>
                     <th className="px-3 text-success">Completed</th>
-                    <th className="px-3 text-warning">Pending</th>
+                    <th className="px-3 text-orange">Pending</th>
                     <th className="px-3 text-danger">Overdue</th>
                   </tr>
                 </thead>
@@ -446,7 +599,7 @@ const ReportsDashboard = ({ user }) => {
                       <td className="px-3 py-3 fw-bold text-dark">{item.period}</td>
                       <td className="px-3 py-3 fw-medium">{item.total}</td>
                       <td className="px-3 py-3 text-success fw-medium font-outfit">{item.completed}</td>
-                      <td className="px-3 py-3 text-warning fw-medium font-outfit">{item.pending}</td>
+                      <td className="px-3 py-3 text-orange fw-medium font-outfit">{item.pending}</td>
                       <td className="px-3 py-3 text-danger fw-medium font-outfit">{item.overdue}</td>
                     </tr>
                   ))}
@@ -461,9 +614,11 @@ const ReportsDashboard = ({ user }) => {
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
                   <Tooltip cursor={{ fill: '#f8f9fa' }} />
                   <Legend />
-                  <Bar dataKey="total" name="Total Tasks" fill="#0d6efd" radius={[6, 6, 0, 0]} barSize={25} />
-                  <Bar dataKey="completed" name="Completed" fill="#198754" radius={[6, 6, 0, 0]} barSize={25} />
-                  <Bar dataKey="overdue" name="Overdue" fill="#dc3545" radius={[6, 6, 0, 0]} barSize={25} />
+                  {(selectedSummary === 'all') && <Bar dataKey="total" name="Total Tasks" fill="#0d6efd" radius={[6, 6, 0, 0]} barSize={25} />}
+                  {(selectedSummary === 'all' || selectedSummary === 'completed') && <Bar dataKey="completed" name="Completed" fill="#198754" radius={[6, 6, 0, 0]} barSize={25} />}
+                  {(selectedSummary === 'all' || selectedSummary === 'inProgress') && <Bar dataKey="inProgress" name="In Progress" fill="#6c757d" radius={[6, 6, 0, 0]} barSize={25} />}
+                  {(selectedSummary === 'all' || selectedSummary === 'pending') && <Bar dataKey="pending" name="Pending" fill="#f97316" radius={[6, 6, 0, 0]} barSize={25} />}
+                  {(selectedSummary === 'all' || selectedSummary === 'overdue') && <Bar dataKey="overdue" name="Overdue" fill="#dc3545" radius={[6, 6, 0, 0]} barSize={25} />}
                 </BarChart>
               </ResponsiveContainer>
             </div>

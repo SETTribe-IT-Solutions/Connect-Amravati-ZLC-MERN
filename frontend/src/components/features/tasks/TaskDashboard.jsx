@@ -417,7 +417,7 @@ const TaskDashboard = ({ user }) => {
 
 
   const stats = [
-    { name: 'Total Tasks', value: tasks.length, icon: DocumentTextIcon, bgColor: '#eff6ff', textColor: '#2563eb' },
+    { name: 'Total Tasks', value: tasks.length, icon: DocumentTextIcon, bgColor: '#eff6ff', textColor: '#000000' },
     { name: 'Completed', value: tasks.filter(t => t.status === 'COMPLETED').length, icon: CheckCircleIcon, bgColor: '#f0fdf4', textColor: '#16a34a' },
     { name: 'In Progress', value: tasks.filter(t => t.status === 'IN_PROGRESS').length, icon: ArrowPathIcon, bgColor: '#f8fafc', textColor: '#64748b' },
     { name: 'Pending', value: tasks.filter(t => t.status === 'PENDING').length, icon: ClockIcon, bgColor: '#fff7ed', textColor: '#f97316' },
@@ -728,7 +728,7 @@ const TaskDashboard = ({ user }) => {
                     <MagnifyingGlassIcon className="position-absolute translate-middle-y text-secondary" style={{ width: '1rem', left: '0.75rem', top: '50%', zIndex: 10 }} />
                     <Form.Control type="text" placeholder="Search tasks..." className="rounded-3 border-light-subtle ps-5 py-2" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                   </div>
-                  <Form.Select className="rounded-3 border-light-subtle w-auto" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
+                  <Form.Select className="rounded-3 border-light-subtle w-auto text-dark" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
                     <option value="all">All Status</option>
                     <option value="IN_PROGRESS">In Progress</option>
                     <option value="PENDING">Pending</option>

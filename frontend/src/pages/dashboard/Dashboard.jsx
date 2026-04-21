@@ -64,33 +64,62 @@ const Dashboard = ({ user }) => {
 
           setAllTasks(mapped);
           setRecentTasks(mapped);
-          
+
+          // Calculate Real Chart Data
           if (selectedPeriod === 'week') {
-            setChartData([
-              { name: 'Mon', tasks: stats.totalTasks || 0, completed: stats.completed || 0, inProgress: stats.inProgress || 0, pending: stats.pending || 0, overdue: stats.overdue || 0 },
-              { name: 'Tue', tasks: 0, completed: 0, inProgress: 0, pending: 0, overdue: 0 },
-              { name: 'Wed', tasks: 0, completed: 0, inProgress: 0, pending: 0, overdue: 0 },
-              { name: 'Thu', tasks: 0, completed: 0, inProgress: 0, pending: 0, overdue: 0 },
-              { name: 'Fri', tasks: 0, completed: 0, inProgress: 0, pending: 0, overdue: 0 },
-              { name: 'Sat', tasks: 0, completed: 0, inProgress: 0, pending: 0, overdue: 0 },
-              { name: 'Sun', tasks: 0, completed: 0, inProgress: 0, pending: 0, overdue: 0 },
-            ]);
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const last7Days = [...Array(7)].map((_, i) => {
+              const d = new Date();
+              d.setDate(d.getDate() - (6 - i));
+              return d;
+            });
+
+            const data = last7Days.map(date => {
+              const dateStr = date.toDateString();
+              const tasksOnDay = mapped.filter(t => new Date(t.createdAt).toDateString() === dateStr);
+              return {
+                name: days[date.getDay()],
+                tasks: tasksOnDay.length,
+                completed: tasksOnDay.filter(t => t.status === 'COMPLETED').length,
+                inProgress: tasksOnDay.filter(t => t.status === 'IN_PROGRESS').length,
+                pending: tasksOnDay.filter(t => t.status === 'PENDING').length,
+                overdue: tasksOnDay.filter(t => t.status === 'OVERDUE').length
+              };
+            });
+            setChartData(data);
           } else if (selectedPeriod === 'month') {
-            setChartData([
-              { name: 'Week 1', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
-              { name: 'Week 2', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
-              { name: 'Week 3', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
-              { name: 'Week 4', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
-            ]);
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const currentYear = new Date().getFullYear();
+            const data = months.map((month, index) => {
+              const tasksInMonth = mapped.filter(t => {
+                const d = new Date(t.createdAt);
+                return d.getMonth() === index && d.getFullYear() === currentYear;
+              });
+              return {
+                name: month,
+                tasks: tasksInMonth.length,
+                completed: tasksInMonth.filter(t => t.status === 'COMPLETED').length,
+                inProgress: tasksInMonth.filter(t => t.status === 'IN_PROGRESS').length,
+                pending: tasksInMonth.filter(t => t.status === 'PENDING').length,
+                overdue: tasksInMonth.filter(t => t.status === 'OVERDUE').length
+              };
+            });
+            setChartData(data);
           } else if (selectedPeriod === 'year') {
-            setChartData([
-              { name: 'Q1', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
-              { name: 'Q2', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
-              { name: 'Q3', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
-              { name: 'Q4', tasks: Math.floor(stats.totalTasks / 4) || 0, completed: Math.floor(stats.completed / 4) || 0, inProgress: Math.floor(stats.inProgress / 4) || 0, pending: Math.floor(stats.pending / 4) || 0, overdue: Math.floor(stats.overdue / 4) || 0 },
-            ]);
-          } else {
-            setChartData([]); // Fallback for other periods
+            const currentYear = new Date().getFullYear();
+            const years = [currentYear - 2, currentYear - 1, currentYear];
+            const data = years.map(year => {
+              const tasksInYear = mapped.filter(t => new Date(t.createdAt).getFullYear() === year);
+              return {
+                name: year.toString(),
+                tasks: tasksInYear.length,
+                completed: tasksInYear.filter(t => t.status === 'COMPLETED').length,
+                inProgress: tasksInYear.filter(t => t.status === 'IN_PROGRESS').length,
+                pending: tasksInYear.filter(t => t.status === 'PENDING').length,
+                overdue: tasksInYear.filter(t => t.status === 'OVERDUE').length
+              };
+            });
+            setChartData(data);
           }
         }
       } catch (error) {
@@ -136,9 +165,9 @@ const Dashboard = ({ user }) => {
   };
 
   const stats = [
-    { name: 'Total Tasks', value: dashboardData.totalTasks, icon: ClipboardDocumentListIcon, bgColor: '#eff6ff', textColor: '#2563eb' },
+    { name: 'Total Tasks', value: dashboardData.totalTasks, icon: ClipboardDocumentListIcon, bgColor: '#eff6ff', textColor: '#000000' },
     { name: 'Completed', value: dashboardData.completed, icon: CheckCircleIcon, bgColor: '#f0fdf4', textColor: '#16a34a' },
-    { name: 'In Progress', value: dashboardData.inProgress, icon: ArrowPathIcon, bgColor: '#f8fafc', textColor: '#475569' },
+    { name: 'In Progress', value: dashboardData.inProgress, icon: ArrowPathIcon, bgColor: '#f8fafc', textColor: '#64748b' },
     { name: 'Pending', value: dashboardData.pending, icon: ClockIcon, bgColor: '#fff7ed', textColor: '#f97316' },
     { name: 'Overdue', value: dashboardData.overdue, icon: ExclamationTriangleIcon, bgColor: '#fef2f2', textColor: '#dc2626' }
   ];
@@ -226,7 +255,7 @@ const Dashboard = ({ user }) => {
               <h5 className="fw-bold text-dark mb-0">
                 {selectedPeriod === 'week' ? 'Weekly' : 'Monthly'} Task Overview
               </h5>
-              <Form.Select size="sm" style={{ width: 'auto' }} value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)}>
+              <Form.Select size="sm" className="text-dark" style={{ width: 'auto' }} value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)}>
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
                 <option value="year">Yearly</option>
@@ -241,7 +270,7 @@ const Dashboard = ({ user }) => {
                   <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
                   <Bar dataKey="tasks" name="Total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="completed" name="Completed" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="pending" name="Pending" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="pending" name="Pending" fill="#f97316" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
