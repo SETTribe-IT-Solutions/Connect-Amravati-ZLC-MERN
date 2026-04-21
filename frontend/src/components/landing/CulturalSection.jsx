@@ -45,30 +45,6 @@ const CulturalSection = () => {
             </h2>
           </div>
 
-          <div className="d-flex align-items-center gap-4 mt-auto">
-            <div className="d-flex flex-column">
-              <div className="d-flex gap-2">
-                {['A', 'MA', 'RA'].map((item, index) => (
-                  <motion.div
-                    key={item}
-                    whileHover={{ y: -5, scale: 1.1 }}
-                    className="rounded-circle d-flex align-items-center justify-content-center shadow-sm"
-                    style={{ 
-                      width: '45px', 
-                      height: '45px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(10px)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      fontSize: '0.9rem',
-                      fontWeight: '700'
-                    }}
-                  >
-                    {item}
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
         </motion.div>
 
         {/* Subtle Watermark Branding */}

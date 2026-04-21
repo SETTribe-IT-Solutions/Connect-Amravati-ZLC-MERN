@@ -13,10 +13,11 @@ public class JwtResponse {
     private String district;
     private String taluka;
     private String village;
+    private String phone;
     private String message;
     private String tokenType = "Bearer";
 
-    public JwtResponse(String accessToken, String id, String name, String email,
+    public JwtResponse(String accessToken, String id, String name, String email, String phone,
                        String role, String district, String taluka,
                        String village, String message) {
 
@@ -28,6 +29,7 @@ public class JwtResponse {
         this.district = district;
         this.taluka = taluka;
         this.village = village;
+        this.phone = phone;
         this.message = message;
     }
 
@@ -40,5 +42,6 @@ public class JwtResponse {
     public String getDistrict() { return district; }
     public String getTaluka() { return taluka; }
     public String getVillage() { return village; }
+    public String getPhone() { return phone; }
     public String getMessage() { return message; }
 }
