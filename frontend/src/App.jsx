@@ -55,6 +55,7 @@ function App() {
             name: userData.name,
             role: userData.role,
             email: userData.email,
+            phone: userData.phone,
             district: userData.district,
             taluka: userData.taluka,
             village: userData.village,
@@ -86,6 +87,7 @@ function App() {
         name: userData.name,
         role: normalizedRole,
         email: userData.email,
+        phone: userData.phone,
         district: userData.district,
         taluka: userData.taluka,
         village: userData.village,
@@ -103,8 +105,8 @@ function App() {
   // Handle password verification (for step 1)
   const handleVerifyPassword = async (currentPassword) => {
     try {
-      if (!user?.userID) return false;
-      await loginUser(user.userID, currentPassword);
+      if (!user?.phone) return false;
+      await loginUser(user.phone, currentPassword);
       return true; // Password is valid!
     } catch (error) {
       return false; // Password mismatch
