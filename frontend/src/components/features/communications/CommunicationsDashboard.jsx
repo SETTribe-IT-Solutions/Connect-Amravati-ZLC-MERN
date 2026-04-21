@@ -51,7 +51,7 @@ const CommunicationsDashboard = ({ user }) => {
   const [acknowledgments, setAcknowledgments] = useState([]);
   const [loadingAcks, setLoadingAcks] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
-  const [editForm, setEditForm] = useState({ title: '', message: '' });
+  const [editForm, setEditForm] = useState({ title: '', message: '', file: null });
   const [updating, setUpdating] = useState(false);
   const [deletingAnnouncementId, setDeletingAnnouncementId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -175,14 +175,18 @@ const CommunicationsDashboard = ({ user }) => {
 
   const openEditModal = (item) => {
     setEditingAnnouncement(item);
-    setEditForm({ title: item.title, message: item.message });
+    setEditForm({ title: item.title, message: item.message, file: null });
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     setUpdating(true);
     try {
-      await updateAnnouncement(editingAnnouncement.id, user?.userID, editForm);
+      const updateData = {
+        title: editForm.title,
+        message: editForm.message
+      };
+      await updateAnnouncement(editingAnnouncement.id, user?.userID, updateData, editForm.file);
       toast.success('Message updated successfully');
       setEditingAnnouncement(null);
       fetchAnnouncements();
@@ -643,7 +647,7 @@ const CommunicationsDashboard = ({ user }) => {
                   className="rounded-3 border-light-subtle py-2 shadow-sm"
                 />
               </Form.Group>
-              <Form.Group className="mb-5">
+              <Form.Group className="mb-4">
                 <Form.Label className="small fw-bold text-secondary">Content</Form.Label>
                 <Form.Control
                   as="textarea"
@@ -654,6 +658,50 @@ const CommunicationsDashboard = ({ user }) => {
                   className="rounded-3 border-light-subtle py-2 shadow-sm resize-none"
                 />
               </Form.Group>
+
+              <Form.Group className="mb-5">
+                <Form.Label className="small fw-bold text-secondary d-flex align-items-center gap-2">
+                  <PaperClipIcon style={{ width: '1.1rem' }} />
+                  Update Attachment (Optional)
+                </Form.Label>
+                <div className="p-3 bg-light rounded-3 border border-dashed border-light-subtle">
+                  <Form.Control
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const allowedExts = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.txt', '.jpg', '.jpeg', '.png'];
+                        const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                        
+                        if (!allowedExts.includes(ext)) {
+                          toast.error("Invalid file format");
+                          e.target.value = null;
+                          return;
+                        }
+
+                        if (file.size > 10 * 1024 * 1024) {
+                          toast.error("File size must be less than 10MB");
+                          e.target.value = null;
+                          return;
+                        }
+                        
+                        setEditForm({ ...editForm, file: file });
+                      }
+                    }}
+                    className="bg-white border-0 shadow-none px-0"
+                  />
+                  {editingAnnouncement?.attachment && !editForm.file && (
+                    <div className="mt-2 d-flex align-items-center gap-2 text-primary small fw-medium">
+                      <CheckBadgeIcon style={{ width: '0.9rem' }} />
+                      Current: {editingAnnouncement.attachment.split('-').slice(1).join('-')}
+                    </div>
+                  )}
+                </div>
+                <Form.Text className="text-secondary small mt-2 d-block">
+                  Allowed formats: PDF, DOC, Excel, Images, CSV, Text (Max 10MB)
+                </Form.Text>
+              </Form.Group>
+
               <div className="d-flex justify-content-end gap-3 pt-3 border-top">
                 <Button variant="light" className="px-4 fw-bold rounded-3 border" onClick={() => setEditingAnnouncement(null)}>Cancel</Button>
                 <Button variant="primary" type="submit" disabled={updating} className="px-5 fw-bold rounded-3 shadow-sm d-flex align-items-center gap-2">

@@ -42,9 +42,21 @@ export const acknowledgeAnnouncement = async (id, userId) => {
   return response.data;
 };
 
-export const updateAnnouncement = async (id, userId, data) => {
-  const response = await axiosInstance.put(`${API_URL}/${id}`, data, {
-    params: { userId }
+export const updateAnnouncement = async (id, userId, data, file) => {
+  const formData = new FormData();
+  formData.append('announcement', new Blob([JSON.stringify(data)], {
+    type: 'application/json'
+  }));
+  
+  if (file) {
+    formData.append('file', file);
+  }
+
+  const response = await axiosInstance.put(`${API_URL}/${id}`, formData, {
+    params: { userId },
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
   return response.data;
 };
