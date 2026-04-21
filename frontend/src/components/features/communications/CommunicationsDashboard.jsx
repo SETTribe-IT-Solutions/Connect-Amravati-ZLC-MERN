@@ -219,6 +219,35 @@ const CommunicationsDashboard = ({ user }) => {
     setFilters({ date: '', month: '', year: '' });
   };
 
+  const handleDownload = async (filename) => {
+    try {
+      const downloadToast = toast.loading('Preparing download...');
+      const response = await fetch(`http://localhost:8080/uploads/${filename}`);
+      
+      if (!response.ok) throw new Error('Download failed');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extract clean filename: remove the UUID prefix if possible
+      const cleanName = filename.split('-').slice(1).join('-') || filename;
+      link.setAttribute('download', cleanName);
+      
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Download started', { id: downloadToast });
+    } catch (error) {
+      console.error("Download failed:", error);
+      toast.error("Download failed. Opening in new tab instead.");
+      window.open(`http://localhost:8080/uploads/${filename}`, '_blank');
+    }
+  };
+
   const currentDisplayList = (activeTab === 'inbox' || activeTab === 'acknowledged') ? announcements : sentAnnouncements;
 
   const months = [
@@ -488,7 +517,7 @@ const CommunicationsDashboard = ({ user }) => {
                     <div className="mb-4 d-flex align-items-center justify-content-between p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-10 transition-all">
                       <div className="d-flex align-items-center gap-3 overflow-hidden">
                         <div className="p-2 bg-white text-primary rounded-3 shadow-sm flex-shrink-0">
-                          {['.jpg', '.jpeg', '.png'].some(ext => item.attachment.toLowerCase().endsWith(ext)) ? (
+                          {['.jpg', '.jpeg', '.png', '.pdf'].some(ext => item.attachment.toLowerCase().endsWith(ext)) ? (
                             <EyeIcon style={{ width: '1.25rem' }} />
                           ) : (
                             <PaperClipIcon style={{ width: '1.25rem' }} />
@@ -513,8 +542,7 @@ const CommunicationsDashboard = ({ user }) => {
                         </Button>
                       ) : (
                         <Button
-                          href={`http://localhost:8080/uploads/${item.attachment}`}
-                          download={item.attachment}
+                          onClick={() => handleDownload(item.attachment)}
                           className="btn-primary d-flex align-items-center gap-2 px-4 py-2 rounded-3 text-xs fw-bold shadow-sm"
                         >
                           <ArrowDownTrayIcon style={{ width: '1.1rem' }} />
@@ -785,9 +813,8 @@ const CommunicationsDashboard = ({ user }) => {
                       >
                         Cancel
                       </Button>
-                      <Button
-                        href={`http://localhost:8080/uploads/${viewingAttachment}`}
-                        download={viewingAttachment}
+                       <Button
+                        onClick={() => handleDownload(viewingAttachment)}
                         className="btn-primary d-flex align-items-center justify-content-center gap-2 px-4 py-2 rounded-3 fw-bold shadow-sm flex-grow-1 flex-md-grow-0"
                       >
                         <ArrowDownTrayIcon style={{ width: '1.1rem' }} />
