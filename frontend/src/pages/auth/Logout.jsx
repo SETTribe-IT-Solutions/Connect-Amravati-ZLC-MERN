@@ -82,7 +82,7 @@ const Logout = ({ onLogout, onClose }) => {
 
             <div className="mb-5">
               <p className="text-secondary lead mb-2">Are you sure you want to logout?</p>
-              <div className="d-flex align-items-center gap-2 text-danger small fw-bold">
+              <div className="d-flex align-items-center gap-2 text-orange small fw-bold">
                 <ExclamationTriangleIcon style={{ width: '1rem' }} />
                 <span>You have 3 pending tasks for today.</span>
               </div>
