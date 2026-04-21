@@ -166,7 +166,7 @@ public class AnnouncementService {
     }
 
     @Transactional
-    public AnnouncementDTO updateAnnouncement(Long announcementId, String userId, String title, String message) {
+    public AnnouncementDTO updateAnnouncement(Long announcementId, String userId, String title, String message, MultipartFile file) {
         Announcement announcement = announcementRepository.findById(announcementId)
                 .orElseThrow(() -> new RuntimeException("Announcement not found"));
                 
@@ -176,6 +176,43 @@ public class AnnouncementService {
         
         announcement.setTitle(title);
         announcement.setMessage(message);
+
+        // Handle file update
+        if (file != null && !file.isEmpty()) {
+            try {
+                Path uploadPath = Paths.get(uploadDir);
+                if (!Files.exists(uploadPath)) {
+                    Files.createDirectories(uploadPath);
+                }
+
+                String originalFileName = file.getOriginalFilename();
+                String extension = "";
+                if (originalFileName != null && originalFileName.contains(".")) {
+                    extension = originalFileName.substring(originalFileName.lastIndexOf(".")).toLowerCase();
+                }
+
+                // File format validation
+                java.util.List<String> allowedExtensions = java.util.Arrays.asList(".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv", ".txt", ".jpg", ".jpeg", ".png");
+                if (extension.isEmpty() || !allowedExtensions.contains(extension)) {
+                    throw new RuntimeException("Invalid file format. Allowed: pdf, doc, docx, xls, xlsx, csv, txt, jpg, jpeg, png");
+                }
+
+                // File size validation (10 MB)
+                if (file.getSize() > 10 * 1024 * 1024) {
+                    throw new RuntimeException("File size must be less than 10MB");
+                }
+
+                String uniqueFileName = UUID.randomUUID().toString() + extension;
+                Path filePath = uploadPath.resolve(uniqueFileName).toAbsolutePath();
+                Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+                // Update attachment
+                announcement.setAttachment(uniqueFileName);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to store file: " + e.getMessage());
+            }
+        }
+
         Announcement updated = announcementRepository.save(announcement);
         
         User creator = userRepository.findByUserID(userId).orElse(null);

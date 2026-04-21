@@ -99,13 +99,14 @@ public class AnnouncementController {
         return ResponseEntity.ok("Acknowledged successfully");
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
     @PreAuthorize("hasAnyRole('COLLECTOR', 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO', 'TEHSILDAR', 'SYSTEM_ADMINISTRATOR')")
     public ResponseEntity<AnnouncementDTO> updateAnnouncement(
             @PathVariable(name = "id") Long id,
             @RequestParam(name = "userId") String userId,
-            @Valid @RequestBody UpdateRequest request) {
-        return ResponseEntity.ok(announcementService.updateAnnouncement(id, userId, request.getTitle(), request.getMessage()));
+            @RequestPart("announcement") @Valid UpdateRequest request,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+        return ResponseEntity.ok(announcementService.updateAnnouncement(id, userId, request.getTitle(), request.getMessage(), file));
     }
 
     @DeleteMapping("/{id}")
