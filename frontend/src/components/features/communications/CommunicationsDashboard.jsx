@@ -51,7 +51,7 @@ const CommunicationsDashboard = ({ user }) => {
   const [acknowledgments, setAcknowledgments] = useState([]);
   const [loadingAcks, setLoadingAcks] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
-  const [editForm, setEditForm] = useState({ title: '', message: '', file: null });
+  const [editForm, setEditForm] = useState({ title: '', message: '', file: null, fileError: '' });
   const [updating, setUpdating] = useState(false);
   const [deletingAnnouncementId, setDeletingAnnouncementId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -175,7 +175,7 @@ const CommunicationsDashboard = ({ user }) => {
 
   const openEditModal = (item) => {
     setEditingAnnouncement(item);
-    setEditForm({ title: item.title, message: item.message, file: null });
+    setEditForm({ title: item.title, message: item.message, file: null, fileError: '' });
   };
 
   const handleUpdate = async (e) => {
@@ -628,7 +628,7 @@ const CommunicationsDashboard = ({ user }) => {
       {/* Edit Communication Modal */}
       <Modal show={!!editingAnnouncement} onHide={() => setEditingAnnouncement(null)} centered size="lg">
         <div className="modal-content border-0 overflow-hidden rounded-4">
-          <Modal.Header className="bg-primary text-white border-0 p-4">
+          <Modal.Header className="bg-primary text-white border-0 p-4 d-flex align-items-center justify-content-between">
             <Modal.Title className="fw-bold d-flex align-items-center gap-2">
               <PencilSquareIcon style={{ width: '1.5rem' }} />
               Edit Communication
@@ -674,26 +674,32 @@ const CommunicationsDashboard = ({ user }) => {
                         const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
                         
                         if (!allowedExts.includes(ext)) {
-                          toast.error("Invalid file format");
+                          setEditForm({ ...editForm, fileError: "Invalid file format", file: null });
                           e.target.value = null;
                           return;
                         }
 
                         if (file.size > 10 * 1024 * 1024) {
-                          toast.error("File size must be less than 10MB");
+                          setEditForm({ ...editForm, fileError: "File size must be less than 10MB", file: null });
                           e.target.value = null;
                           return;
                         }
                         
-                        setEditForm({ ...editForm, file: file });
+                        setEditForm({ ...editForm, file: file, fileError: '' });
                       }
                     }}
                     className="bg-white border-0 shadow-none px-0"
                   />
-                  {editingAnnouncement?.attachment && !editForm.file && (
+                  {editingAnnouncement?.attachment && !editForm.file && !editForm.fileError && (
                     <div className="mt-2 d-flex align-items-center gap-2 text-primary small fw-medium">
                       <CheckBadgeIcon style={{ width: '0.9rem' }} />
                       Current: {editingAnnouncement.attachment.split('-').slice(1).join('-')}
+                    </div>
+                  )}
+                  {editForm.fileError && (
+                    <div className="mt-2 d-flex align-items-center gap-2 text-danger small fw-bold">
+                      <XMarkIcon style={{ width: '1rem' }} />
+                      {editForm.fileError}
                     </div>
                   )}
                 </div>
@@ -702,8 +708,7 @@ const CommunicationsDashboard = ({ user }) => {
                 </Form.Text>
               </Form.Group>
 
-              <div className="d-flex justify-content-end gap-3 pt-3 border-top">
-                <Button variant="light" className="px-4 fw-bold rounded-3 border" onClick={() => setEditingAnnouncement(null)}>Cancel</Button>
+              <div className="d-flex justify-content-end pt-3 border-top">
                 <Button variant="primary" type="submit" disabled={updating} className="px-5 fw-bold rounded-3 shadow-sm d-flex align-items-center gap-2">
                   {updating ? <Spinner size="sm" /> : 'Save Changes'}
                 </Button>
@@ -716,14 +721,14 @@ const CommunicationsDashboard = ({ user }) => {
       {/* Acknowledgments Modal */}
       <Modal show={!!selectedAnnouncement} onHide={() => setSelectedAnnouncement(null)} centered size="lg">
         <div className="modal-content border-0 overflow-hidden rounded-4">
-          <Modal.Header className="bg-primary text-white border-0 p-4">
+          <Modal.Header className="bg-primary text-white border-0 p-4 d-flex align-items-center justify-content-between">
             <div>
               <Modal.Title className="fw-bold mb-1">Acknowledgment List</Modal.Title>
               <p className="small mb-0 opacity-75 text-truncate" style={{ maxWidth: '400px' }}>
                 "{selectedAnnouncement?.title}"
               </p>
             </div>
-            <Button variant="link" className="text-white p-0 ms-auto" onClick={() => setSelectedAnnouncement(null)}><XMarkIcon style={{ width: '1.5rem' }} /></Button>
+            <Button variant="link" className="text-white p-0" onClick={() => setSelectedAnnouncement(null)}><XMarkIcon style={{ width: '1.5rem' }} /></Button>
           </Modal.Header>
           <Modal.Body className="p-4" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             {loadingAcks ? (
@@ -853,15 +858,8 @@ const CommunicationsDashboard = ({ user }) => {
                         <p className="text-primary fw-medium mb-0" style={{ fontSize: '0.65rem' }}>OFFICIAL ATTACHMENT</p>
                       </div>
                    </div>
-                   <div className="d-flex gap-3 w-100 w-md-auto">
+                   <div className="d-flex w-100 w-md-auto">
                       <Button
-                        variant="outline-secondary"
-                        className="px-4 py-2 rounded-3 fw-bold small flex-grow-1 flex-md-grow-0"
-                        onClick={() => setViewingAttachment(null)}
-                      >
-                        Cancel
-                      </Button>
-                       <Button
                         onClick={() => handleDownload(viewingAttachment)}
                         className="btn-primary d-flex align-items-center justify-content-center gap-2 px-4 py-2 rounded-3 fw-bold shadow-sm flex-grow-1 flex-md-grow-0"
                       >
