@@ -595,13 +595,31 @@ const TaskDashboard = ({ user }) => {
                         );
                       })()}
 
-                      {newTask.assignedType === 'employee' && (
-                        <Form.Select value={newTask.assignedTo} onChange={(e) => setNewTask({ ...newTask, assignedTo: e.target.value })} 
-                          className="rounded-3 border-light-subtle" required>
-                          <option value="">Select Specific Officer</option>
-                          {staff.map(u => <option key={u.userID} value={u.userID}>{u.name} - {u.role?.replace(/_/g, ' ')}</option>)}
-                        </Form.Select>
-                      )}
+                      {newTask.assignedType === 'employee' && (() => {
+                        const roleRanks = { 'collector': 1, 'additional_deputy_collector': 2, 'sdo': 3, 'tehsildar': 4, 'bdo': 5, 'talathi': 6, 'gramsevak': 7, 'gram_sevak': 7 };
+                        const userRank = roleLower.includes('admin') ? 0 : (roleRanks[roleLower] || 99);
+                        const allowedRoles = [...new Set(staff.map(u => u.role).filter(r => r && r !== 'SYSTEM_ADMINISTRATOR'))]
+                          .filter(r => (roleRanks[r.toLowerCase()] || 99) > userRank);
+
+                        return (
+                          <div className="vstack gap-2">
+                            <Form.Select value={newTask.selectedRole || ''} onChange={(e) => setNewTask({ ...newTask, selectedRole: e.target.value, assignedTo: '' })} 
+                              className="rounded-3 border-light-subtle" required>
+                              <option value="">Select Role</option>
+                              {allowedRoles.map(r => <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>)}
+                            </Form.Select>
+                            {newTask.selectedRole && (
+                              <Form.Select value={newTask.assignedTo} onChange={(e) => setNewTask({ ...newTask, assignedTo: e.target.value })} 
+                                className="rounded-3 border-light-subtle" required>
+                                <option value="">Select Specific Officer</option>
+                                {staff.filter(u => u.role === newTask.selectedRole).map(u => (
+                                  <option key={u.userID} value={u.userID}>{u.name}</option>
+                                ))}
+                              </Form.Select>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {newTask.assignedType === 'village' && (
                         <div className="vstack gap-2">
@@ -786,28 +804,37 @@ const TaskDashboard = ({ user }) => {
                             </div>
                           </td>
                           <td>
-                            <div className="d-flex justify-content-center gap-2">
+                            <div className="d-flex justify-content-center gap-3">
                               <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-view-${task.id}`}>View Task Details</Tooltip>}>
-                                <Button variant="light" size="sm" onClick={() => { setSelectedTask(task); setShowDetailsModal(true); }} className="rounded-pill p-1 border-0 bg-transparent">
-                                  <EyeIcon style={{ width: '1rem', height: '1rem' }} className="text-primary" />
+                                <Button variant="light" size="sm" onClick={() => { setSelectedTask(task); setShowDetailsModal(true); }} className="p-1 border-0 bg-transparent d-flex flex-column align-items-center">
+                                  <EyeIcon style={{ width: '1.1rem', height: '1.1rem' }} className="text-primary mb-1" />
+                                  <span className="fw-bold text-dark" style={{ fontSize: '0.6rem' }}>View</span>
                                 </Button>
                               </OverlayTrigger>
                               <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-remark-${task.id}`}>Add Remark</Tooltip>}>
-                                <Button variant="light" size="sm" onClick={() => { setRemarkTask(task); setRemarkText(''); setIsRemarkModalOpen(true); }} className="rounded-pill p-1 border-0 bg-transparent">
-                                  <ChatBubbleLeftRightIcon style={{ width: '1rem', height: '1rem' }} className="text-success" />
+                                <Button variant="light" size="sm" onClick={() => { setRemarkTask(task); setRemarkText(''); setIsRemarkModalOpen(true); }} className="p-1 border-0 bg-transparent d-flex flex-column align-items-center">
+                                  <ChatBubbleLeftRightIcon style={{ width: '1.1rem', height: '1.1rem' }} className="text-success mb-1" />
+                                  <span className="fw-bold text-dark" style={{ fontSize: '0.6rem' }}>Remark</span>
                                 </Button>
                               </OverlayTrigger>
-                              {!canCreateTask && !roleLower.includes('gramsevak') && !roleLower.includes('gram_sevak') && (
+                              
+                              {/* Forward Task Button - Visible if assigned to user or created by user, AND user is not a Gram Sevak */}
+                              {((task.assignedToId?.toString() === user?.userID?.toString()) || (task.createdById?.toString() === user?.userID?.toString())) && 
+                               !roleLower.includes('gramsevak') && !roleLower.includes('gram_sevak') && (
                                 <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-forward-${task.id}`}>Forward Task</Tooltip>}>
-                                  <Button variant="light" size="sm" onClick={() => handleOpenForwardModal(task)} className="rounded-pill p-1 border-0 bg-transparent">
-                                    <PaperAirplaneIcon style={{ width: '1rem', height: '1rem' }} className="text-info" />
+                                  <Button variant="light" size="sm" onClick={() => handleOpenForwardModal(task)} className="p-1 border-0 bg-transparent d-flex flex-column align-items-center">
+                                    <PaperAirplaneIcon style={{ width: '1.1rem', height: '1.1rem' }} className="text-info mb-1" />
+                                    <span className="fw-bold text-dark" style={{ fontSize: '0.6rem' }}>Forward</span>
                                   </Button>
                                 </OverlayTrigger>
                               )}
-                              {!canCreateTask && (
+
+                              {/* Update Progress Button - Visible if assigned to user or created by user */}
+                              {((task.assignedToId?.toString() === user?.userID?.toString()) || (task.createdById?.toString() === user?.userID?.toString())) && (
                                 <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-progress-${task.id}`}>Update Progress</Tooltip>}>
-                                  <Button variant="light" size="sm" onClick={() => { setUpdateTaskObj(task); setUpdateAchievementValue(task.achievement || 0); setIsUpdateModalOpen(true); }} className="rounded-pill p-1 border-0 bg-transparent">
-                                    <ArrowPathIcon style={{ width: '1rem', height: '1rem' }} className="text-warning" />
+                                  <Button variant="light" size="sm" onClick={() => { setUpdateTaskObj(task); setUpdateAchievementValue(task.achievement || 0); setIsUpdateModalOpen(true); }} className="p-1 border-0 bg-transparent d-flex flex-column align-items-center">
+                                    <ArrowPathIcon style={{ width: '1.1rem', height: '1.1rem' }} className="text-warning mb-1" />
+                                    <span className="fw-bold text-dark" style={{ fontSize: '0.6rem' }}>Update</span>
                                   </Button>
                                 </OverlayTrigger>
                               )}

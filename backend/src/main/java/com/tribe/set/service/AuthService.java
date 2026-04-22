@@ -134,6 +134,19 @@ public class AuthService {
         return "Password changed successfully";
     }
 
+    public boolean verifyEmail(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
+    public String resetPasswordByEmail(String email, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with this email: " + email));
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return "Password reset successfully";
+    }
+
     public User getUserById(String userId) {
         return userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));

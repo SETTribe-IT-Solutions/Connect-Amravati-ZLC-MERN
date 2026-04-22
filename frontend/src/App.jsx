@@ -19,7 +19,7 @@ const UserManagement = React.lazy(() => import('./pages/users/UserManagement'));
 const Appreciation = React.lazy(() => import('./pages/appreciation/Appreciation'));
 const Notifications = React.lazy(() => import('./pages/notifications/Notifications'));
 const ChangePassword = React.lazy(() => import('./pages/auth/ChangePassword'));
-import { changePassword, loginUser, getCurrentUser, logoutUser } from './services/auth/authService';
+import { changePassword, loginUser, getCurrentUser, logoutUser, verifyEmail, resetPasswordByEmail } from './services/auth/authService';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -135,6 +135,26 @@ function App() {
         }
       }
       toast.error(msg);
+      return false;
+    }
+  };
+
+  const handleVerifyEmail = async (email) => {
+    try {
+      await verifyEmail(email);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const handleForgotPassword = async (email, newPassword) => {
+    try {
+      await resetPasswordByEmail(email, newPassword);
+      toast.success('Password reset successfully');
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data || 'Failed to reset password');
       return false;
     }
   };
@@ -289,9 +309,10 @@ function App() {
                   path="change-password" 
                   element={
                     <ChangePassword 
-                      onPasswordChange={handlePasswordChange}
-                      onVerifyPassword={handleVerifyPassword}
+                      onVerifyEmail={handleVerifyEmail}
+                      onForgotPassword={handleForgotPassword}
                       onClose={() => window.history.back()}
+                      mode="forgot"
                     />
                   } 
                 />
@@ -305,11 +326,10 @@ function App() {
                 path="/forgot-password" 
                 element={
                   <ChangePassword 
-                    onPasswordChange={handlePasswordChange}
-                    onVerifyPassword={handleVerifyPassword}
+                    onVerifyEmail={handleVerifyEmail}
+                    onForgotPassword={handleForgotPassword}
                     onClose={() => window.location.href = '/login'}
-                    initialTab="forgot"
-                    hideTabs={true}
+                    mode="forgot"
                   />
                 } 
               />

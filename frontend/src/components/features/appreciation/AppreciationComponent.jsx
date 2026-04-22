@@ -30,6 +30,9 @@ const AppreciationComponent = ({ user }) => {
 
   // Debounce search term
   const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+
+  
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);

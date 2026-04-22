@@ -36,3 +36,13 @@ export const refreshSession = async () => {
   const response = await axiosInstance.post("/auth/refresh-token");
   return response.data;
 };
+
+export const verifyEmail = async (email) => {
+  const response = await axiosInstance.post("/auth/verify-email", { email });
+  return response.data;
+};
+
+export const resetPasswordByEmail = async (email, newPassword) => {
+  const response = await axiosInstance.post("/auth/reset-password-email", { email, newPassword });
+  return response.data;
+};
