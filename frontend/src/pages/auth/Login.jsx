@@ -50,13 +50,15 @@ const LoginPage = () => {
     try {
       const data = await loginUser(formData.phone, formData.password);
       if (data.message && data.message.toLowerCase() === "login successful") {
-        dispatch(setCredentials({
-          user: data.user,
-          token: data.token
-        }));
+        dispatch(setCredentials(data));
         toast.success('Login successful');
         setLoading(false);
-        navigate("/dashboard");
+        
+        if (data.role === 'SYSTEM_ADMINISTRATOR') {
+          navigate("/users");
+        } else {
+          navigate("/dashboard");
+        }
         return;
       } else {
         setLoginError(data.message || 'Invalid credentials');

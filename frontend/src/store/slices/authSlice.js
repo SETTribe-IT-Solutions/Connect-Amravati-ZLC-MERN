@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { ROLES } from '../../constants/roles';
 
 const initialState = {
   user: null,
@@ -23,7 +24,7 @@ const authSlice = createSlice({
         taluka: userData.taluka,
         village: userData.village,
         loginTime: userData.loginTime || new Date().toISOString(),
-        permissions: userData.role === 'SYSTEM_ADMINISTRATOR' ? ['all'] : ['view_tasks'],
+        permissions: userData.role === ROLES.SYSTEM_ADMINISTRATOR ? ['all'] : ['view_tasks'],
       };
       state.isAuthenticated = true;
       state.loading = false;
