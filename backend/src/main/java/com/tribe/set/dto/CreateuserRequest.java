@@ -1,6 +1,7 @@
 package com.tribe.set.dto;
 
 import com.tribe.set.entity.Role;
+import com.tribe.set.entity.UserStatus;
 import jakarta.validation.constraints.*;
 
 public class CreateuserRequest {
@@ -32,7 +33,7 @@ public class CreateuserRequest {
     @NotNull(message = "Requester ID is required")
     private String requesterId;
 
-    private Boolean active;
+    private UserStatus status;
 
     // ─── Getters ───
 
@@ -118,11 +119,11 @@ public class CreateuserRequest {
         this.requesterId = requesterId;
     }
 
-    public Boolean getActive() {
-        return active;
+    public UserStatus getStatus() {
+        return status;
     }
 
-    public void setActive(Boolean active) {
-        this.active = active;
+    public void setStatus(UserStatus status) {
+        this.status = status;
     }
 }

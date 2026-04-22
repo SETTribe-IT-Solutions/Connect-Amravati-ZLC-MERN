@@ -22,7 +22,7 @@ export const createTask = async (formData) => {
   try {
     const response = await axiosInstance.post("/tasks", formData, {
       headers: {
-        'Content-Type': undefined // Browser sets it automatically with boundary
+        'Content-Type': 'multipart/form-data'
       }
     });
     return response.data;

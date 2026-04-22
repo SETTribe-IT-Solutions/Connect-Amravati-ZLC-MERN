@@ -1,17 +1,11 @@
 package com.tribe.set.service;
 
 import org.springframework.stereotype.Service;
-
-import com.tribe.set.entity.User;
-import com.tribe.set.dto.TaskRequest;
-import com.tribe.set.dto.TaskResponse;
-
+import com.tribe.set.security.SecurityUtils;
 import com.tribe.set.entity.*;
 import com.tribe.set.dto.*;
 import com.tribe.set.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,6 +40,7 @@ public class TaskService {
     // ═══════════════════════════════════════════════════
 
     public TaskResponse createTask(TaskRequest request, String creatorId, MultipartFile file) {
+        SecurityUtils.validateRequester(creatorId);
 
         User creator = findUser(creatorId);
         User assignee = findUser(request.getAssignedTo());
@@ -64,9 +59,9 @@ public class TaskService {
         }
 
         // CHECK 3: Cannot assign to inactive user
-        if (!assignee.getActive()) {
+        if (assignee.getStatus() != UserStatus.ACTIVE) {
             throw new RuntimeException(
-                    "Cannot assign task to inactive user: " + assignee.getName());
+                    "Cannot assign task to " + assignee.getStatus().toString().toLowerCase() + " user: " + assignee.getName());
         }
 
         // CHECK 4: Due date cannot be in the past
@@ -153,6 +148,7 @@ public class TaskService {
     // ═══════════════════════════════════════════════════
 
 	public TaskResponse reassignTask(Long taskId, String newAssigneeId, String requesterId) {
+        SecurityUtils.validateRequester(requesterId);
 
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
@@ -212,6 +208,7 @@ public class TaskService {
     // ═══════════════════════════════════════════════════
 
     public TaskResponse forwardTask(Long taskId, String newAssigneeId, String requesterId) {
+        SecurityUtils.validateRequester(requesterId);
 
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
@@ -237,8 +234,8 @@ public class TaskService {
         }
 
         // Check if user is active
-        if (!newAssignee.getActive()) {
-            throw new RuntimeException("Cannot forward task to an inactive user");
+        if (newAssignee.getStatus() != UserStatus.ACTIVE) {
+            throw new RuntimeException("Cannot forward task to an " + newAssignee.getStatus().toString().toLowerCase() + " user");
         }
 
         String oldAssigneeId = task.getAssignedToUserId();
@@ -286,6 +283,7 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public Page<TaskResponse> getTasks(String finalUserId, Pageable pageable) {
+        SecurityUtils.validateRequester(finalUserId);
         User requester = findUser(finalUserId);
 
         Page<Task> tasks;
@@ -324,6 +322,7 @@ public class TaskService {
     // ═══════════════════════════════════════════════════
 
     public TaskResponse updateTaskStatus(Long taskId, TaskStatus newStatus, String requesterId) {
+        SecurityUtils.validateRequester(requesterId);
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
 
@@ -365,6 +364,7 @@ public class TaskService {
     // ═══════════════════════════════════════════════════
 
     public TaskResponse updateTaskProgress(Long taskId, Double achievedWorkInput, String requesterId) {
+        SecurityUtils.validateRequester(requesterId);
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
 
@@ -463,6 +463,7 @@ public class TaskService {
     // ═══════════════════════════════════════════════════
 
     public RemarkResponse addRemark(Long taskId, String remarkText, String requesterId) {
+        SecurityUtils.validateRequester(requesterId);
         User requester = findUser(requesterId);
         Task task = findTask(taskId);
 
@@ -502,6 +503,7 @@ public class TaskService {
     // ═══════════════════════════════════════════════════
 
     public DashboardResponse getDashboard(String finalUserId) {
+        SecurityUtils.validateRequester(finalUserId);
         User requester = findUser(finalUserId);
 
         long total, pending, inProgress, completed, overdue;

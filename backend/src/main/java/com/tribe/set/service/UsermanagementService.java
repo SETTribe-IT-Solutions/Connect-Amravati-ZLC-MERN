@@ -1,14 +1,9 @@
 package com.tribe.set.service;
  
-import com.tribe.set.entity.Role;
-import com.tribe.set.entity.User;
- 
-import com.tribe.set.dto.CreateuserRequest;
-import com.tribe.set.dto.UpdateUserRequest;
-import com.tribe.set.dto.UserResponse;
-import com.tribe.set.repository.AppreciationRepository;
-import com.tribe.set.repository.TaskRepository;
-import com.tribe.set.repository.UserRepository;
+import com.tribe.set.security.SecurityUtils;
+import com.tribe.set.entity.*;
+import com.tribe.set.dto.*;
+import com.tribe.set.repository.*;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
  
 import com.tribe.set.dto.UserStatsDTO;
+import com.tribe.set.entity.UserStatus;
 import java.time.LocalDateTime;
 
 @Service
@@ -40,14 +36,15 @@ public class UsermanagementService {
     private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     // ... helper ...
-    private User findUser1(String userId) {
+    private User findUser(String userId) {
         return userRepository.findByUserID(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
     }
 
     @Transactional
     public UserResponse createUser(CreateuserRequest request, String requesterId) {
-        User requester = findUser1(requesterId);
+        SecurityUtils.validateRequester(requesterId);
+        User requester = findUser(requesterId);
 
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
             throw new RuntimeException("Access Denied: Only System Administrator can create users");
@@ -71,18 +68,22 @@ public class UsermanagementService {
         user.setDistrict(request.getDistrict());
         user.setTaluka(request.getTaluka());
         user.setVillage(request.getVillage());
+        user.setVillage(request.getVillage());
         user.setPhone(request.getPhone());
         
-        user.setActive(true); 
+        user.setStatus(UserStatus.ACTIVE); 
   
         return enrichWithStats(UserResponse.from(userRepository.save(user)));
     }
 
-    public Page<UserResponse> getAllUsers(String requesterId, String searchTerm, Role filterRole, Boolean active, Pageable pageable) {
-        User requester = (requesterId != null && !requesterId.equals("null")) ? findUser1(requesterId) : null;
+    public Page<UserResponse> getAllUsers(String requesterId, String searchTerm, Role filterRole, UserStatus status, Pageable pageable) {
+        if (requesterId != null && !requesterId.equals("null")) {
+            SecurityUtils.validateRequester(requesterId);
+        }
+        User requester = (requesterId != null && !requesterId.equals("null")) ? findUser(requesterId) : null;
         
         List<Role> visibleRoles;
-        if (requester != null && requester.getRole() == Role.SYSTEM_ADMINISTRATOR) {
+        if (requester != null && (requester.getRole() == Role.SYSTEM_ADMINISTRATOR || requester.getRole() == Role.COLLECTOR)) {
             visibleRoles = Arrays.asList(Role.values());
         } else {
             visibleRoles = Arrays.stream(Role.values())
@@ -90,15 +91,15 @@ public class UsermanagementService {
                     .collect(Collectors.toList());
         }
 
-        Page<User> userPage = userRepository.findAllFiltered(visibleRoles, searchTerm, filterRole, active, pageable);
+        Page<User> userPage = userRepository.findAllFiltered(visibleRoles, searchTerm, filterRole, status, pageable);
         
         return userPage.map(u -> enrichWithStats(UserResponse.from(u)));
     }
 
     public UserStatsDTO getUserStats() {
         long total = userRepository.countAllUsers();
-        long active = userRepository.countByActive(true);
-        long inactive = userRepository.countByActive(false);
+        long active = userRepository.countByStatus(UserStatus.ACTIVE);
+        long inactive = userRepository.countByStatus(UserStatus.INACTIVE);
         
         LocalDateTime firstDayOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
         long newThisMonth = userRepository.countNewUsersThisMonth(firstDayOfMonth);
@@ -111,11 +112,12 @@ public class UsermanagementService {
     // ═══════════════════════════════════════════════════
  
     public List<UserResponse> getUsersByRole(Role role, String requesterId) {
-        findUser1(requesterId);
+        SecurityUtils.validateRequester(requesterId);
+        findUser(requesterId);
  
         return userRepository.findByRole(role)
                 .stream()
-                .filter(User::getActive)
+                .filter(u -> u.getStatus() == UserStatus.ACTIVE)
                 .map(UserResponse::from)
                 .collect(Collectors.toList());
     }
@@ -125,38 +127,37 @@ public class UsermanagementService {
     // ═══════════════════════════════════════════════════
  
     public UserResponse getUserProfile(String targetUserId, String requesterId) {
-        findUser1(requesterId);
-        User target = findUser1(targetUserId);
+        SecurityUtils.validateRequester(requesterId);
+        findUser(requesterId);
+        User target = findUser(targetUserId);
         return enrichWithStats(UserResponse.from(target));
     }
  
     // ═══════════════════════════════════════════════════
-    // SET ACTIVE STATUS (activate / deactivate)
-    // This is the dedicated method called from PATCH /{id}/status.
-    // Uses a direct @Modifying SQL query — guaranteed to hit the DB.
+    // SET STATUS (activate / deactivate / suspend)
     // ═══════════════════════════════════════════════════
  
     @Transactional
-    public UserResponse setActiveStatus(String targetUserId, Boolean active, String requesterId) {
-        User requester = findUser1(requesterId);
+    public UserResponse setStatus(String targetUserId, UserStatus status, String requesterId) {
+        User requester = findUser(requesterId);
  
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
             throw new RuntimeException("Access Denied: Only System Administrator can change user status");
         }
  
-        User target = findUser1(targetUserId);
+        User target = findUser(targetUserId);
  
         if (target.getUserID().equals(requesterId)) {
-            throw new RuntimeException("You cannot deactivate your own account");
+            throw new RuntimeException("You cannot change your own account status");
         }
  
-        // Direct SQL UPDATE — does not rely on JPA dirty checking or entity state
-        int rows = userRepository.updateActiveStatus(targetUserId, active);
+        // Direct SQL UPDATE
+        int rows = userRepository.updateStatus(targetUserId, status);
         if (rows == 0) {
             throw new RuntimeException("Failed to update status — no rows affected for user: " + targetUserId);
         }
  
-        target.setActive(active); // keep in-memory object in sync for response
+        target.setStatus(status); // keep in-memory object in sync for response
         return enrichWithStats(UserResponse.from(target));
     }
  
@@ -166,13 +167,13 @@ public class UsermanagementService {
  
     @Transactional
     public UserResponse updateUserRole(String targetUserId, Role newRole, String requesterId) {
-        User requester = findUser1(requesterId);
+        User requester = findUser(requesterId);
  
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
             throw new RuntimeException("Access Denied: Only System Administrator can change roles");
         }
  
-        User target = findUser1(targetUserId);
+        User target = findUser(targetUserId);
         target.setRole(newRole);
         return UserResponse.from(userRepository.save(target));
     }
@@ -185,13 +186,14 @@ public class UsermanagementService {
  
     @Transactional
     public UserResponse updateUser(String targetUserId, UpdateUserRequest request, String requesterId) {
-        User requester = findUser1(requesterId);
+        SecurityUtils.validateRequester(requesterId);
+        User requester = findUser(requesterId);
  
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR && !requester.getUserID().equals(targetUserId)) {
             throw new RuntimeException("Access Denied: You do not have permission to update this user");
         }
  
-        User target = findUser1(targetUserId);
+        User target = findUser(targetUserId);
  
         if (request.getName() != null)
             target.setName(request.getName());
@@ -220,16 +222,16 @@ public class UsermanagementService {
             target.setPassword(passwordEncoder.encode(request.getPassword()));
         }
  
-        // Save all non-active fields first
+        // Save all non-status fields first
         userRepository.save(target);
  
-        // Handle active separately using direct SQL — avoids JPA caching issues
-        if (request.getActive() != null) {
-            if (target.getUserID().equals(requesterId) && !request.getActive()) {
-                throw new RuntimeException("You cannot deactivate your own account");
+        // Handle status separately using direct SQL — avoids JPA caching issues
+        if (request.getStatus() != null) {
+            if (target.getUserID().equals(requesterId) && request.getStatus() != UserStatus.ACTIVE) {
+                throw new RuntimeException("You cannot change your own account status");
             }
-            userRepository.updateActiveStatus(targetUserId, request.getActive());
-            target.setActive(request.getActive());
+            userRepository.updateStatus(targetUserId, request.getStatus());
+            target.setStatus(request.getStatus());
         }
  
         return enrichWithStats(UserResponse.from(target));
@@ -241,13 +243,13 @@ public class UsermanagementService {
  
     @Transactional
     public void deleteUser(String id, String long1) {
-        User requester = findUser1(long1);
+        User requester = findUser(long1);
  
         if (requester.getRole() != Role.SYSTEM_ADMINISTRATOR) {
             throw new RuntimeException("Access Denied: Only System Administrator can delete users");
         }
  
-        User target = findUser1(id);
+        User target = findUser(id);
  
         if (target.getUserID().equals(long1)) {
             throw new RuntimeException("You cannot delete your own account");
@@ -264,10 +266,10 @@ public class UsermanagementService {
     // GET SUBORDINATES
     // ═══════════════════════════════════════════════════
     public List<UserResponse> getSubordinates(String requesterId) {
-        User requester = findUser1(requesterId);
+        User requester = findUser(requesterId);
         int requesterLevel = requester.getRole().getLevel();
         
-        return userRepository.findByActive(true)
+        return userRepository.findByStatus(UserStatus.ACTIVE)
                 .stream()
                 .filter(u -> u.getRole() != Role.SYSTEM_ADMINISTRATOR)
                 .filter(u -> u.getRole().getLevel() > requesterLevel)
@@ -292,10 +294,6 @@ public class UsermanagementService {
                 .collect(Collectors.toList());
     }
 
-    private User findUser(String userId) {
-        return userRepository.findByUserID(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-    }
  
     private UserResponse enrichWithStats(UserResponse res) {
         String userId = res.getUserID();

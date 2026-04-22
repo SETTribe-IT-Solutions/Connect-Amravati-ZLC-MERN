@@ -22,9 +22,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private AuthService authService;
@@ -58,6 +62,8 @@ public class AuthController {
                 userDetails.getVillage(),
                 "Login successful");
 
+        logger.info("Successful login for Email: {} from IP: {}", userDetails.getEmail(), httpRequest.getRemoteAddr());
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, jwtRefreshCookie.toString())
@@ -81,6 +87,7 @@ public class AuthController {
                         RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getUserID());
                         ResponseCookie jwtRefreshCookie = jwtUtils.generateRefreshCookie(newRefreshToken.getToken());
 
+                        logger.info("Successful token refresh for User ID: {}", user.getUserID());
                         return ResponseEntity.ok()
                                 .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
                                 .header(HttpHeaders.SET_COOKIE, jwtRefreshCookie.toString())
@@ -98,6 +105,7 @@ public class AuthController {
         if (auth != null && auth.getPrincipal() instanceof UserDetailsImpl) {
             String userId = ((UserDetailsImpl) auth.getPrincipal()).getId();
             refreshTokenService.deleteByUserId(userId);
+            logger.info("User logged out successfully. User ID: {}", userId);
         }
 
         ResponseCookie jwtCookie = jwtUtils.getCleanAccessCookie();

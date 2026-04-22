@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import java.util.List;
 
 import com.tribe.set.dto.UserStatsDTO;
+import com.tribe.set.entity.UserStatus;
 
 @RestController
 @RequestMapping("/api/users")
@@ -62,13 +63,13 @@ public class UserManagementController {
             @RequestParam(defaultValue = "desc") String direction,
             @RequestParam(required = false, name = "searchTerm") String searchTerm,
             @RequestParam(required = false, name = "role") Role role,
-            @RequestParam(required = false, name = "active") Boolean active,
+            @RequestParam(required = false, name = "status") UserStatus status,
             @RequestParam(required = false, name = "requesterId") String requesterId) {
         
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
         
-        return ResponseEntity.ok(userService.getAllUsers(requesterId, searchTerm, role, active, pageable));
+        return ResponseEntity.ok(userService.getAllUsers(requesterId, searchTerm, role, status, pageable));
     }
 
     @GetMapping("/profile/{id}")

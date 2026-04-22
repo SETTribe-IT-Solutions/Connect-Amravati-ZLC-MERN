@@ -3,12 +3,13 @@ package com.tribe.set.entity;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.ArrayList;
 
 @Entity
-@Table(name = "tasks")
-public class Task {
+@Table(name = "tasks", indexes = {
+        @Index(name = "idx_assigned_user", columnList = "assigned_to"),
+        @Index(name = "idx_created_by", columnList = "created_by")
+})
+public class Task extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,7 +39,7 @@ public class Task {
     private Integer achievement;
     private String location;
 
-    @Column(name = "created_by", nullable = false)
+    @Column(name = "created_by_user_id", nullable = false)
     private String createdByUserId;
 
     // Stores the file name or path relative to the uploads directory
@@ -47,16 +48,6 @@ public class Task {
 
     @Column(name = "assigned_to", nullable = false)
     private String assignedToUserId;
-
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    private LocalDateTime updatedAt = LocalDateTime.now();
-
-    @PreUpdate
-    public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 
     // Getters and Setters
     public Long getId() {
@@ -121,22 +112,6 @@ public class Task {
 
     public void setAssignedToUserId(String assignedToUserId) {
         this.assignedToUserId = assignedToUserId;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
     public String getDepartment() {

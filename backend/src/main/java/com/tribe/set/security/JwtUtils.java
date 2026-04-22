@@ -21,17 +21,27 @@ import org.springframework.web.util.WebUtils;
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    @Value("${amravati.app.jwtSecret}")
+    @Value("${amravati.app.jwtSecret:Z3JlYXRlc3Qtc2VjcmV0LWtleS1mb3Itamp3dC1hcHAtZGV2ZWxvcG1lbnQ=}")
     private String jwtSecret;
 
     @Value("${amravati.app.jwtExpirationMs:900000}")
     private int jwtExpirationMs;
+
+    @Value("${amravati.app.jwtRefreshExpirationMs:604800000}")
+    private long refreshExpirationMs;
 
     @Value("${amravati.app.jwtCookieName:amravati-access}")
     private String jwtAccessCookieName;
 
     @Value("${amravati.app.jwtRefreshCookieName:amravati-refresh}")
     private String jwtRefreshCookieName;
+
+    @Value("${amravati.app.cookie.secure:false}")
+    private boolean secureCookie;
+
+    public long getRefreshExpirationMs() {
+        return refreshExpirationMs;
+    }
 
     public String getJwtFromCookies(HttpServletRequest request) {
         Cookie cookie = WebUtils.getCookie(request, jwtAccessCookieName);
@@ -49,7 +59,7 @@ public class JwtUtils {
                 .path("/")
                 .maxAge(jwtExpirationMs / 1000)
                 .httpOnly(true)
-                .secure(false)
+                .secure(secureCookie)
                 .sameSite("Lax")
                 .build();
     }
@@ -57,9 +67,9 @@ public class JwtUtils {
     public ResponseCookie generateRefreshCookie(String refreshToken) {
         return ResponseCookie.from(jwtRefreshCookieName, refreshToken)
                 .path("/")
-                .maxAge(24 * 60 * 60) // 24 hours
+                .maxAge(refreshExpirationMs / 1000)
                 .httpOnly(true)
-                .secure(false)
+                .secure(secureCookie)
                 .sameSite("Lax")
                 .build();
     }

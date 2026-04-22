@@ -2,6 +2,7 @@ package com.tribe.set.repository;
 
 import com.tribe.set.entity.Role;
 import com.tribe.set.entity.User;
+import com.tribe.set.entity.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -26,7 +27,7 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     List<User> findByRole(Role role);
 
-    List<User> findByActive(Boolean active);
+    List<User> findByStatus(UserStatus status);
 
     List<User> findAllByUserIDIn(java.util.Collection<String> userIds);
 
@@ -34,15 +35,15 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     boolean existsByUserID(String string);
     
-    @Query("SELECT DISTINCT u.taluka FROM User u WHERE u.role = :role AND u.active = true AND u.taluka IS NOT NULL")
+    @Query("SELECT DISTINCT u.taluka FROM User u WHERE u.role = :role AND u.status = 'ACTIVE' AND u.taluka IS NOT NULL")
     List<String> findDistinctTalukasByRole(@Param("role") Role role);
 
-    @Query("SELECT DISTINCT u.village FROM User u WHERE u.role = :role AND u.taluka = :taluka AND u.active = true AND u.village IS NOT NULL")
+    @Query("SELECT DISTINCT u.village FROM User u WHERE u.role = :role AND u.taluka = :taluka AND u.status = 'ACTIVE' AND u.village IS NOT NULL")
     List<String> findDistinctVillagesByRoleAndTaluka(@Param("role") Role role, @Param("taluka") String taluka);
 
     @Modifying
-    @Query("UPDATE User u SET u.active = :active WHERE u.userID = :userId")
-    int updateActiveStatus(@Param("userId") String userId, @Param("active") Boolean active);
+    @Query("UPDATE User u SET u.status = :status WHERE u.userID = :userId")
+    int updateStatus(@Param("userId") String userId, @Param("status") UserStatus status);
 
     @Query("SELECT DISTINCT u FROM User u WHERE u.isAppreciated = false AND " +
            "EXISTS (SELECT 1 FROM Task t WHERE t.assignedToUserId = u.userID AND t.status = com.tribe.set.entity.TaskStatus.COMPLETED)")
@@ -62,15 +63,15 @@ public interface UserRepository extends JpaRepository<User, String> {
            "OR LOWER(u.village) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
            "OR LOWER(CAST(u.role AS string)) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
            "AND (:filterRole IS NULL OR u.role = :filterRole) " +
-           "AND (:active IS NULL OR u.active = :active)")
+           "AND (:status IS NULL OR u.status = :status)")
     Page<User> findAllFiltered(
         @Param("roles") List<Role> visibleRoles,
         @Param("searchTerm") String searchTerm,
         @Param("filterRole") Role filterRole,
-        @Param("active") Boolean active,
+        @Param("status") UserStatus status,
         Pageable pageable);
 
-    long countByActive(Boolean active);
+    long countByStatus(UserStatus status);
 
     @Query("SELECT COUNT(u) FROM User u")
     long countAllUsers();

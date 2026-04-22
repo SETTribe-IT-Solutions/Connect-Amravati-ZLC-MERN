@@ -7,15 +7,17 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Entity
-@Table(name = "users")
-@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class User {
+@Table(name = "users", indexes = {
+        @Index(name = "idx_user_email", columnList = "email"),
+        @Index(name = "idx_user_phone", columnList = "phone")
+})
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+public class User extends BaseEntity {
 
-	@Id
-	@Column(name = "userid")
-	private String userID;
-	
-	
+    @Id
+    @Column(name = "userid")
+    private String userID;
+
     @Column(nullable = false)
     private String name;
 
@@ -38,8 +40,9 @@ public class User {
 
     private Double rating = 0.0;
 
-    @Column( nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
-    private Boolean active = true;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private UserStatus status = UserStatus.ACTIVE;
 
     @Column(name = "is_appreciated", columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean isAppreciated = false;
@@ -47,12 +50,12 @@ public class User {
     @Column(name = "ever_appreciated", columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean everAppreciated = false;
 
-    @Column(updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
     private LocalDateTime lastLogin;
     private String lastLoginIP;
     private String lastLoginDevice;
+
+    @Column(name = "failed_login_attempts", columnDefinition = "INT DEFAULT 0")
+    private Integer failedLoginAttempts = 0;
 
     // Getters and Setters
 
@@ -61,14 +64,14 @@ public class User {
     }
 
     public String getUserID() {
-		return userID;
-	}
+        return userID;
+    }
 
-	public void setUserID(String userID) {
-		this.userID = userID;
-	}
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
 
-	public void setName(String name) {
+    public void setName(String name) {
         this.name = name;
     }
 
@@ -136,21 +139,14 @@ public class User {
         this.rating = rating;
     }
 
-    public Boolean getActive() {
-        return active;
+    public UserStatus getStatus() {
+        return status;
     }
 
-    public void setActive(Boolean active) {
-        this.active = active;
+    public void setStatus(UserStatus status) {
+        this.status = status;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
 
     public Boolean getIsAppreciated() {
         return isAppreciated;
@@ -167,7 +163,6 @@ public class User {
     public void setEverAppreciated(Boolean everAppreciated) {
         this.everAppreciated = everAppreciated;
     }
-
 
     public LocalDateTime getLastLogin() {
         return lastLogin;
@@ -191,5 +186,16 @@ public class User {
 
     public void setLastLoginDevice(String lastLoginDevice) {
         this.lastLoginDevice = lastLoginDevice;
+    }
+
+
+
+
+    public Integer getFailedLoginAttempts() {
+        return failedLoginAttempts;
+    }
+
+    public void setFailedLoginAttempts(Integer failedLoginAttempts) {
+        this.failedLoginAttempts = failedLoginAttempts;
     }
 }

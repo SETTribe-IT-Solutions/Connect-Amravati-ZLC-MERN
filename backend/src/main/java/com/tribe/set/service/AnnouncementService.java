@@ -147,7 +147,7 @@ public class AnnouncementService {
     }
 
     public List<AcknowledgmentDetailDTO> getAcknowledgmentDetails(Long announcementId) {
-        List<AnnouncementAcknowledgment> acks = acknowledgmentRepository.findByAnnouncementIdOrderByAcknowledgedAtDesc(announcementId);
+        List<AnnouncementAcknowledgment> acks = acknowledgmentRepository.findByAnnouncementIdOrderByCreatedAtDesc(announcementId);
         
         java.util.Set<String> userIds = acks.stream().map(AnnouncementAcknowledgment::getUserId).collect(Collectors.toSet());
         java.util.Map<String, User> userMap = userRepository.findAllByUserIDIn(userIds).stream()
@@ -225,7 +225,7 @@ public class AnnouncementService {
         }
         
         // Remove acknowledgments first to respect foreign keys (if cascade type doesn't handle it)
-        List<AnnouncementAcknowledgment> acks = acknowledgmentRepository.findByAnnouncementIdOrderByAcknowledgedAtDesc(announcementId);
+        List<AnnouncementAcknowledgment> acks = acknowledgmentRepository.findByAnnouncementIdOrderByCreatedAtDesc(announcementId);
         acknowledgmentRepository.deleteAll(acks);
         
         announcementRepository.delete(announcement);
@@ -290,7 +290,7 @@ public class AnnouncementService {
             this.userRole = user != null ? user.getRole().toString() : "N/A";
             this.taluka = (user != null && user.getTaluka() != null) ? user.getTaluka() : "N/A";
             this.village = (user != null && user.getVillage() != null) ? user.getVillage() : "N/A";
-            this.acknowledgedAt = ack.getAcknowledgedAt().toString();
+            this.acknowledgedAt = ack.getCreatedAt() != null ? ack.getCreatedAt().toString() : "N/A";
         }
 
         public String getUserName() { return userName; }

@@ -2,6 +2,7 @@ package com.tribe.set.config;
 
 import com.tribe.set.entity.Role;
 import com.tribe.set.entity.User;
+import com.tribe.set.entity.UserStatus;
 import com.tribe.set.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -30,7 +31,7 @@ public class DataSeeder implements CommandLineRunner {
             admin.setEmail("admin@amravati.gov.in");
             admin.setPassword(passwordEncoder.encode("Admin123"));
             admin.setRole(Role.SYSTEM_ADMINISTRATOR);
-            admin.setActive(true);
+            admin.setStatus(UserStatus.ACTIVE);
             admin.setDistrict("Amravati");
             admin.setTaluka("Amravati");
             admin.setVillage("Amravati");

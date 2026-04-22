@@ -1,6 +1,7 @@
 package com.tribe.set.dto;
 
 import com.tribe.set.entity.User;
+import com.tribe.set.entity.UserStatus;
 
 public class UserResponse {
 
@@ -13,7 +14,7 @@ public class UserResponse {
     private String village;
     private String phone;
     private Double rating;
-    private Boolean active;
+    private UserStatus status;
     private int level;
     private String createdAt;
     private String lastLogin;
@@ -36,7 +37,7 @@ public class UserResponse {
         res.village = user.getVillage();
         res.phone = user.getPhone();
         res.rating = user.getRating();
-        res.active = user.getActive();
+        res.status = user.getStatus();
         res.level = user.getRole().getLevel();
         res.createdAt = user.getCreatedAt() != null ? user.getCreatedAt().toString() : null;
         res.lastLogin = user.getLastLogin() != null ? user.getLastLogin().toString() : null;
@@ -82,8 +83,8 @@ public class UserResponse {
         return rating;
     }
 
-    public Boolean getActive() {
-        return active;
+    public UserStatus getStatus() {
+        return status;
     }
 
     public int getLevel() {
@@ -155,8 +156,8 @@ public class UserResponse {
         this.rating = rating;
     }
 
-    public void setActive(Boolean active) {
-        this.active = active;
+    public void setStatus(UserStatus status) {
+        this.status = status;
     }
 
     public void setLevel(int level) {

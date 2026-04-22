@@ -5,17 +5,14 @@ import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "announcements")
-public class Announcement {
+public class Announcement extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,25 +20,24 @@ public class Announcement {
 
     private String title;
     private String message;
-    
+
     @Enumerated(EnumType.STRING)
     private Role targetRole; // NULL = broadcast to ALL
-    
+
     private String targetTaluka; // target specific area
     private String targetVillage;
 
-    @jakarta.persistence.Column(name = "created_by")
+    @jakarta.persistence.Column(name = "created_by_user_id")
     private String createdByUserId;
 
     private boolean isCircular = false;
     private String attachment;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
-
     public Announcement() {
     }
 
-    public Announcement(String title, String message, Role targetRole, String targetTaluka, String targetVillage, String createdByUserId, boolean isCircular) {
+    public Announcement(String title, String message, Role targetRole, String targetTaluka, String targetVillage,
+            String createdByUserId, boolean isCircular) {
         this.title = title;
         this.message = message;
         this.targetRole = targetRole;
@@ -49,7 +45,6 @@ public class Announcement {
         this.targetVillage = targetVillage;
         this.createdByUserId = createdByUserId;
         this.isCircular = isCircular;
-        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -106,14 +101,6 @@ public class Announcement {
 
     public void setCreatedByUserId(String createdByUserId) {
         this.createdByUserId = createdByUserId;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 
     public boolean isCircular() {
