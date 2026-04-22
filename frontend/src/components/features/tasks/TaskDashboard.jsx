@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
@@ -48,7 +49,8 @@ import { getSubordinates, getAllUsers } from '../../../services/users/userServic
 import Pagination from '../../common/Pagination';
 import { toast } from 'react-hot-toast';
 
-const TaskDashboard = ({ user }) => {
+const TaskDashboard = () => {
+  const { user } = useSelector((state) => state.auth);
   const role = user?.role || 'user';
   const roleLower = role.toLowerCase();
   const canCreateTask = ['collector', 'additional_deputy_collector', 'additional collector', 'sdo', 'tehsildar'].some(r => roleLower.includes(r));
@@ -353,14 +355,14 @@ const TaskDashboard = ({ user }) => {
     }
   };
 
-  const tabs = canCreateTask
+  const tabs = useMemo(() => canCreateTask
     ? [{ id: 'create', name: 'Create Task', icon: PlusCircleIcon },
     { id: 'tracking', name: 'Task Tracking', icon: ArrowPathIcon },
     { id: 'pending', name: 'Pending & Overdue', icon: ClockIcon }]
     : [{ id: 'tracking', name: 'Task Tracking', icon: ArrowPathIcon },
-    { id: 'pending', name: 'Pending & Overdue', icon: ClockIcon }];
+    { id: 'pending', name: 'Pending & Overdue', icon: ClockIcon }], [canCreateTask]);
 
-  const filteredTasks = tasks.filter(task => {
+  const filteredTasks = useMemo(() => tasks.filter(task => {
     const matchesSearch = searchTerm === '' ||
       task.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -377,9 +379,9 @@ const TaskDashboard = ({ user }) => {
     const matchesStatus = selectedStatus === 'all' || task.status === selectedStatus.replace(/\s+/g, '_').toUpperCase();
     const matchesDept = selectedDepartment === 'all' || task.department === selectedDepartment;
     return matchesSearch && matchesStatus && matchesDept;
-  });
+  }), [tasks, searchTerm, selectedStatus, selectedDepartment]);
 
-  const filteredPendingTasks = tasks.filter(t => {
+  const filteredPendingTasks = useMemo(() => tasks.filter(t => {
     const isPending = t.status === 'PENDING' || t.status === 'OVERDUE';
     const matchesSearch = pendingSearchTerm === '' ||
       t.title?.toLowerCase().includes(pendingSearchTerm.toLowerCase()) ||
@@ -396,7 +398,7 @@ const TaskDashboard = ({ user }) => {
       (t.progress || 0).toString().includes(pendingSearchTerm);
     const matchesStatus = pendingStatusFilter === 'all' || t.status === pendingStatusFilter.toUpperCase();
     return isPending && matchesSearch && matchesStatus;
-  });
+  }), [tasks, pendingSearchTerm, pendingStatusFilter]);
 
   const getStatusColor = (status) => {
     const s = status?.toUpperCase() || '';
@@ -416,13 +418,13 @@ const TaskDashboard = ({ user }) => {
   };
 
 
-  const stats = [
+  const stats = useMemo(() => [
     { name: 'Total Tasks', value: tasks.length, icon: DocumentTextIcon, bgColor: '#eff6ff', textColor: '#000000' },
     { name: 'Completed', value: tasks.filter(t => t.status === 'COMPLETED').length, icon: CheckCircleIcon, bgColor: '#f0fdf4', textColor: '#16a34a' },
     { name: 'In Progress', value: tasks.filter(t => t.status === 'IN_PROGRESS').length, icon: ArrowPathIcon, bgColor: '#f8fafc', textColor: '#64748b' },
     { name: 'Pending', value: tasks.filter(t => t.status === 'PENDING').length, icon: ClockIcon, bgColor: '#fff7ed', textColor: '#f97316' },
     { name: 'Overdue', value: tasks.filter(t => t.status === 'OVERDUE').length, icon: ExclamationTriangleIcon, bgColor: '#fef2f2', textColor: '#dc2626' }
-  ];
+  ], [tasks]);
 
   return (
     <div className="container-fluid p-3 p-md-4">

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ClipboardDocumentListIcon, 
@@ -22,7 +23,8 @@ import {
 import { getDashboardStats, getTasks, addTaskRemark } from '../../services/tasks/taskService';
 import { Container, Row, Col, Card, Button, Form, Modal, Badge, ProgressBar, OverlayTrigger, Tooltip as BootstrapTooltip } from 'react-bootstrap';
 
-const Dashboard = ({ user }) => {
+const Dashboard = () => {
+  const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const recentActivitiesRef = React.useRef(null);
   const [selectedPeriod, setSelectedPeriod] = useState('week');
@@ -36,7 +38,6 @@ const Dashboard = ({ user }) => {
   });
   const [allTasks, setAllTasks] = useState([]);
   const [activeFilter, setActiveFilter] = useState('All');
-  const [recentTasks, setRecentTasks] = useState([]);
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
@@ -63,7 +64,6 @@ const Dashboard = ({ user }) => {
           }));
 
           setAllTasks(mapped);
-          setRecentTasks(mapped);
 
           // Calculate Real Chart Data
           if (selectedPeriod === 'week') {
@@ -129,17 +129,17 @@ const Dashboard = ({ user }) => {
     fetchData();
   }, [user, selectedPeriod]);
 
-  useEffect(() => {
-    if (allTasks.length > 0) {
-      let filtered = allTasks;
-      if (activeFilter === 'Completed') filtered = allTasks.filter(t => t.status === 'COMPLETED' || t.status === 'Completed');
-      else if (activeFilter === 'In Progress') filtered = allTasks.filter(t => t.status === 'IN_PROGRESS' || t.status === 'In Progress');
-      else if (activeFilter === 'Pending') filtered = allTasks.filter(t => t.status === 'PENDING' || t.status === 'Pending');
-      else if (activeFilter === 'Overdue') filtered = allTasks.filter(t => t.status === 'OVERDUE' || t.status === 'Overdue');
-      
-      // If "Total Tasks", it just uses the filtered array (which is allTasks)
-      setRecentTasks(filtered);
-    }
+  const recentTasks = useMemo(() => {
+    if (allTasks.length === 0) return [];
+    let filtered = allTasks;
+    const filterUpper = activeFilter.toUpperCase();
+    
+    if (filterUpper === 'COMPLETED') filtered = allTasks.filter(t => t.status === 'COMPLETED');
+    else if (filterUpper === 'IN PROGRESS') filtered = allTasks.filter(t => t.status === 'IN_PROGRESS');
+    else if (filterUpper === 'PENDING') filtered = allTasks.filter(t => t.status === 'PENDING');
+    else if (filterUpper === 'OVERDUE') filtered = allTasks.filter(t => t.status === 'OVERDUE');
+    
+    return filtered;
   }, [activeFilter, allTasks]);
 
   const getStatusColor = (status) => {
@@ -164,20 +164,20 @@ const Dashboard = ({ user }) => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const stats = [
+  const stats = useMemo(() => [
     { name: 'Total Tasks', value: dashboardData.totalTasks, icon: ClipboardDocumentListIcon, bgColor: '#eff6ff', textColor: '#000000' },
     { name: 'Completed', value: dashboardData.completed, icon: CheckCircleIcon, bgColor: '#f0fdf4', textColor: '#16a34a' },
     { name: 'In Progress', value: dashboardData.inProgress, icon: ArrowPathIcon, bgColor: '#f8fafc', textColor: '#64748b' },
     { name: 'Pending', value: dashboardData.pending, icon: ClockIcon, bgColor: '#fff7ed', textColor: '#f97316' },
     { name: 'Overdue', value: dashboardData.overdue, icon: ExclamationTriangleIcon, bgColor: '#fef2f2', textColor: '#dc2626' }
-  ];
+  ], [dashboardData]);
 
-  const taskDistribution = [
+  const taskDistribution = useMemo(() => [
     { name: 'Completed', value: dashboardData.completed, color: '#10b981' },
     { name: 'In Progress', value: dashboardData.inProgress, color: '#64748b' },
     { name: 'Pending', value: dashboardData.pending, color: '#f97316' },
     { name: 'Overdue', value: dashboardData.overdue, color: '#ef4444' },
-  ].filter(item => item.value > 0);
+  ].filter(item => item.value > 0), [dashboardData]);
 
   const handleViewAll = () => { navigate('/tasks?tab=tracking'); };
 

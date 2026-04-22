@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { 
   Container, Row, Col, Card, Badge, Button, 
   Form, Spinner, Stack, InputGroup 
@@ -18,7 +19,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import Pagination from '../../components/common/Pagination';
 
-const Notifications = ({ user }) => {
+const Notifications = () => {
+  const { user } = useSelector((state) => state.auth);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');

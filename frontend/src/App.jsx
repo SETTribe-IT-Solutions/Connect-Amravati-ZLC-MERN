@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import toast, { Toaster } from 'react-hot-toast';
-import { Provider } from 'react-redux';
-import { store } from './store';
+import { Toaster, toast } from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
+import store from './store';
+import { setCredentials, logout, setLoading } from './store/slices/authSlice';
 import { AnimatePresence } from 'framer-motion';
 
 // Layout Components
@@ -22,9 +23,8 @@ const ChangePassword = React.lazy(() => import('./pages/auth/ChangePassword'));
 import { changePassword, loginUser, getCurrentUser, logoutUser, verifyEmail, resetPasswordByEmail } from './services/auth/authService';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { user, isAuthenticated, loading } = useSelector((state) => state.auth);
 
   // Handle logout
   const handleLogout = async () => {
@@ -37,67 +37,34 @@ function App() {
     // Clear all local storage data
     localStorage.clear();
     
-    setIsAuthenticated(false);
-    setUser(null);
+    dispatch(logout());
     
     // Redirect to login
     window.location.href = '/login';
   };
 
   // Check for existing session on load
-  useEffect(() => {
+  React.useEffect(() => {
     const vaildateSession = async () => {
       try {
         const userData = await getCurrentUser();
         if (userData) {
-          const userToStore = {
-            userID: userData.id,
-            name: userData.name,
-            role: userData.role,
-            email: userData.email,
-            phone: userData.phone,
-            district: userData.district,
-            taluka: userData.taluka,
-            village: userData.village,
-            loginTime: new Date().toISOString(),
-            permissions: userData.role === 'SYSTEM_ADMINISTRATOR' ? ['all'] : ['view_tasks']
-          };
-          setUser(userToStore);
-          setIsAuthenticated(true);
+          dispatch(setCredentials(userData));
+        } else {
+          dispatch(setLoading(false));
         }
       } catch (error) {
-        // Not authenticated or session expired
-        setIsAuthenticated(false);
-        setUser(null);
-      } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
       }
     };
 
     vaildateSession();
-  }, []);
+  }, [dispatch]);
 
   // Handle login
   const handleLogin = (userData) => {
     if (userData) {
-      const normalizedRole = userData.role;
-      
-      const userToStore = {
-        userID: userData.id,
-        name: userData.name,
-        role: normalizedRole,
-        email: userData.email,
-        phone: userData.phone,
-        district: userData.district,
-        taluka: userData.taluka,
-        village: userData.village,
-        loginTime: new Date().toISOString(),
-        permissions: normalizedRole === 'SYSTEM_ADMINISTRATOR' ? ['all'] : ['view_tasks']
-      };
- 
-      setIsAuthenticated(true);
-      setUser(userToStore);
-      
+      dispatch(setCredentials(userData));
       return true;
     }
     return false;
@@ -172,7 +139,6 @@ function App() {
   }
 
   return (
-    <Provider store={store}>
       <Router>
         <div className="min-vh-100" style={{ backgroundColor: '#f8fafc' }}>
           <Toaster 
@@ -230,11 +196,8 @@ function App() {
               <Route 
                 path="/" 
                 element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated}>
-                    <Layout 
-                      user={user} 
-                      onLogout={handleLogout}
-                    />
+                  <ProtectedRoute>
+                    <Layout />
                   </ProtectedRoute>
                 }
               >
@@ -246,7 +209,7 @@ function App() {
                   element={
                     user?.role === 'SYSTEM_ADMINISTRATOR' ? 
                     <Navigate to="/users" replace /> : 
-                    <Dashboard user={user} />
+                    <Dashboard />
                   } 
                 />
                 
@@ -255,7 +218,7 @@ function App() {
                   element={
                     user?.role === 'SYSTEM_ADMINISTRATOR' ? 
                     <Navigate to="/users" replace /> : 
-                    <Tasks user={user} />
+                    <Tasks />
                   } 
                 />
                 
@@ -264,7 +227,7 @@ function App() {
                   element={
                     user?.role === 'SYSTEM_ADMINISTRATOR' ? 
                     <Navigate to="/users" replace /> : 
-                    <Communications user={user} />
+                    <Communications />
                   } 
                 />
                 
@@ -273,7 +236,7 @@ function App() {
                   element={
                     user?.role === 'SYSTEM_ADMINISTRATOR' ? 
                     <Navigate to="/users" replace /> : 
-                    <Reports user={user} />
+                    <Reports />
                   } 
                 />
                 
@@ -281,7 +244,7 @@ function App() {
                   path="users" 
                   element={
                     user?.role === 'SYSTEM_ADMINISTRATOR' ? 
-                    <UserManagement user={user} /> : 
+                    <UserManagement /> : 
                     <Navigate to="/dashboard" replace />
                   } 
                 />
@@ -291,16 +254,16 @@ function App() {
                   element={
                     user?.role === 'SYSTEM_ADMINISTRATOR' ? 
                     <Navigate to="/users" replace /> : 
-                    <Appreciation user={user} />
+                    <Appreciation />
                   } 
                 />
-
+                
                 <Route 
                   path="notifications" 
                   element={
                     user?.role === 'SYSTEM_ADMINISTRATOR' ? 
                     <Navigate to="/users" replace /> : 
-                    <Notifications user={user} />
+                    <Notifications />
                   } 
                 />
 
@@ -353,7 +316,6 @@ function App() {
           )}
         </div>
       </Router>
-    </Provider>
   );
 }
 
