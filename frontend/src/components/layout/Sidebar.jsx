@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Modal, Button } from 'react-bootstrap';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../../store/slices/authSlice';
+import { logoutUser } from '../../services/auth/authService';
 import { 
   HomeIcon, 
   ClipboardDocumentListIcon, 
@@ -15,7 +18,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { GiIndiaGate } from 'react-icons/gi';
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed, user, onLogout }) => {
+const Sidebar = React.memo(({ sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed }) => {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const role = user?.role || 'user';
@@ -203,9 +208,16 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed, use
             <Button variant="light" className="flex-grow-1 py-2 fw-semibold rounded-3" onClick={() => setShowLogoutModal(false)}>
               Cancel
             </Button>
-            <Button variant="danger" className="flex-grow-1 py-2 fw-semibold rounded-3 d-flex align-items-center justify-content-center gap-2 shadow-sm" onClick={() => {
+            <Button variant="danger" className="flex-grow-1 py-2 fw-semibold rounded-3 d-flex align-items-center justify-content-center gap-2 shadow-sm" onClick={async () => {
               setShowLogoutModal(false);
-              if (onLogout) onLogout();
+              try {
+                await logoutUser();
+              } catch (error) {
+                console.error("Logout error", error);
+              }
+              localStorage.clear();
+              dispatch(logout());
+              window.location.href = '/login';
             }}>
               <ArrowRightOnRectangleIcon style={{ width: '1.15rem', height: '1.15rem' }} />
               Logout
@@ -215,6 +227,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed, use
       </Modal>
     </>
   );
-};
+});
 
 export default Sidebar;

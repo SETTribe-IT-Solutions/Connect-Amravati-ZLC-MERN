@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { getTalukas, getVillagesByTaluka } from '../../../services/common/locationService';
 import { toast } from 'react-hot-toast';
 import { Form, Button, Row, Col, Spinner, InputGroup } from 'react-bootstrap';
@@ -12,7 +13,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { createAnnouncement } from '../../../services/communications/announcementService';
 
-const AnnouncementForm = ({ onClose, onSuccess, currentUser }) => {
+const AnnouncementForm = ({ onClose, onSuccess }) => {
+  const { user: currentUser } = useSelector((state) => state.auth);
   const [formData, setFormData] = useState({
     title: '',
     message: '',

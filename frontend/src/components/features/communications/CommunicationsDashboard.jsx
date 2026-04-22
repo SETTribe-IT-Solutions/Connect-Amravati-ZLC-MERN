@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MegaphoneIcon, 
@@ -35,7 +36,8 @@ import Pagination from '../../common/Pagination';
 
 import { Container, Row, Col, Card, Button, Form, Nav, Badge, Modal, Spinner } from 'react-bootstrap';
 
-const CommunicationsDashboard = ({ user }) => {
+const CommunicationsDashboard = () => {
+  const { user } = useSelector((state) => state.auth);
   const [announcements, setAnnouncements] = useState([]);
   const [sentAnnouncements, setSentAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import Footer from './Footer';
 
-const Layout = ({ user, onLogout }) => {
+const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -17,8 +17,6 @@ const Layout = ({ user, onLogout }) => {
           setSidebarOpen={setSidebarOpen}
           isCollapsed={isCollapsed}
           setIsCollapsed={setIsCollapsed}
-          user={user}
-          onLogout={onLogout}
         />
 
         {/* Content Column */}
@@ -34,18 +32,13 @@ const Layout = ({ user, onLogout }) => {
             setSidebarOpen={setSidebarOpen}
             isCollapsed={isCollapsed}
             setIsCollapsed={setIsCollapsed}
-            user={user}
-            onLogout={onLogout}
           />
 
           <main className="flex-grow-1 overflow-auto" style={{ backgroundColor: '#f8fafc' }}>
             <div className="p-3 p-lg-4">
               <Outlet />
             </div>
-            <Footer
-              user={user}
-              onLogout={onLogout}
-            />
+            <Footer />
           </main>
         </div>
       </div>

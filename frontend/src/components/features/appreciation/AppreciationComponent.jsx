@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { 
   Container, Row, Col, Card, Badge, Button, Form, 
   InputGroup, Spinner, Stack, ProgressBar 
@@ -17,7 +18,8 @@ import { getAllAppreciations, sendAppreciation, getEligibleUsers, getSentAppreci
 import { toast } from 'react-hot-toast';
 import Pagination from '../../common/Pagination';
 
-const AppreciationComponent = ({ user }) => {
+const AppreciationComponent = () => {
+  const { user } = useSelector((state) => state.auth);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
   const [formStates, setFormStates] = useState({});

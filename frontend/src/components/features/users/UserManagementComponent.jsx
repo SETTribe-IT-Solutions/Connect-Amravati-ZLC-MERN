@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { getAllUsers, addUser, updateUser, getUserStats } from '../../../services/users/userService';
 import { getTalukas, getVillagesByTaluka } from '../../../services/common/locationService';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,7 +11,8 @@ import {
 import Pagination from '../../common/Pagination';
 import { Container, Row, Col, Card, Button, Form, Table, Badge, Modal, ProgressBar } from 'react-bootstrap';
 
-const UserManagementComponent = ({ user }) => {
+const UserManagementComponent = () => {
+  const { user } = useSelector((state) => state.auth);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
