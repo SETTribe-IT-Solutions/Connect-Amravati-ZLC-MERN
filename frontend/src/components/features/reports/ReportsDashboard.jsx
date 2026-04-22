@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Card, Row, Col, Button, Nav, Table, Badge, Spinner, Form, Toast, ToastContainer 
+  Card, Row, Col, Button, Nav, Table, Badge, Spinner, Form, Toast, ToastContainer, Modal 
 } from 'react-bootstrap';
 import {
   DocumentTextIcon, ArrowDownTrayIcon, CalendarIcon, CheckCircleIcon,
@@ -29,15 +29,34 @@ const ReportsDashboard = ({ user }) => {
   const [selectedSummary, setSelectedSummary] = useState('all');
   const [allTasks, setAllTasks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [selectedRoleChart, setSelectedRoleChart] = useState('all');
+  const [selectedUserChart, setSelectedUserChart] = useState('all');
+  const [taskCurrentPage, setTaskCurrentPage] = useState(1);
+  const [taskSearchTerm, setTaskSearchTerm] = useState('');
+  const [drillDownModal, setDrillDownModal] = useState({ show: false, title: '', tasks: [] });
+
+  const handleDrillDown = (period, statusType, taskList) => {
+    if (taskList.length === 0) {
+      showToast(`No ${statusType.toLowerCase()} tasks in ${period}`, 'info');
+      return;
+    }
+    setDrillDownModal({
+      show: true,
+      title: `${statusType} Tasks - ${period}`,
+      tasks: taskList
+    });
+  };
 
   const departments = ['All Departments', 'Revenue', 'Finance', 'Administration', 'Development', 'Infrastruction', 'Other'];
 
   // Reset pagination when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedDept, globalDept, selectedSummary]);
+    setTaskCurrentPage(1);
+  }, [selectedDept, globalDept, selectedSummary, selectedRoleChart, selectedUserChart]);
 
   const showToast = (title, value) => {
     setToast({ title, value });
@@ -100,7 +119,9 @@ const ReportsDashboard = ({ user }) => {
     return deptMatch && statusMatch;
   });
 
-  const deptData = performanceData.map((p, idx) => {
+  const deptData = performanceData
+    .filter(p => p.role !== 'SYSTEM_ADMINISTRATOR' && p.userName !== 'Admin User')
+    .map((p, idx) => {
     const userTasks = allTasks.filter(t => t.assignedToId === p.userId || t.assignedToName === p.userName);
     // Determine department for this user from their tasks
     const userDept = userTasks.length > 0 ? userTasks[0].department || 'Other' : 'Other';
@@ -118,7 +139,8 @@ const ReportsDashboard = ({ user }) => {
       pending: userTasks.filter(t => t.status === 'PENDING').length,
       overdue: userTasks.filter(t => t.status === 'OVERDUE').length,
       activeCount: filtered.length,
-      rate: userTasks.length > 0 ? Math.round((userTasks.filter(t => t.status === 'COMPLETED').length / userTasks.length) * 100) : 0
+      rate: userTasks.length > 0 ? Math.round((userTasks.filter(t => t.status === 'COMPLETED').length / userTasks.length) * 100) : 0,
+      tasks: userTasks
     };
   });
 
@@ -132,10 +154,16 @@ const ReportsDashboard = ({ user }) => {
     return true;
   });
 
-  // Separate Search filter for Table only
   const searchedDeptData = filteredDeptData.filter(d => {
     if (!searchTerm) return true;
     const searchLow = searchTerm.toLowerCase();
+    
+    const userTasks = activeTasks.filter(t => t.assignedToName === d.name);
+    const taskMatch = userTasks.some(t => 
+      (t.title && t.title.toLowerCase().includes(searchLow)) ||
+      (t.description && t.description.toLowerCase().includes(searchLow))
+    );
+
     return (
       d.name.toLowerCase().includes(searchLow) ||
       d.role.toLowerCase().includes(searchLow) ||
@@ -144,13 +172,25 @@ const ReportsDashboard = ({ user }) => {
       d.completed.toString().includes(searchLow) ||
       d.inProgress.toString().includes(searchLow) ||
       d.pending.toString().includes(searchLow) ||
-      d.overdue.toString().includes(searchLow)
+      d.overdue.toString().includes(searchLow) ||
+      d.rate.toString().includes(searchLow) ||
+      taskMatch
     );
   });
 
   const deptNames = departments.filter(d => d !== 'All Departments');
 
-  const deptChartData = filteredDeptData.map(d => ({
+  const availableRoles = [...new Set(filteredDeptData.map(d => d.role).filter(Boolean))].filter(r => r !== 'SYSTEM_ADMINISTRATOR');
+  const chartUsersList = filteredDeptData.filter(d => selectedRoleChart === 'all' || d.role === selectedRoleChart);
+  const availableUsers = [...new Set(chartUsersList.map(d => d.name))];
+
+  const chartFilteredData = filteredDeptData.filter(d => {
+    const roleMatch = selectedRoleChart === 'all' || d.role === selectedRoleChart;
+    const userMatch = selectedUserChart === 'all' || d.name === selectedUserChart;
+    return roleMatch && userMatch;
+  });
+
+  const deptChartData = chartFilteredData.map(d => ({
     name: d.name,
     Completed: d.completed,
     'In Progress': d.inProgress,
@@ -158,6 +198,17 @@ const ReportsDashboard = ({ user }) => {
     Overdue: d.overdue,
     Total: d.total
   }));
+
+  const searchedActiveTasks = activeTasks.filter(t => {
+    if (!taskSearchTerm) return true;
+    const searchLow = taskSearchTerm.toLowerCase();
+    return (
+      (t.title && t.title.toLowerCase().includes(searchLow)) ||
+      (t.description && t.description.toLowerCase().includes(searchLow)) ||
+      (t.assignedToName && t.assignedToName.toLowerCase().includes(searchLow)) ||
+      (t.status && t.status.toLowerCase().includes(searchLow))
+    );
+  });
 
   const taskDistribution = [
     { name: 'Completed', value: globalStats?.completed || 0, color: '#198754' },
@@ -169,6 +220,16 @@ const ReportsDashboard = ({ user }) => {
     return item.name.toLowerCase() === (selectedSummary === 'inProgress' ? 'in progress' : selectedSummary) && item.value > 0;
   });
 
+  const mapPeriodData = (period, filtered) => ({
+    period,
+    total: filtered.length,
+    completed: filtered.filter(t => t.status === 'COMPLETED').length,
+    inProgress: filtered.filter(t => t.status === 'IN_PROGRESS').length,
+    pending: filtered.filter(t => t.status === 'PENDING').length,
+    overdue: filtered.filter(t => t.status === 'OVERDUE').length,
+    tasks: filtered
+  });
+
   const getMonthlyData = () => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentYear = new Date().getFullYear();
@@ -178,14 +239,7 @@ const ReportsDashboard = ({ user }) => {
         const d = new Date(t.createdAt);
         return d.getMonth() === index && d.getFullYear() === currentYear;
       });
-      return {
-        period: month,
-        total: filtered.length,
-        completed: filtered.filter(t => t.status === 'COMPLETED').length,
-        inProgress: filtered.filter(t => t.status === 'IN_PROGRESS').length,
-        pending: filtered.filter(t => t.status === 'PENDING').length,
-        overdue: filtered.filter(t => t.status === 'OVERDUE').length
-      };
+      return mapPeriodData(month, filtered);
     });
   };
 
@@ -203,14 +257,7 @@ const ReportsDashboard = ({ user }) => {
         const td = new Date(t.createdAt);
         return td.toDateString() === date.toDateString();
       });
-      return {
-        period: days[date.getDay()],
-        total: filtered.length,
-        completed: filtered.filter(t => t.status === 'COMPLETED').length,
-        inProgress: filtered.filter(t => t.status === 'IN_PROGRESS').length,
-        pending: filtered.filter(t => t.status === 'PENDING').length,
-        overdue: filtered.filter(t => t.status === 'OVERDUE').length
-      };
+      return mapPeriodData(days[date.getDay()], filtered);
     });
   };
 
@@ -224,14 +271,7 @@ const ReportsDashboard = ({ user }) => {
         const quarter = Math.floor(d.getMonth() / 3);
         return quarter === idx && d.getFullYear() === currentYear;
       });
-      return {
-        period: q,
-        total: filtered.length,
-        completed: filtered.filter(t => t.status === 'COMPLETED').length,
-        inProgress: filtered.filter(t => t.status === 'IN_PROGRESS').length,
-        pending: filtered.filter(t => t.status === 'PENDING').length,
-        overdue: filtered.filter(t => t.status === 'OVERDUE').length
-      };
+      return mapPeriodData(q, filtered);
     });
   };
 
@@ -244,14 +284,7 @@ const ReportsDashboard = ({ user }) => {
         const d = new Date(t.createdAt);
         return d.getFullYear() === year;
       });
-      return {
-        period: year.toString(),
-        total: filtered.length,
-        completed: filtered.filter(t => t.status === 'COMPLETED').length,
-        inProgress: filtered.filter(t => t.status === 'IN_PROGRESS').length,
-        pending: filtered.filter(t => t.status === 'PENDING').length,
-        overdue: filtered.filter(t => t.status === 'OVERDUE').length
-      };
+      return mapPeriodData(year.toString(), filtered);
     });
   };
 
@@ -313,6 +346,46 @@ const ReportsDashboard = ({ user }) => {
         </Toast>
       </ToastContainer>
 
+      {/* Drill Down Modal */}
+      <Modal show={drillDownModal.show} onHide={() => setDrillDownModal({ ...drillDownModal, show: false })} size="lg" centered>
+        <Modal.Header closeButton className="border-0 pb-0 pt-4 px-4">
+          <Modal.Title className="fw-bold fs-5 d-flex align-items-center gap-2">
+            <DocumentTextIcon style={{ width: '1.25rem' }} className="text-primary" />
+            {drillDownModal.title}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          <div className="table-responsive border border-light rounded-3 shadow-sm custom-scrollbar" style={{ maxHeight: '400px' }}>
+            <Table hover className="align-middle mb-0">
+              <thead className="bg-light sticky-top">
+                <tr className="text-secondary small fw-bold text-uppercase">
+                  <th className="px-3 py-2 border-0">Task Title</th>
+                  <th className="px-3 py-2 border-0">Assigned To</th>
+                  <th className="px-3 py-2 border-0">Due Date</th>
+                  <th className="px-3 py-2 border-0">Status</th>
+                </tr>
+              </thead>
+              <tbody className="border-top-0">
+                {drillDownModal.tasks.map((t, i) => (
+                  <tr key={t.id || i}>
+                    <td className="px-3 py-3 fw-medium text-dark">{t.title}</td>
+                    <td className="px-3 py-3 small text-secondary">{t.assignedToName || 'Unassigned'}</td>
+                    <td className="px-3 py-3 small text-secondary">{t.dueDate ? new Date(t.dueDate).toLocaleDateString() : 'No date'}</td>
+                    <td className="px-3 py-3">
+                      <Badge bg={
+                        t.status === 'COMPLETED' ? 'success' :
+                        t.status === 'PENDING' ? 'warning' :
+                        t.status === 'OVERDUE' ? 'danger' : 'secondary'
+                      } style={{ fontSize: '0.65rem' }}>{t.status}</Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        </Modal.Body>
+      </Modal>
+
       {/* Header */}
       <div className="mb-5">
         <Row className="align-items-center justify-content-between g-4">
@@ -367,7 +440,7 @@ const ReportsDashboard = ({ user }) => {
 
       {/* Tab Navigation */}
       <Nav variant="pills" className="bg-white p-2 rounded-4 shadow-sm mb-5 gap-2 border w-fit" activeKey={reportType}>
-        {['overview', 'department', 'trends', 'performance'].map((type) => (
+        {['overview', 'department', 'analytics', 'performance'].map((type) => (
           <Nav.Item key={type}>
             <Nav.Link 
               eventKey={type} 
@@ -457,15 +530,26 @@ const ReportsDashboard = ({ user }) => {
                   <UserGroupIcon style={{ width: '1.25rem' }} className="text-primary" /> 
                   Department Performance Chart
                 </h5>
-                <Form.Select 
-                  value={selectedDept} 
-                  onChange={(e) => setSelectedDept(e.target.value)}
-                  className="w-auto border-0 bg-light rounded-3 fw-medium text-dark"
-                  style={{ minWidth: '200px' }}
-                >
-                  <option value="all">All Departments</option>
-                  {deptNames.map(d => <option key={d} value={d}>{d}</option>)}
-                </Form.Select>
+                <div className="d-flex gap-2">
+                  <Form.Select 
+                    value={selectedRoleChart} 
+                    onChange={(e) => { setSelectedRoleChart(e.target.value); setSelectedUserChart('all'); }}
+                    className="w-auto border-0 bg-light rounded-3 fw-medium text-dark"
+                    style={{ minWidth: '150px' }}
+                  >
+                    <option value="all">All Roles</option>
+                    {availableRoles.map(r => <option key={r} value={r}>{r}</option>)}
+                  </Form.Select>
+                  <Form.Select 
+                    value={selectedUserChart} 
+                    onChange={(e) => setSelectedUserChart(e.target.value)}
+                    className="w-auto border-0 bg-light rounded-3 fw-medium text-dark"
+                    style={{ minWidth: '150px' }}
+                  >
+                    <option value="all">All Users</option>
+                    {availableUsers.map(u => <option key={u} value={u}>{u}</option>)}
+                  </Form.Select>
+                </div>
               </div>
             </Card.Header>
             <Card.Body className="p-4">
@@ -495,18 +579,35 @@ const ReportsDashboard = ({ user }) => {
                   <TableCellsIcon style={{ width: '1.25rem' }} className="text-primary" /> 
                   Department Data Details
                 </h5>
-                <div className="position-relative" style={{ minWidth: '300px' }}>
-                  <Form.Control
-                    type="text"
-                    placeholder="Search by name, role or department..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="ps-5 border-0 bg-light rounded-3 fw-medium"
-                  />
-                  <MagnifyingGlassIcon 
-                    className="position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary" 
-                    style={{ width: '1.25rem' }} 
-                  />
+                <div className="d-flex flex-column flex-md-row align-items-md-center gap-3">
+                  <div className="d-flex align-items-center gap-2">
+                    <Form.Control 
+                      type="number"
+                      min="1"
+                      size="sm" 
+                      className="border-0 bg-light rounded-3 fw-bold text-dark text-center px-1" 
+                      style={{ width: '60px', padding: '0.375rem' }} 
+                      value={itemsPerPage} 
+                      onChange={(e) => { 
+                        setItemsPerPage(e.target.value ? Number(e.target.value) : 1); 
+                        setCurrentPage(1); 
+                      }}
+                    />
+                    <span className="small text-secondary fw-medium text-nowrap">per page</span>
+                  </div>
+                  <div className="position-relative" style={{ minWidth: '300px' }}>
+                    <Form.Control
+                      type="text"
+                      placeholder="Search by name, role or department..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="ps-5 border-0 bg-light rounded-3 fw-medium"
+                    />
+                    <MagnifyingGlassIcon 
+                      className="position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary" 
+                      style={{ width: '1.25rem' }} 
+                    />
+                  </div>
                 </div>
               </div>
             </Card.Header>
@@ -516,6 +617,7 @@ const ReportsDashboard = ({ user }) => {
                   <tr className="text-secondary small fw-bold text-uppercase pb-3">
                     <th className="border-0 px-3">SR NO</th>
                     <th className="border-0 px-3">Department</th>
+                    <th className="border-0 px-3" style={{ minWidth: '250px' }}>Task Details</th>
                     <th className="border-0 px-3 text-primary">Total</th>
                     <th className="border-0 px-3 text-success">Completed</th>
                     <th className="border-0 px-3 text-secondary">In Progress</th>
@@ -534,6 +636,27 @@ const ReportsDashboard = ({ user }) => {
                         <div className="fw-bold text-dark">{d.name}</div>
                         <div className="small text-secondary fw-medium">{d.role}</div>
                       </td>
+                      <td className="px-3 py-3">
+                        <div style={{ maxHeight: '120px', overflowY: 'auto' }} className="pe-2 custom-scrollbar">
+                          {activeTasks.filter(t => t.assignedToName === d.name).length > 0 ? (
+                            activeTasks.filter(t => t.assignedToName === d.name).map((t, idx) => (
+                              <div key={t.id || idx} className="mb-2 pb-2 border-bottom border-light">
+                                <div className="fw-bold text-dark small mb-1">{t.title || 'Untitled'}</div>
+                                <div className="text-secondary mb-1" style={{ fontSize: '0.75rem', lineHeight: '1.2' }}>
+                                  {t.description ? (t.description.length > 50 ? t.description.substring(0, 50) + '...' : t.description) : 'No description'}
+                                </div>
+                                <div className="d-flex align-items-center">
+                                  <span className="text-muted fw-medium" style={{ fontSize: '0.7rem' }}>
+                                    Created by: {t.createdByName || 'Unknown'} {t.createdByRole ? `(${t.createdByRole})` : ''}
+                                  </span>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <span className="small text-secondary">No tasks assigned</span>
+                          )}
+                        </div>
+                      </td>
                       <td className={`px-3 py-3 fw-bold font-outfit ${selectedSummary === 'all' ? 'text-primary bg-primary bg-opacity-10' : 'text-secondary opacity-50'}`}>{d.total}</td>
                       <td className={`px-3 py-3 fw-medium font-outfit ${selectedSummary === 'completed' ? 'text-success bg-success bg-opacity-10 fw-bold' : 'text-success'}`}>{d.completed}</td>
                       <td className={`px-3 py-3 fw-medium font-outfit ${selectedSummary === 'inProgress' ? 'text-dark bg-light fw-bold' : 'text-secondary'}`}>{d.inProgress}</td>
@@ -548,26 +671,18 @@ const ReportsDashboard = ({ user }) => {
                   ))}
                 </tbody>
               </Table>
-              <div className="mt-4">
-                <Pagination 
-                  totalItems={searchedDeptData.length}
-                  itemsPerPage={itemsPerPage}
-                  currentPage={currentPage}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
             </Card.Body>
           </Card>
         </div>
       )}
 
 
-      {/* Trends Tab */}
-      {reportType === 'trends' && (
+      {/* Analytics Tab */}
+      {reportType === 'analytics' && (
         <Card className="border-0 shadow-sm rounded-4">
           <Card.Header className="bg-transparent border-0 p-4 pb-0">
             <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-              <h5 className="fw-bold text-dark mb-0">Activity Trends</h5>
+              <h5 className="fw-bold text-dark mb-0">Analytics</h5>
               <Form.Select 
                 value={dateRange} 
                 onChange={(e) => setDateRange(e.target.value)}
@@ -587,8 +702,9 @@ const ReportsDashboard = ({ user }) => {
                 <thead className="bg-light bg-opacity-50">
                   <tr className="text-secondary small fw-bold text-uppercase pb-2">
                     <th className="px-3">Period</th>
-                    <th className="px-3">Total</th>
+                    <th className="px-3 text-primary">Total</th>
                     <th className="px-3 text-success">Completed</th>
+                    <th className="px-3 text-secondary">In Progress</th>
                     <th className="px-3 text-orange">Pending</th>
                     <th className="px-3 text-danger">Overdue</th>
                   </tr>
@@ -597,10 +713,11 @@ const ReportsDashboard = ({ user }) => {
                   {getTrendData().map((item, idx) => (
                     <tr key={idx}>
                       <td className="px-3 py-3 fw-bold text-dark">{item.period}</td>
-                      <td className="px-3 py-3 fw-medium">{item.total}</td>
-                      <td className="px-3 py-3 text-success fw-medium font-outfit">{item.completed}</td>
-                      <td className="px-3 py-3 text-orange fw-medium font-outfit">{item.pending}</td>
-                      <td className="px-3 py-3 text-danger fw-medium font-outfit">{item.overdue}</td>
+                      <td className="px-3 py-3 fw-bold cursor-pointer text-primary text-decoration-underline" onClick={() => handleDrillDown(item.period, 'Total', item.tasks)}>{item.total}</td>
+                      <td className="px-3 py-3 text-success fw-bold font-outfit cursor-pointer text-decoration-underline" onClick={() => handleDrillDown(item.period, 'Completed', item.tasks.filter(t => t.status === 'COMPLETED'))}>{item.completed}</td>
+                      <td className="px-3 py-3 text-secondary fw-bold font-outfit cursor-pointer text-decoration-underline" onClick={() => handleDrillDown(item.period, 'In Progress', item.tasks.filter(t => t.status === 'IN_PROGRESS'))}>{item.inProgress}</td>
+                      <td className="px-3 py-3 text-orange fw-bold font-outfit cursor-pointer text-decoration-underline" onClick={() => handleDrillDown(item.period, 'Pending', item.tasks.filter(t => t.status === 'PENDING'))}>{item.pending}</td>
+                      <td className="px-3 py-3 text-danger fw-bold font-outfit cursor-pointer text-decoration-underline" onClick={() => handleDrillDown(item.period, 'Overdue', item.tasks.filter(t => t.status === 'OVERDUE'))}>{item.overdue}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -630,10 +747,27 @@ const ReportsDashboard = ({ user }) => {
       {reportType === 'performance' && (
         <Card className="border-0 shadow-sm rounded-4">
           <Card.Header className="bg-transparent border-0 p-4 pb-0">
-            <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-              <TableCellsIcon style={{ width: '1.25rem' }} className="text-primary" /> 
-              Performance Summary Matrix
-            </h5>
+            <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+              <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                <TableCellsIcon style={{ width: '1.25rem' }} className="text-primary" /> 
+                Performance Summary Matrix
+              </h5>
+              <div className="d-flex align-items-center gap-2">
+                <Form.Control 
+                  type="number"
+                  min="1"
+                  size="sm" 
+                  className="border-0 bg-light rounded-3 fw-bold text-dark text-center px-1" 
+                  style={{ width: '60px', padding: '0.375rem' }} 
+                  value={itemsPerPage} 
+                  onChange={(e) => { 
+                    setItemsPerPage(e.target.value ? Number(e.target.value) : 1); 
+                    setCurrentPage(1); 
+                  }}
+                />
+                <span className="small text-secondary fw-medium text-nowrap">per page</span>
+              </div>
+            </div>
           </Card.Header>
           <Card.Body className="p-4">
             <Table responsive hover className="align-middle">
@@ -641,8 +775,10 @@ const ReportsDashboard = ({ user }) => {
                 <tr className="text-secondary small fw-bold text-uppercase pb-3">
                   <th className="px-3 border-0">SR NO</th>
                   <th className="px-3 border-0">Department</th>
-                  <th className="px-3 border-0">Total</th>
+                  <th className="px-3 border-0 text-primary">Total</th>
                   <th className="px-3 border-0 text-success">Completed</th>
+                  <th className="px-3 border-0 text-secondary">In Progress</th>
+                  <th className="px-3 border-0 text-orange">Pending</th>
                   <th className="px-3 border-0 text-danger">Overdue</th>
                   <th className="px-3 border-0">Efficiency</th>
                 </tr>
@@ -654,9 +790,11 @@ const ReportsDashboard = ({ user }) => {
                   <tr key={d.srNo}>
                     <td className="px-3 py-3 small text-secondary">{d.srNo}</td>
                     <td className="px-3 py-3 fw-bold text-dark">{d.name}</td>
-                    <td className="px-3 py-3 fw-medium">{d.total}</td>
-                    <td className="px-3 py-3 text-success fw-medium font-outfit">{d.completed}</td>
-                    <td className="px-3 py-3 text-danger fw-medium font-outfit">{d.overdue}</td>
+                    <td className="px-3 py-3 fw-bold text-primary cursor-pointer text-decoration-underline" onClick={() => handleDrillDown(d.name, 'Total', d.tasks)}>{d.total}</td>
+                    <td className="px-3 py-3 text-success fw-bold font-outfit cursor-pointer text-decoration-underline" onClick={() => handleDrillDown(d.name, 'Completed', d.tasks.filter(t => t.status === 'COMPLETED'))}>{d.completed}</td>
+                    <td className="px-3 py-3 text-secondary fw-bold font-outfit cursor-pointer text-decoration-underline" onClick={() => handleDrillDown(d.name, 'In Progress', d.tasks.filter(t => t.status === 'IN_PROGRESS'))}>{d.inProgress}</td>
+                    <td className="px-3 py-3 text-orange fw-bold font-outfit cursor-pointer text-decoration-underline" onClick={() => handleDrillDown(d.name, 'Pending', d.tasks.filter(t => t.status === 'PENDING'))}>{d.pending}</td>
+                    <td className="px-3 py-3 text-danger fw-bold font-outfit cursor-pointer text-decoration-underline" onClick={() => handleDrillDown(d.name, 'Overdue', d.tasks.filter(t => t.status === 'OVERDUE'))}>{d.overdue}</td>
                     <td className="px-3 py-3">
                       <div className="d-flex align-items-center gap-2">
                         <div className="flex-grow-1 bg-light rounded-pill overflow-hidden" style={{ height: '6px', minWidth: '100px' }}>
@@ -672,14 +810,6 @@ const ReportsDashboard = ({ user }) => {
                 ))}
               </tbody>
             </Table>
-            <div className="mt-4">
-              <Pagination 
-                totalItems={deptData.length}
-                itemsPerPage={itemsPerPage}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-              />
-            </div>
           </Card.Body>
         </Card>
       )}
