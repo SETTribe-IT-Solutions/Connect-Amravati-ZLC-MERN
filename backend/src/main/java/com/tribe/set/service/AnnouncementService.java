@@ -165,7 +165,7 @@ public class AnnouncementService {
     }
 
     @Transactional
-    public AnnouncementDTO updateAnnouncement(Long announcementId, String userId, String title, String message) {
+    public AnnouncementDTO updateAnnouncement(Long announcementId, String userId, String title, String message, MultipartFile file) {
         Announcement announcement = announcementRepository.findById(announcementId)
                 .orElseThrow(() -> new RuntimeException("Announcement not found"));
                 
@@ -175,6 +175,38 @@ public class AnnouncementService {
         
         announcement.setTitle(title);
         announcement.setMessage(message);
+
+        // Handle file update if a new file is provided
+        if (file != null && !file.isEmpty()) {
+            try {
+                Path uploadPath = Paths.get(uploadDir);
+                if (!Files.exists(uploadPath)) {
+                    Files.createDirectories(uploadPath);
+                }
+
+                String originalFileName = file.getOriginalFilename();
+                String extension = "";
+                if (originalFileName != null && originalFileName.contains(".")) {
+                    extension = originalFileName.substring(originalFileName.lastIndexOf(".")).toLowerCase();
+                }
+
+                // File format validation
+                java.util.List<String> allowedExtensions = java.util.Arrays.asList(".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv", ".txt", ".jpg", ".jpeg", ".png");
+                if (!extension.isEmpty() && allowedExtensions.contains(extension)) {
+                    // File size validation (10 MB)
+                    if (file.getSize() <= 10 * 1024 * 1024) {
+                        String uniqueFileName = UUID.randomUUID().toString() + extension;
+                        Path filePath = uploadPath.resolve(uniqueFileName).toAbsolutePath();
+                        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                        announcement.setAttachment(uniqueFileName);
+                    }
+                }
+            } catch (Exception e) {
+                // Silently skip file update on error or log it if needed
+                System.err.println("Failed to update file: " + e.getMessage());
+            }
+        }
+        
         Announcement updated = announcementRepository.save(announcement);
         
         User creator = userRepository.findByUserID(userId).orElse(null);

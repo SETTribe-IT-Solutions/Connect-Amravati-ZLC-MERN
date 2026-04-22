@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.tribe.set.dto.CreateAnnouncementRequest;
 import com.tribe.set.service.AnnouncementService;
 import com.tribe.set.service.AnnouncementService.AnnouncementDTO;
+import com.tribe.set.dto.UpdateAnnouncementRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -104,7 +105,7 @@ public class AnnouncementController {
     public ResponseEntity<AnnouncementDTO> updateAnnouncement(
             @PathVariable(name = "id") Long id,
             @RequestParam(name = "userId") String userId,
-            @RequestPart("announcement") @Valid UpdateRequest request,
+            @RequestPart("announcement") @Valid UpdateAnnouncementRequest request,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         return ResponseEntity.ok(announcementService.updateAnnouncement(id, userId, request.getTitle(), request.getMessage(), file));
     }
@@ -118,15 +119,4 @@ public class AnnouncementController {
         return ResponseEntity.ok("Deleted successfully");
     }
 
-    public static class UpdateRequest {
-        @NotBlank(message = "Title is required")
-        private String title;
-        @NotBlank(message = "Message is required")
-        private String message;
-
-        public String getTitle() { return title; }
-        public void setTitle(String title) { this.title = title; }
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-    }
 }
