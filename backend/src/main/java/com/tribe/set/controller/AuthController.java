@@ -129,6 +129,22 @@ public class AuthController {
         return authService.changePassword(request);
     }
 
+    @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@Valid @RequestBody com.tribe.set.dto.EmailRequest request) {
+        boolean exists = authService.verifyEmail(request.getEmail());
+        if (exists) {
+            return ResponseEntity.ok("Email verified");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email ID does not match our records");
+        }
+    }
+
+    @PostMapping("/reset-password-email")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody com.tribe.set.dto.ResetPasswordRequest request) {
+        String res = authService.resetPasswordByEmail(request.getEmail(), request.getNewPassword());
+        return ResponseEntity.ok(res);
+    }
+
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {

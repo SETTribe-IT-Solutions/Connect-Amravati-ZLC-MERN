@@ -142,6 +142,13 @@ const LoginPage = ({ onLogin }) => {
                       <Form.Group className="mb-5 position-relative">
                         <div className="d-flex justify-content-between align-items-center mb-1">
                           <Form.Label className="small fw-bold text-secondary ms-1 mb-0">Password</Form.Label>
+                          <Button 
+                            variant="link" 
+                            className="p-0 text-primary text-decoration-none small fw-bold"
+                            onClick={() => navigate('/forgot-password')}
+                          >
+                            Forgot Password?
+                          </Button>
                         </div>
                         <div className="position-relative">
                           <div className="position-absolute top-50 translate-middle-y ps-3 text-muted" style={{ zIndex: 5 }}>

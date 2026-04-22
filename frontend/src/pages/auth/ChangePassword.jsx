@@ -13,10 +13,18 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { Container, Card, Form, Button, ProgressBar, Badge, Spinner, Stack } from 'react-bootstrap';
 
-const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
+const ChangePassword = ({ 
+  onPasswordChange, 
+  onVerifyPassword, 
+  onVerifyEmail, 
+  onForgotPassword, 
+  onClose,
+  mode = 'change' // 'change' or 'forgot'
+}) => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1); // 1: verify, 2: new password, 3: success
   const [formData, setFormData] = useState({
+    email: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
@@ -31,6 +39,8 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  const isForgotMode = mode === 'forgot';
 
   // Password strength checker
   const checkPasswordStrength = (password) => {
@@ -55,8 +65,16 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
   const validateForm = () => {
     const newErrors = {};
     if (step === 1) {
-      if (!formData.currentPassword) {
-        newErrors.currentPassword = 'Current password is required';
+      if (isForgotMode) {
+        if (!formData.email) {
+          newErrors.email = 'Email address is required';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+          newErrors.email = 'Please enter a valid email address';
+        }
+      } else {
+        if (!formData.currentPassword) {
+          newErrors.currentPassword = 'Current password is required';
+        }
       }
     }
     if (step === 2) {
@@ -77,24 +95,35 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
   const handleNext = async () => {
     const newErrors = validateForm();
     if (Object.keys(newErrors).length === 0) {
+      setErrors({});
       if (step === 1) {
-        if (onVerifyPassword) {
-          setIsLoading(true);
-          try {
-            const isValid = await onVerifyPassword(formData.currentPassword);
+        setIsLoading(true);
+        try {
+          // Always use email verification for step 1
+          if (onVerifyEmail) {
+            const isValid = await onVerifyEmail(formData.email);
             if (isValid) setStep(2);
-            else setErrors({ currentPassword: 'Current password is incorrect' });
-          } finally {
-            setIsLoading(false);
+            else setErrors({ email: 'Email ID does not match our records' });
+          } else {
+            setStep(2);
           }
-        } else setStep(2);
+        } finally {
+          setIsLoading(false);
+        }
       } else if (step === 2) {
         setIsLoading(true);
         try {
-          if (onPasswordChange) {
-            const success = await onPasswordChange(formData.currentPassword, formData.newPassword);
-            if (success) setStep(3);
-          } else setStep(3);
+          if (isForgotMode) {
+            if (onForgotPassword) {
+              const success = await onForgotPassword(formData.email, formData.newPassword);
+              if (success) setStep(3);
+            } else setStep(3);
+          } else {
+            if (onPasswordChange) {
+              const success = await onPasswordChange(formData.currentPassword, formData.newPassword);
+              if (success) setStep(3);
+            } else setStep(3);
+          }
         } finally {
           setIsLoading(false);
         }
@@ -111,8 +140,12 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
         style={{ maxWidth: '500px' }}
       >
         <div className="text-center mb-5">
-          <h1 className="display-6 fw-bold text-dark mb-2 font-outfit">Change Password</h1>
-          <p className="text-secondary lead">Update your security credentials</p>
+          <h1 className="display-6 fw-bold text-dark mb-2 font-outfit">
+            {isForgotMode ? 'Reset Password' : 'Change Password'}
+          </h1>
+          <p className="text-secondary lead">
+            Securely update your credentials via email verification
+          </p>
         </div>
 
         <Card className="border-0 shadow-lg rounded-4 overflow-hidden bg-white bg-opacity-75 backdrop-blur">
@@ -127,37 +160,37 @@ const ChangePassword = ({ onPasswordChange, onVerifyPassword, onClose }) => {
               >
                 <div className="d-flex align-items-center gap-3 mb-5">
                   <div className="p-3 bg-primary bg-opacity-10 rounded-3">
-                    <ShieldCheckIcon style={{ width: '1.5rem' }} className="text-primary" />
+                    <ArrowPathIcon style={{ width: '1.5rem' }} className="text-primary" />
                   </div>
                   <div>
-                    <h5 className="fw-bold text-dark mb-0">Verify Identity</h5>
-                    <p className="small text-secondary mb-0">Enter current password to continue</p>
+                    <h5 className="fw-bold text-dark mb-0">Verify Email</h5>
+                    <p className="small text-secondary mb-0">Enter your registered email address to continue</p>
                   </div>
                 </div>
 
                 <Form.Group className="mb-4">
-                  <Form.Label className="small fw-bold text-secondary text-uppercase mb-2">Current Password</Form.Label>
+                  <Form.Label className="small fw-bold text-secondary text-uppercase mb-2">Email Address</Form.Label>
                   <div className="position-relative">
-                    <LockClosedIcon 
-                      style={{ width: '1.25rem' }} 
-                      className="position-absolute top-50 translate-middle-y ms-3 text-muted" 
-                    />
+                    <i className="bi bi-envelope position-absolute top-50 translate-middle-y ms-3 text-muted"></i>
                     <Form.Control
-                      type={showPasswords.current ? 'text' : 'password'}
-                      value={formData.currentPassword}
-                      onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                      placeholder="Enter current password"
-                      className={`ps-5 py-3 rounded-3 border-2 shadow-none focus-border-primary ${errors.currentPassword ? 'border-danger' : ''}`}
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        email: e.target.value 
+                      })}
+                      placeholder="Enter your registered email"
+                      className={`ps-5 py-3 rounded-3 border-2 shadow-none focus-border-primary ${
+                        errors.email ? 'border-danger' : ''
+                      }`}
                     />
-                    <Button
-                      variant="link"
-                      className="position-absolute top-50 translate-middle-y end-0 me-2 text-muted p-2 border-0 shadow-none"
-                      onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
-                    >
-                      {showPasswords.current ? <EyeSlashIcon style={{ width: '1.25rem' }} /> : <EyeIcon style={{ width: '1.25rem' }} />}
-                    </Button>
                   </div>
-                  {errors.currentPassword && <p className="text-danger small mt-2 mb-0">{errors.currentPassword}</p>}
+                  {errors.email && (
+                    <p className="text-danger small mt-3 mb-0 fw-bold animate-pulse">
+                      <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                      {errors.email}
+                    </p>
+                  )}
                 </Form.Group>
 
                 <div className="d-flex justify-content-end mt-5">

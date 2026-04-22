@@ -221,11 +221,12 @@ public class TaskService {
             throw new RuntimeException("Validation Error: Cannot forward a completed task");
         }
 
-        // Verify that the task is assigned to the requester
+        // Verify that the task is assigned to the requester or they are the creator
         boolean isAssignee = task.getAssignedToUserId().equals(requesterId);
+        boolean isCreator = task.getCreatedByUserId().equals(requesterId);
 
-        if (!isAssignee) {
-            throw new RuntimeException("Access Denied: You cannot forward this task because you are not the current assignee");
+        if (!isAssignee && !isCreator) {
+            throw new RuntimeException("Access Denied: You cannot forward this task because you are neither the current assignee nor the creator");
         }
 
         // CHECK 2: Hierarchy rule — requester must be HIGHER than assignee
@@ -249,12 +250,13 @@ public class TaskService {
 
         Task saved = taskRepository.save(task);
 
-        // Add a remark that it was forwarded
+        // Add a remark that it was forwarded/reassigned
         TaskRemark remark = new TaskRemark();
         remark.setTaskId(saved.getId());
         remark.setAddedByUserId(requesterId);
+        String actionType = isAssignee ? "forwarded" : "reassigned";
         remark.setRemark(
-                requester.getName() + " (" + requester.getRole() + ") forwarded this task to " + newAssignee.getName());
+                requester.getName() + " (" + requester.getRole() + ") " + actionType + " this task to " + newAssignee.getName());
         remarkRepository.save(remark);
 
         // Notify old assignee (if not the requester)
