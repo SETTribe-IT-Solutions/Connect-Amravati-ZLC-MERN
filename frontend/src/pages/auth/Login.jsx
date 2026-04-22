@@ -50,10 +50,9 @@ const LoginPage = () => {
     try {
       const data = await loginUser(formData.phone, formData.password);
       if (data.message && data.message.toLowerCase() === "login successful") {
-        dispatch(setCredentials({
-          user: data.user,
-          token: data.token
-        }));
+        // Corrected: The backend sends user details at the top level of the response
+        dispatch(setCredentials(data));
+        
         toast.success('Login successful');
         setLoading(false);
         navigate("/dashboard");
