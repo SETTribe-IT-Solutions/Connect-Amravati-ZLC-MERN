@@ -3,20 +3,17 @@ package com.tribe.set.entity;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "announcement_acknowledgments", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"announcement_id", "user_id"})
+        @UniqueConstraint(columnNames = { "announcement_id", "user_id" })
 })
-public class AnnouncementAcknowledgment {
+public class AnnouncementAcknowledgment extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,15 +25,12 @@ public class AnnouncementAcknowledgment {
     @jakarta.persistence.Column(name = "user_id", nullable = false)
     private String userId;
 
-    private LocalDateTime acknowledgedAt = LocalDateTime.now();
-
     public AnnouncementAcknowledgment() {
     }
 
     public AnnouncementAcknowledgment(Long announcementId, String userId) {
         this.announcementId = announcementId;
         this.userId = userId;
-        this.acknowledgedAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -61,13 +55,5 @@ public class AnnouncementAcknowledgment {
 
     public void setUserId(String userId) {
         this.userId = userId;
-    }
-
-    public LocalDateTime getAcknowledgedAt() {
-        return acknowledgedAt;
-    }
-
-    public void setAcknowledgedAt(LocalDateTime acknowledgedAt) {
-        this.acknowledgedAt = acknowledgedAt;
     }
 }

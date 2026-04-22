@@ -1,4 +1,4 @@
-package com.tribe.set.config;
+package com.tribe.set.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,8 +9,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @ControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -33,6 +37,7 @@ public class GlobalExceptionHandler {
         String message = ex.getMessage();
         if ("Bad credentials".equals(message)) {
             message = "Invalid credentials";
+            logger.warn("Security Event: Failed login attempt due to invalid credentials.");
         }
         body.put("status", "error");
         body.put("message", message);
@@ -41,7 +46,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
-        ex.printStackTrace(); // Log for developers
+        logger.error("A processing error occurred on the server:", ex);
         Map<String, Object> body = new HashMap<>();
         body.put("status", "error");
         body.put("message", "A processing error occurred on the server.");

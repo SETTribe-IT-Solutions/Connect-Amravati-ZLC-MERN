@@ -5,24 +5,25 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tribe.set.entity.RefreshToken;
 import com.tribe.set.repository.RefreshTokenRepository;
 import com.tribe.set.repository.UserRepository;
+import com.tribe.set.security.JwtUtils;
 
 @Service
 public class RefreshTokenService {
-    @Value("${amravati.app.jwtRefreshExpirationMs:86400000}")
-    private Long refreshTokenDurationMs;
-
+    
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     public Optional<RefreshToken> findByToken(String token) {
         return refreshTokenRepository.findByToken(token);
@@ -44,7 +45,7 @@ public class RefreshTokenService {
         }
 
         refreshToken.setToken(UUID.randomUUID().toString());
-        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
+        refreshToken.setExpiryDate(Instant.now().plusMillis(jwtUtils.getRefreshExpirationMs()));
 
         return refreshTokenRepository.save(refreshToken);
     }

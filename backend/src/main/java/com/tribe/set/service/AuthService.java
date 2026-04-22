@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.tribe.set.entity.User;
+import com.tribe.set.entity.UserStatus;
 import com.tribe.set.repository.UserRepository;
 import com.tribe.set.security.JwtUtils;
 import com.tribe.set.security.UserDetailsImpl;
@@ -48,18 +49,32 @@ public class AuthService {
             User user = userRepository.findByPhone(request.getPhone())
                     .orElseThrow(() -> new RuntimeException("User not found with this mobile number"));
 
-            if (!user.getActive()) {
-                auditLogRepository.save(new AuditLog("LOGIN_FAILED", "Phone: " + request.getPhone(), ip, "FAILURE", "Account inactive"));
-                throw new RuntimeException("User account is inactive");
+            if (user.getStatus() != UserStatus.ACTIVE) {
+                auditLogRepository.save(new AuditLog("LOGIN_FAILED", "Phone: " + request.getPhone(), ip, "FAILURE", "Account status: " + user.getStatus()));
+                throw new RuntimeException("User account is " + user.getStatus().toString().toLowerCase());
+            }
+
+            if (user.getFailedLoginAttempts() != null && user.getFailedLoginAttempts() >= 5) {
+                auditLogRepository.save(new AuditLog("LOGIN_BLOCKED", "Phone: " + request.getPhone(), ip, "FAILURE", "Account locked due to too many failed attempts"));
+                throw new RuntimeException("User account is locked due to too many failed login attempts. Please contact Administrator.");
             }
 
             // Authenticate using AuthenticationManager
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(user.getEmail(), request.getPassword()));
+            Authentication authentication;
+            try {
+                authentication = authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(user.getEmail(), request.getPassword()));
+            } catch (org.springframework.security.core.AuthenticationException authEx) {
+                int attempts = (user.getFailedLoginAttempts() == null) ? 1 : user.getFailedLoginAttempts() + 1;
+                user.setFailedLoginAttempts(attempts);
+                userRepository.save(user);
+                throw authEx;
+            }
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             
-            // Update last login metadata
+            // Update last login metadata and reset failed attempts
+            user.setFailedLoginAttempts(0);
             user.setLastLogin(java.time.LocalDateTime.now());
             user.setLastLoginIP(ip);
             user.setLastLoginDevice(httpRequest.getHeader("User-Agent"));
@@ -111,7 +126,7 @@ public class AuthService {
         user.setTaluka(request.getTaluka());
         user.setVillage(request.getVillage());
         user.setRole(request.getRole());
-        user.setActive(true);
+        user.setStatus(UserStatus.ACTIVE);
 
         // 🔥 MISSING LINE (THIS FIXES YOUR ERROR)
         user.setPhone(request.getPhone());

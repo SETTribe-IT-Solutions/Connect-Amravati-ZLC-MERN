@@ -16,5 +16,5 @@ public interface AnnouncementAcknowledgmentRepository extends JpaRepository<Anno
     List<AnnouncementAcknowledgment> findAllByUserId(String userId);
     boolean existsByAnnouncementIdAndUserId(Long announcementId, String userId);
     long countByAnnouncementId(Long announcementId);
-    List<AnnouncementAcknowledgment> findByAnnouncementIdOrderByAcknowledgedAtDesc(Long announcementId);
+    List<AnnouncementAcknowledgment> findByAnnouncementIdOrderByCreatedAtDesc(Long announcementId);
 }

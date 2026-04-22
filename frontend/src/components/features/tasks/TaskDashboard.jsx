@@ -59,7 +59,7 @@ const TaskDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedDepartment] = useState('all');
-  const [toast, setToast] = useState(null);
+  const [alertMessage, setAlertMessage] = useState(null);
   const [pendingSearchTerm, setPendingSearchTerm] = useState('');
   const [pendingStatusFilter, setPendingStatusFilter] = useState('all');
   const [fileUploadError, setFileUploadError] = useState('');
@@ -106,8 +106,8 @@ const TaskDashboard = () => {
   }, [pendingSearchTerm, pendingStatusFilter]);
 
   const showToast = (title, value) => {
-    setToast({ title, value });
-    setTimeout(() => setToast(null), 3000);
+    setAlertMessage({ title, value });
+    setTimeout(() => setAlertMessage(null), 3000);
   };
 
   const fetchTasks = async () => {
@@ -138,15 +138,25 @@ const TaskDashboard = () => {
     try {
       const requesterId = user?.userID;
       if (!requesterId) return;
-      // Pass params as object and include a large size to get all relevant staff
+      
       const data = await getAllUsers({ requesterId, size: 1000 });
-      // Extract content array from the Page object
-      const userList = data.content || data || [];
-      // Filter out self
-      const filteredStaff = userList.filter(u => u.userID?.toString() !== requesterId.toString());
+      
+      // Spring Data Page object has 'content', but we handle both for safety
+      let userList = [];
+      if (data && data.content && Array.isArray(data.content)) {
+        userList = data.content;
+      } else if (Array.isArray(data)) {
+        userList = data;
+      }
+      
+      // Filter out self and ensure basic data exists
+      const filteredStaff = userList.filter(u => u && u.userID && u.userID.toString() !== requesterId.toString());
+      
+      console.log(`Fetched ${filteredStaff.length} potential staff members.`);
       setStaff(filteredStaff);
     } catch (error) {
       console.error("Fetch Staff Error:", error);
+      showToast('Could not fetch staff list. Please check your connection.', 'error');
     }
   };
 
@@ -242,8 +252,23 @@ const TaskDashboard = () => {
       setActiveTab('tracking');
     } catch (error) {
       console.error("Create Task Error:", error);
-      const msg = error.response?.data?.message || error.message || 'Failed to create task';
-      showToast(msg, 'error');
+      let errorMsg = 'Failed to create task';
+      
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMsg = error.response.data;
+        } else if (error.response.data.message) {
+          errorMsg = error.response.data.message;
+        }
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      if (errorMsg === 'Network Error') {
+        errorMsg = 'Network failed. Please check if the server is running or your connection is active.';
+      }
+      
+      showToast(errorMsg, 'error');
     }
   };
 
@@ -428,18 +453,17 @@ const TaskDashboard = () => {
 
   return (
     <div className="container-fluid p-3 p-md-4">
-      {/* Toast Popup */}
+      {/* Alert Message Popup */}
       <AnimatePresence>
-        {toast && (
+        {alertMessage && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
             className="position-fixed top-0 start-50 translate-middle-x mt-4 p-3 rounded-4 shadow-lg border-0 d-flex align-items-center gap-3 text-white" 
-            style={{ zIndex: 9999, backgroundColor: '#2563eb', minWidth: '240px' }}>
+            style={{ zIndex: 9999, backgroundColor: alertMessage.value === 'error' ? '#ef4444' : '#2563eb', minWidth: '240px' }}>
             <DocumentTextIcon style={{ width: '1.25rem', height: '1.25rem', opacity: 0.8 }} />
             <div className="flex-grow-1">
-              <p className="small mb-0 opacity-80">{toast.title}</p>
-              <p className="h5 fw-bold mb-0">{toast.value}</p>
+              <p className="small mb-0 opacity-80">{alertMessage.title}</p>
             </div>
-            <XMarkIcon className="cursor-pointer" style={{ width: '1rem', height: '1rem' }} onClick={() => setToast(null)} />
+            <XMarkIcon className="cursor-pointer" style={{ width: '1rem', height: '1rem' }} onClick={() => setAlertMessage(null)} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -614,9 +638,13 @@ const TaskDashboard = () => {
                               <Form.Select value={newTask.assignedTo} onChange={(e) => setNewTask({ ...newTask, assignedTo: e.target.value })} 
                                 className="rounded-3 border-light-subtle" required>
                                 <option value="">Select Specific Officer</option>
-                                {staff.filter(u => u.role === newTask.selectedRole).map(u => (
-                                  <option key={u.userID} value={u.userID}>{u.name}</option>
-                                ))}
+                                {staff.filter(u => u.role === newTask.selectedRole).length > 0 ? (
+                                  staff.filter(u => u.role === newTask.selectedRole).map(u => (
+                                    <option key={u.userID} value={u.userID}>{u.name}</option>
+                                  ))
+                                ) : (
+                                  <option disabled>No users found for this role</option>
+                                )}
                               </Form.Select>
                             )}
                           </div>
