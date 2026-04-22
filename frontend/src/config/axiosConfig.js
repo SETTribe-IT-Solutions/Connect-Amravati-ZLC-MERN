@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
@@ -74,6 +75,11 @@ axiosInstance.interceptors.response.use(
         }
         return Promise.reject(refreshError);
       }
+    }
+
+    // Global Server Error Handler
+    if (error.response?.status >= 500) {
+      toast.error('A server error occurred. Please try again later.');
     }
 
     return Promise.reject(error);

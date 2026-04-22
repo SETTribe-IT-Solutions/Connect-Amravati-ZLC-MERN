@@ -9,6 +9,9 @@ import { AnimatePresence } from 'framer-motion';
 // Layout Components
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import RoleRoute from './components/common/RoleRoute';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import { ROLES } from './constants/roles';
 
 // Pages (Lazy Loaded for performance)
 const Login = React.lazy(() => import('./pages/auth/Login'));
@@ -139,6 +142,7 @@ function App() {
   }
 
   return (
+    <ErrorBoundary>
       <Router>
         <div className="min-vh-100" style={{ backgroundColor: '#f8fafc' }}>
           <Toaster 
@@ -187,7 +191,7 @@ function App() {
                 path="/login" 
                 element={
                   isAuthenticated ? 
-                  <Navigate to={user?.role === 'SYSTEM_ADMINISTRATOR' ? "/users" : "/dashboard"} replace /> : 
+                  <Navigate to={user?.role === ROLES.SYSTEM_ADMINISTRATOR ? "/users" : "/dashboard"} replace /> : 
                   <Login onLogin={handleLogin} />
                 } 
               />
@@ -201,13 +205,13 @@ function App() {
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<Navigate to={user?.role === 'SYSTEM_ADMINISTRATOR' ? "/users" : "/dashboard"} replace />} />
+                <Route index element={<Navigate to={user?.role === ROLES.SYSTEM_ADMINISTRATOR ? "/users" : "/dashboard"} replace />} />
                 
                 {/* Main Pages */}
                 <Route 
                   path="dashboard" 
                   element={
-                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
+                    user?.role === ROLES.SYSTEM_ADMINISTRATOR ? 
                     <Navigate to="/users" replace /> : 
                     <Dashboard />
                   } 
@@ -216,7 +220,7 @@ function App() {
                 <Route 
                   path="tasks" 
                   element={
-                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
+                    user?.role === ROLES.SYSTEM_ADMINISTRATOR ? 
                     <Navigate to="/users" replace /> : 
                     <Tasks />
                   } 
@@ -225,7 +229,7 @@ function App() {
                 <Route 
                   path="communications" 
                   element={
-                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
+                    user?.role === ROLES.SYSTEM_ADMINISTRATOR ? 
                     <Navigate to="/users" replace /> : 
                     <Communications />
                   } 
@@ -234,7 +238,7 @@ function App() {
                 <Route 
                   path="reports" 
                   element={
-                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
+                    user?.role === ROLES.SYSTEM_ADMINISTRATOR ? 
                     <Navigate to="/users" replace /> : 
                     <Reports />
                   } 
@@ -243,16 +247,16 @@ function App() {
                 <Route 
                   path="users" 
                   element={
-                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
-                    <UserManagement /> : 
-                    <Navigate to="/dashboard" replace />
+                    <RoleRoute allowedRoles={[ROLES.SYSTEM_ADMINISTRATOR]} fallbackPath="/dashboard">
+                      <UserManagement />
+                    </RoleRoute>
                   } 
                 />
                 
                 <Route 
                   path="appreciation" 
                   element={
-                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
+                    user?.role === ROLES.SYSTEM_ADMINISTRATOR ? 
                     <Navigate to="/users" replace /> : 
                     <Appreciation />
                   } 
@@ -261,7 +265,7 @@ function App() {
                 <Route 
                   path="notifications" 
                   element={
-                    user?.role === 'SYSTEM_ADMINISTRATOR' ? 
+                    user?.role === ROLES.SYSTEM_ADMINISTRATOR ? 
                     <Navigate to="/users" replace /> : 
                     <Notifications />
                   } 
@@ -281,7 +285,7 @@ function App() {
                 />
 
                 {/* Catch all unmatched routes */}
-                <Route path="*" element={<Navigate to={user?.role === 'SYSTEM_ADMINISTRATOR' ? "/users" : "/dashboard"} replace />} />
+                <Route path="*" element={<Navigate to={user?.role === ROLES.SYSTEM_ADMINISTRATOR ? "/users" : "/dashboard"} replace />} />
               </Route>
 
               {/* Redirect root to appropriate page */}
@@ -316,6 +320,7 @@ function App() {
           )}
         </div>
       </Router>
+    </ErrorBoundary>
   );
 }
 

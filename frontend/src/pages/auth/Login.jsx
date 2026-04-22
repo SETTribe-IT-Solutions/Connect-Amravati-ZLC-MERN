@@ -55,7 +55,12 @@ const LoginPage = () => {
         
         toast.success('Login successful');
         setLoading(false);
-        navigate("/dashboard");
+        
+        if (data.role === 'SYSTEM_ADMINISTRATOR') {
+          navigate("/users");
+        } else {
+          navigate("/dashboard");
+        }
         return;
       } else {
         setLoginError(data.message || 'Invalid credentials');
