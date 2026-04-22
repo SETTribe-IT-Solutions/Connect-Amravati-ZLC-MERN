@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
 
 import { FaMapMarkerAlt, FaBell } from 'react-icons/fa';
 import { GiIndiaGate } from 'react-icons/gi';
@@ -9,7 +10,8 @@ import { Bars3Icon, BellIcon, CheckCircleIcon, EyeIcon, XMarkIcon, InformationCi
 import * as notificationService from '../../services/notifications/notificationService';
 import logo1 from '../../assets/images/logo1.png';
 
-const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
+const Header = React.memo(({ setSidebarOpen, isCollapsed, setIsCollapsed }) => {
+  const { user } = useSelector((state) => state.auth);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -217,6 +219,6 @@ const Header = ({ setSidebarOpen, isCollapsed, setIsCollapsed, user }) => {
       </div>
     </motion.header>
   );
-};
+});
 
 export default Header;

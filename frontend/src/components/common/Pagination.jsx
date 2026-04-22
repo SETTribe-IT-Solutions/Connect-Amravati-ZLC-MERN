@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Nav } from 'react-bootstrap';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
-const Pagination = ({ totalItems, itemsPerPage, currentPage, onPageChange }) => {
+const Pagination = React.memo(({ totalItems, itemsPerPage, currentPage, onPageChange }) => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const getPageNumbers = () => {
@@ -76,6 +76,6 @@ const Pagination = ({ totalItems, itemsPerPage, currentPage, onPageChange }) => 
       </Nav>
     </div>
   );
-};
+});
 
 export default Pagination;

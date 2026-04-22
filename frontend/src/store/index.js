@@ -1,17 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
+import authReducer from './slices/authSlice';
 
-// Create a simple dummy reducer to avoid the warning
-const dummyReducer = (state = {}) => {
-  return state;
-};
-// Create a simple reducer to avoid the warning
-const rootReducer = (state = { version: '1.0' }) => {
-  return state;
-};
-
-export const store = configureStore({
+const store = configureStore({
   reducer: {
-    app: dummyReducer, // Add at least one reducer
-    reducer: rootReducer,
+    auth: authReducer,
   },
 });
+
+export default store;

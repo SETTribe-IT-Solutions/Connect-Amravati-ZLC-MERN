@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { 
   Card, Row, Col, Button, Nav, Table, Badge, Spinner, Form, Toast, ToastContainer, Modal 
 } from 'react-bootstrap';
@@ -17,7 +18,8 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import Pagination from '../../common/Pagination';
 
-const ReportsDashboard = ({ user }) => {
+const ReportsDashboard = () => {
+  const { user } = useSelector((state) => state.auth);
   const [dateRange, setDateRange] = useState('month');
   const [reportType, setReportType] = useState('overview');
   const [performanceData, setPerformanceData] = useState([]);
@@ -104,22 +106,22 @@ const ReportsDashboard = ({ user }) => {
   }, [user?.userID]);
 
   // Stats cards in correct sequence
-  const stats = [
+  const stats = useMemo(() => [
     { id: 'all', title: 'Total Tasks', value: globalStats?.total || 0, icon: DocumentTextIcon, bgColor: '#eff6ff', textColor: '#0d6efd' },
     { id: 'completed', title: 'Completed', value: globalStats?.completed || 0, icon: CheckCircleIcon, bgColor: '#f0fdf4', textColor: '#16a34a' },
     { id: 'inProgress', title: 'In Progress', value: globalStats?.inProgress || 0, icon: ArrowPathIcon, bgColor: '#f8fafc', textColor: '#64748b' },
     { id: 'pending', title: 'Pending', value: globalStats?.pending || 0, icon: ClockIcon, bgColor: '#fff7ed', textColor: '#f97316' },
     { id: 'overdue', title: 'Overdue', value: globalStats?.overdue || 0, icon: ExclamationTriangleIcon, bgColor: '#fef2f2', textColor: '#dc2626' }
-  ];
+  ], [globalStats]);
 
   // Derived data based on filters
-  const activeTasks = allTasks.filter(t => {
+  const activeTasks = useMemo(() => allTasks.filter(t => {
     const deptMatch = globalDept === 'all' || t.department === globalDept;
     const statusMatch = selectedSummary === 'all' || t.status === selectedSummary.toUpperCase();
     return deptMatch && statusMatch;
-  });
+  }), [allTasks, globalDept, selectedSummary]);
 
-  const deptData = performanceData
+  const deptData = useMemo(() => performanceData
     .filter(p => p.role !== 'SYSTEM_ADMINISTRATOR' && p.userName !== 'Admin User')
     .map((p, idx) => {
     const userTasks = allTasks.filter(t => t.assignedToId === p.userId || t.assignedToName === p.userName);
@@ -142,9 +144,9 @@ const ReportsDashboard = ({ user }) => {
       rate: userTasks.length > 0 ? Math.round((userTasks.filter(t => t.status === 'COMPLETED').length / userTasks.length) * 100) : 0,
       tasks: userTasks
     };
-  });
+  }), [performanceData, allTasks, selectedSummary]);
 
-  const filteredDeptData = deptData.filter(d => {
+  const filteredDeptData = useMemo(() => deptData.filter(d => {
     const deptMatch = globalDept === 'all' || d.department === globalDept || (selectedDept !== 'all' && d.department === selectedDept);
     if (!deptMatch) return false;
     
@@ -152,9 +154,9 @@ const ReportsDashboard = ({ user }) => {
     if (selectedSummary !== 'all' && d.activeCount === 0) return false;
     
     return true;
-  });
+  }), [deptData, globalDept, selectedDept, selectedSummary]);
 
-  const searchedDeptData = filteredDeptData.filter(d => {
+  const searchedDeptData = useMemo(() => filteredDeptData.filter(d => {
     if (!searchTerm) return true;
     const searchLow = searchTerm.toLowerCase();
     
@@ -176,7 +178,7 @@ const ReportsDashboard = ({ user }) => {
       d.rate.toString().includes(searchLow) ||
       taskMatch
     );
-  });
+  }), [filteredDeptData, searchTerm, activeTasks]);
 
   const deptNames = departments.filter(d => d !== 'All Departments');
 
@@ -199,7 +201,7 @@ const ReportsDashboard = ({ user }) => {
     Total: d.total
   }));
 
-  const searchedActiveTasks = activeTasks.filter(t => {
+  const searchedActiveTasks = useMemo(() => activeTasks.filter(t => {
     if (!taskSearchTerm) return true;
     const searchLow = taskSearchTerm.toLowerCase();
     return (
@@ -208,9 +210,9 @@ const ReportsDashboard = ({ user }) => {
       (t.assignedToName && t.assignedToName.toLowerCase().includes(searchLow)) ||
       (t.status && t.status.toLowerCase().includes(searchLow))
     );
-  });
+  }), [activeTasks, taskSearchTerm]);
 
-  const taskDistribution = [
+  const taskDistribution = useMemo(() => [
     { name: 'Completed', value: globalStats?.completed || 0, color: '#198754' },
     { name: 'In Progress', value: globalStats?.inProgress || 0, color: '#6c757d' },
     { name: 'Pending', value: globalStats?.pending || 0, color: '#f97316' },
@@ -218,7 +220,7 @@ const ReportsDashboard = ({ user }) => {
   ].filter(item => {
     if (selectedSummary === 'all') return item.value > 0;
     return item.name.toLowerCase() === (selectedSummary === 'inProgress' ? 'in progress' : selectedSummary) && item.value > 0;
-  });
+  }), [globalStats, selectedSummary]);
 
   const mapPeriodData = (period, filtered) => ({
     period,
@@ -230,73 +232,63 @@ const ReportsDashboard = ({ user }) => {
     tasks: filtered
   });
 
-  const getMonthlyData = () => {
+  const getTrendData = useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const currentYear = new Date().getFullYear();
-    return months.map((month, index) => {
-      const filtered = activeTasks.filter(t => {
-        if (!t.createdAt) return false;
-        const d = new Date(t.createdAt);
-        return d.getMonth() === index && d.getFullYear() === currentYear;
-      });
-      return mapPeriodData(month, filtered);
-    });
-  };
-
-  const getWeeklyData = () => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const last7Days = [...Array(7)].map((_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (6 - i));
-      return d;
-    });
-
-    return last7Days.map(date => {
-      const filtered = activeTasks.filter(t => {
-        if (!t.createdAt) return false;
-        const td = new Date(t.createdAt);
-        return td.toDateString() === date.toDateString();
-      });
-      return mapPeriodData(days[date.getDay()], filtered);
-    });
-  };
-
-  const getQuarterlyData = () => {
     const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
     const currentYear = new Date().getFullYear();
-    return quarters.map((q, idx) => {
-      const filtered = activeTasks.filter(t => {
-        if (!t.createdAt) return false;
-        const d = new Date(t.createdAt);
-        const quarter = Math.floor(d.getMonth() / 3);
-        return quarter === idx && d.getFullYear() === currentYear;
-      });
-      return mapPeriodData(q, filtered);
-    });
-  };
 
-  const getYearlyData = () => {
-    const currentYear = new Date().getFullYear();
-    const years = [currentYear - 2, currentYear - 1, currentYear];
-    return years.map(year => {
-      const filtered = activeTasks.filter(t => {
-        if (!t.createdAt) return false;
-        const d = new Date(t.createdAt);
-        return d.getFullYear() === year;
-      });
-      return mapPeriodData(year.toString(), filtered);
-    });
-  };
-
-  const getTrendData = () => {
     switch(dateRange) {
-      case 'week': return getWeeklyData();
-      case 'month': return getMonthlyData();
-      case 'quarter': return getQuarterlyData();
-      case 'year': return getYearlyData();
-      default: return getMonthlyData();
+      case 'week': {
+        const last7Days = [...Array(7)].map((_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - (6 - i));
+          return d;
+        });
+        return last7Days.map(date => {
+          const filtered = activeTasks.filter(t => {
+            if (!t.createdAt) return false;
+            const td = new Date(t.createdAt);
+            return td.toDateString() === date.toDateString();
+          });
+          return mapPeriodData(days[date.getDay()], filtered);
+        });
+      }
+      case 'month': {
+        return months.map((month, index) => {
+          const filtered = activeTasks.filter(t => {
+            if (!t.createdAt) return false;
+            const d = new Date(t.createdAt);
+            return d.getMonth() === index && d.getFullYear() === currentYear;
+          });
+          return mapPeriodData(month, filtered);
+        });
+      }
+      case 'quarter': {
+        return quarters.map((q, idx) => {
+          const filtered = activeTasks.filter(t => {
+            if (!t.createdAt) return false;
+            const d = new Date(t.createdAt);
+            const quarter = Math.floor(d.getMonth() / 3);
+            return quarter === idx && d.getFullYear() === currentYear;
+          });
+          return mapPeriodData(q, filtered);
+        });
+      }
+      case 'year': {
+        const years = [currentYear - 2, currentYear - 1, currentYear];
+        return years.map(year => {
+          const filtered = activeTasks.filter(t => {
+            if (!t.createdAt) return false;
+            const d = new Date(t.createdAt);
+            return d.getFullYear() === year;
+          });
+          return mapPeriodData(year.toString(), filtered);
+        });
+      }
+      default: return [];
     }
-  };
+  }, [dateRange, activeTasks]);
 
   const handleExport = () => {
     try {
@@ -464,7 +456,7 @@ const ReportsDashboard = ({ user }) => {
               <Card.Body className="p-4">
                 <div style={{ height: '350px' }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={getMonthlyData()}>
+                    <LineChart data={getTrendData}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f3f5" />
                       <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6c757d' }} />
                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6c757d' }} />
@@ -710,7 +702,7 @@ const ReportsDashboard = ({ user }) => {
                   </tr>
                 </thead>
                 <tbody className="border-top-0">
-                  {getTrendData().map((item, idx) => (
+                  {getTrendData.map((item, idx) => (
                     <tr key={idx}>
                       <td className="px-3 py-3 fw-bold text-dark">{item.period}</td>
                       <td className="px-3 py-3 fw-bold cursor-pointer text-primary text-decoration-underline" onClick={() => handleDrillDown(item.period, 'Total', item.tasks)}>{item.total}</td>
@@ -725,7 +717,7 @@ const ReportsDashboard = ({ user }) => {
             </div>
             <div style={{ height: '400px' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={getTrendData()}>
+                <BarChart data={getTrendData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f3f5" />
                   <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />

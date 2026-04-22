@@ -3,7 +3,7 @@ import React from 'react';
 import { GiPeaceDove } from 'react-icons/gi';
 import { motion } from 'framer-motion';
 
-const Footer = () => {
+const Footer = React.memo(() => {
   return (
     
     <motion.footer
@@ -30,6 +30,6 @@ const Footer = () => {
       </div>
     </motion.footer>
   );
-};
+});
 
 export default Footer;

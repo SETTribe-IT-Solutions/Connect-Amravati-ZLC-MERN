@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import { motion } from 'framer-motion';
 import { FaUser, FaLock, FaArrowRight, FaShieldAlt, FaEye, FaEyeSlash, FaPhoneAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setCredentials } from '../../store/slices/authSlice';
 import { Container, Row, Col, Form, Button, Spinner, Card } from 'react-bootstrap';
 
 import { loginUser } from '../../services/auth/authService';
@@ -13,42 +18,46 @@ import AnimatedBackground from '../../components/landing/AnimatedBackground';
 import WelcomeOverlay from '../../components/landing/WelcomeOverlay';
 import CulturalSection from '../../components/landing/CulturalSection';
 
-const LoginPage = ({ onLogin }) => {
+const loginSchema = yup.object().shape({
+  phone: yup.string()
+    .required('Mobile Number is required')
+    .matches(/^[0-9]{10}$/, 'Mobile Number must be exactly 10 digits'),
+  password: yup.string()
+    .required('Password is required')
+    .min(6, 'Password must be at least 6 characters')
+});
+
+const LoginPage = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ phone: '', password: '' });
-  const [errors, setErrors] = useState({ phone: '', password: '' });
+  const dispatch = useDispatch();
+  
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: yupResolver(loginSchema),
+    defaultValues: {
+      phone: '',
+      password: ''
+    }
+  });
+
   const [loginError, setLoginError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isWelcomeActive, setIsWelcomeActive] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const newErrors = {
-      phone: !formData.phone ? 'Please enter your Mobile Number' : '',
-      password: !formData.password ? 'Please enter your password' : ''
-    };
-
-    if (newErrors.phone || newErrors.password) {
-      setErrors(newErrors);
-      return;
-    }
-
-    setErrors({ phone: '', password: '' });
+  const onSubmit = async (formData) => {
     setLoginError('');
     setLoading(true);
     try {
       const data = await loginUser(formData.phone, formData.password);
       if (data.message && data.message.toLowerCase() === "login successful") {
-        if (onLogin) {
-          const success = onLogin(data);
-          if (success) {
-            toast.success('Login successful');
-            setLoading(false);
-            navigate("/dashboard");
-            return;
-          }
-        }
+        dispatch(setCredentials({
+          user: data.user,
+          token: data.token
+        }));
+        toast.success('Login successful');
+        setLoading(false);
+        navigate("/dashboard");
+        return;
       } else {
         setLoginError(data.message || 'Invalid credentials');
         setLoading(false);
@@ -111,7 +120,7 @@ const LoginPage = ({ onLogin }) => {
                       </motion.div>
                     )}
 
-                    <Form onSubmit={handleSubmit} className="mt-4">
+                    <Form onSubmit={handleSubmit(onSubmit)} className="mt-4">
                       <Form.Group className="mb-4 position-relative">
                         <Form.Label className="small fw-bold text-secondary ms-1">Mobile Number</Form.Label>
                         <div className="position-relative">
@@ -121,20 +130,13 @@ const LoginPage = ({ onLogin }) => {
                           <Form.Control
                             type="text"
                             placeholder="Enter your registered mobile number"
-                            value={formData.phone}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(/[^0-9]/g, '');
-                              if (value.length <= 10) {
-                                setFormData({ ...formData, phone: value });
-                              }
-                              if (errors.phone) setErrors({ ...errors, phone: '' });
-                            }}
+                            {...register('phone')}
                             isInvalid={!!errors.phone}
                             className="ps-5 py-3 rounded-4 border-1 bg-light glass-input"
                             style={{ fontSize: '1rem' }}
                           />
                           <Form.Control.Feedback type="invalid" className="ps-1 mt-1">
-                            {errors.phone}
+                            {errors.phone?.message}
                           </Form.Control.Feedback>
                         </div>
                       </Form.Group>
@@ -157,11 +159,7 @@ const LoginPage = ({ onLogin }) => {
                           <Form.Control
                             type={showPassword ? "text" : "password"}
                             placeholder="Enter your password"
-                            value={formData.password}
-                            onChange={(e) => {
-                              setFormData({ ...formData, password: e.target.value });
-                              if (errors.password) setErrors({ ...errors, password: '' });
-                            }}
+                            {...register('password')}
                             isInvalid={!!errors.password}
                             className="ps-5 py-3 rounded-4 border-1 bg-light glass-input"
                             style={{ fontSize: '1rem' }}
@@ -177,7 +175,7 @@ const LoginPage = ({ onLogin }) => {
                         </div>
                         {errors.password && (
                           <div className="text-danger small ps-1 mt-1">
-                            {errors.password}
+                            {errors.password?.message}
                           </div>
                         )}
                       </Form.Group>
