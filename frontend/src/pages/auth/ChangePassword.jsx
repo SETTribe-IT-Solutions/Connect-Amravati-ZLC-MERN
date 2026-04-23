@@ -350,13 +350,23 @@ const ChangePassword = ({
                   <CheckCircleIcon style={{ width: '4rem' }} className="text-success" />
                 </div>
                 <h3 className="fw-bold text-dark mb-2">Success!</h3>
-                <p className="text-secondary mb-5">Your password has been changed successfully.</p>
+                <p className="text-secondary mb-5">
+                  {isForgotMode 
+                    ? 'Your password has been reset successfully. Please log in with your new credentials.' 
+                    : 'Your password has been changed successfully.'}
+                </p>
                 <Button
                   variant="primary"
-                  onClick={() => onClose ? onClose() : navigate('/dashboard')}
+                  onClick={() => {
+                    if (onClose) {
+                      onClose();
+                    } else {
+                      navigate(isForgotMode ? '/login' : '/dashboard');
+                    }
+                  }}
                   className="w-100 py-3 fw-bold rounded-3 shadow-sm gradient-button-premium border-0"
                 >
-                  Go to Dashboard
+                  {isForgotMode ? 'Back to Login' : 'Go to Dashboard'}
                 </Button>
               </motion.div>
             )}

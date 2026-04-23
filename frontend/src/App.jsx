@@ -276,13 +276,12 @@ function App() {
                   path="change-password" 
                   element={
                     <ChangePassword 
-                      onVerifyEmail={handleVerifyEmail}
-                      onForgotPassword={handleForgotPassword}
+                      onVerifyPassword={handleVerifyPassword}
+                      onPasswordChange={handlePasswordChange}
                       onClose={() => window.history.back()}
-                      mode="forgot"
+                      mode="change"
                       currentUser={user}
                     />
-
                   } 
                 />
 
@@ -297,7 +296,16 @@ function App() {
                   <ChangePassword 
                     onVerifyEmail={handleVerifyEmail}
                     onForgotPassword={handleForgotPassword}
-                    onClose={() => window.location.href = '/login'}
+                    onClose={async () => {
+                      try {
+                        await logoutUser();
+                      } catch (error) {
+                        console.error("Logout error during reset", error);
+                      }
+                      localStorage.clear();
+                      dispatch(logout());
+                      window.location.href = '/login';
+                    }}
                     mode="forgot"
                   />
                 } 
