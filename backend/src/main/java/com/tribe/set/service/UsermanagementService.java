@@ -71,7 +71,7 @@ public class UsermanagementService {
         user.setVillage(request.getVillage());
         user.setPhone(request.getPhone());
         
-        user.setStatus(UserStatus.ACTIVE); 
+        user.setStatus(request.getStatus() != null ? request.getStatus() : UserStatus.ACTIVE); 
   
         return enrichWithStats(UserResponse.from(userRepository.save(user)));
     }

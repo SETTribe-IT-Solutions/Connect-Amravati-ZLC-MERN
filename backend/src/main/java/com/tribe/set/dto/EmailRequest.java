@@ -9,6 +9,7 @@ public class EmailRequest {
     @Email(message = "Please provide a valid email address")
     private String email;
 
+
     public String getEmail() {
         return email;
     }
@@ -17,3 +18,5 @@ public class EmailRequest {
         this.email = email;
     }
 }
+
+

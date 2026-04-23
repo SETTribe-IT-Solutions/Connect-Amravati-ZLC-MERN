@@ -68,7 +68,7 @@ const UserManagementComponent = () => {
           requesterId: user?.userID,
           searchTerm: debouncedSearchTerm,
           role: roleFilter !== 'all' ? roleMap[roleFilter] : null,
-          active: activeFilter
+          status: activeFilter === true ? 'ACTIVE' : (activeFilter === false ? 'INACTIVE' : null)
       };
 
       const data = await getAllUsers(params);
@@ -82,13 +82,13 @@ const UserManagementComponent = () => {
         id: u.userID, name: u.name || 'Unknown', role: revRoleMap[u.role?.toUpperCase()] || u.role || 'User',
         email: u.email || 'N/A', phone: u.phone || '+91 00000 00000', village: u.village || '', taluka: u.taluka || '',
         district: u.district || '', jurisdiction: u.village ? `${u.village}, ${u.taluka}` : (u.taluka || u.district || 'Amravati'),
-        status: u.active ? 'Active' : 'Inactive', avatar: (u.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2),
+        status: u.status === 'ACTIVE' ? 'Active' : 'Inactive', avatar: (u.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2),
         joinDate: u.createdAt ? u.createdAt.toString().split('T')[0] : 'N/A',
         lastLogin: u.lastLogin,
         lastLoginIP: u.lastLoginIP || 'N/A',
         lastLoginDevice: u.lastLoginDevice || 'N/A',
         createdAt: u.createdAt || new Date().toISOString(),
-        _rawActive: u.active
+        _rawStatus: u.status
       }));
 
       setUsers(mapped);
@@ -374,8 +374,15 @@ const UserManagementComponent = () => {
           onSave={async (userData) => {
           try {
             const roleMap = { 'Collector': 'COLLECTOR', 'Addl. Collector': 'ADDITIONAL_DEPUTY_COLLECTOR', 'SDO': 'SDO', 'Tehsildar': 'TEHSILDAR', 'BDO': 'BDO', 'Talathi': 'TALATHI', 'Gram Sevak': 'GRAMSEVAK', 'Admin': 'SYSTEM_ADMINISTRATOR' };
-            const payload = { ...userData, role: roleMap[userData.role] || userData.role, requesterId: user?.userID || '', active: userData.status === 'Active' };
-            delete payload.status;
+            const payload = { 
+              ...userData, 
+              role: roleMap[userData.role] || userData.role, 
+              requesterId: user?.userID || '', 
+              status: userData.status === 'Active' ? 'ACTIVE' : 'INACTIVE' 
+            };
+            delete payload.id; // Removed after use
+            delete payload.userID; // NOT present in UpdateUserRequest DTO
+            
             
             if (selectedUser) {
               delete payload.userID; // NOT present in UpdateUserRequest DTO

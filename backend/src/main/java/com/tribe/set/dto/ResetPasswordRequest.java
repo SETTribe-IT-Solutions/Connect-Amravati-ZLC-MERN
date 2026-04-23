@@ -10,6 +10,7 @@ public class ResetPasswordRequest {
     @Email(message = "Please provide a valid email address")
     private String email;
 
+
     @NotBlank(message = "New password is required")
     @Size(min = 8, message = "New password must be at least 8 characters")
     private String newPassword;
@@ -21,6 +22,8 @@ public class ResetPasswordRequest {
     public void setEmail(String email) {
         this.email = email;
     }
+
+
 
     public String getNewPassword() {
         return newPassword;

@@ -280,7 +280,9 @@ function App() {
                       onForgotPassword={handleForgotPassword}
                       onClose={() => window.history.back()}
                       mode="forgot"
+                      currentUser={user}
                     />
+
                   } 
                 />
 
