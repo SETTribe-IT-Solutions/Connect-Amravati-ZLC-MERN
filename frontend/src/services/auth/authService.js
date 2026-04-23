@@ -46,3 +46,4 @@ export const resetPasswordByEmail = async (email, newPassword) => {
   const response = await axiosInstance.post("/auth/reset-password-email", { email, newPassword });
   return response.data;
 };
+

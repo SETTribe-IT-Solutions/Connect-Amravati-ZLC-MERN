@@ -19,7 +19,8 @@ const ChangePassword = ({
   onVerifyEmail, 
   onForgotPassword, 
   onClose,
-  mode = 'change' // 'change' or 'forgot'
+  mode = 'change', // 'change' or 'forgot'
+  currentUser = null
 }) => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1); // 1: verify, 2: new password, 3: success
@@ -99,11 +100,20 @@ const ChangePassword = ({
       if (step === 1) {
         setIsLoading(true);
         try {
-          // Always use email verification for step 1
-          if (onVerifyEmail) {
+          // Always use email verification for step 1 forgot mode
+          if (isForgotMode && onVerifyEmail) {
+            // If logged in, verify against current user email first
+            if (currentUser && formData.email !== currentUser.email) {
+              setErrors({ email: 'You can only change your own password' });
+              return;
+            }
             const isValid = await onVerifyEmail(formData.email);
             if (isValid) setStep(2);
             else setErrors({ email: 'Email ID does not match our records' });
+          } else if (!isForgotMode && onVerifyPassword) {
+            const isValid = await onVerifyPassword(formData.currentPassword);
+            if (isValid) setStep(2);
+            else setErrors({ currentPassword: 'Current password is incorrect' });
           } else {
             setStep(2);
           }
@@ -144,7 +154,7 @@ const ChangePassword = ({
             {isForgotMode ? 'Reset Password' : 'Change Password'}
           </h1>
           <p className="text-secondary lead">
-            Securely update your credentials via email verification
+            {isForgotMode ? 'Securely verify your identity via email' : 'Securely update your credentials via password verification'}
           </p>
         </div>
 
@@ -159,39 +169,61 @@ const ChangePassword = ({
                 className="p-4 p-md-5"
               >
                 <div className="d-flex align-items-center gap-3 mb-5">
-                  <div className="p-3 bg-primary bg-opacity-10 rounded-3">
-                    <ArrowPathIcon style={{ width: '1.5rem' }} className="text-primary" />
+                  <div className={`p-3 rounded-3 ${isForgotMode ? 'bg-primary bg-opacity-10' : 'bg-warning bg-opacity-10'}`}>
+                    {isForgotMode ? (
+                      <ArrowPathIcon style={{ width: '1.5rem' }} className="text-primary" />
+                    ) : (
+                      <ShieldCheckIcon style={{ width: '1.5rem' }} className="text-warning" />
+                    )}
                   </div>
                   <div>
-                    <h5 className="fw-bold text-dark mb-0">Verify Email</h5>
-                    <p className="small text-secondary mb-0">Enter your registered email address to continue</p>
+                    <h5 className="fw-bold text-dark mb-0">{isForgotMode ? 'Verify Email' : 'Verify Identity'}</h5>
+                    <p className="small text-secondary mb-0">
+                      {isForgotMode ? 'Enter your registered email address' : 'Verify your current password'}
+                    </p>
                   </div>
                 </div>
 
-                <Form.Group className="mb-4">
-                  <Form.Label className="small fw-bold text-secondary text-uppercase mb-2">Email Address</Form.Label>
-                  <div className="position-relative">
-                    <i className="bi bi-envelope position-absolute top-50 translate-middle-y ms-3 text-muted"></i>
-                    <Form.Control
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        email: e.target.value 
-                      })}
-                      placeholder="Enter your registered email"
-                      className={`ps-5 py-3 rounded-3 border-2 shadow-none focus-border-primary ${
-                        errors.email ? 'border-danger' : ''
-                      }`}
-                    />
-                  </div>
-                  {errors.email && (
-                    <p className="text-danger small mt-3 mb-0 fw-bold animate-pulse">
-                      <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                      {errors.email}
-                    </p>
-                  )}
-                </Form.Group>
+                {isForgotMode ? (
+                  <>
+                    <Form.Group className="mb-4">
+                      <Form.Label className="small fw-bold text-secondary text-uppercase mb-2">Email Address</Form.Label>
+                      <div className="position-relative">
+                        <i className="bi bi-envelope position-absolute top-50 translate-middle-y ms-3 text-muted"></i>
+                        <Form.Control
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          placeholder="Enter your registered email"
+                          className={`ps-5 py-3 rounded-3 border-2 shadow-none focus-border-primary ${errors.email ? 'border-danger' : ''}`}
+                        />
+                      </div>
+                      {errors.email && <p className="text-danger small mt-2 mb-0 fw-bold">{errors.email}</p>}
+                    </Form.Group>
+                  </>
+                ) : (
+                  <Form.Group className="mb-4">
+                    <Form.Label className="small fw-bold text-secondary text-uppercase mb-2">Current Password</Form.Label>
+                    <div className="position-relative">
+                      <LockClosedIcon style={{ width: '1.25rem' }} className="position-absolute top-50 translate-middle-y ms-3 text-muted" />
+                      <Form.Control
+                        type={showPasswords.current ? 'text' : 'password'}
+                        value={formData.currentPassword}
+                        onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                        placeholder="Enter your current password"
+                        className={`ps-5 py-3 rounded-3 border-2 shadow-none focus-border-primary ${errors.currentPassword ? 'border-danger' : ''}`}
+                      />
+                      <Button
+                        variant="link"
+                        className="position-absolute top-50 translate-middle-y end-0 me-2 text-muted p-2 border-0 shadow-none"
+                        onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                      >
+                        {showPasswords.current ? <EyeSlashIcon style={{ width: '1.25rem' }} /> : <EyeIcon style={{ width: '1.25rem' }} />}
+                      </Button>
+                    </div>
+                    {errors.currentPassword && <p className="text-danger small mt-2 mb-0 fw-bold">{errors.currentPassword}</p>}
+                  </Form.Group>
+                )}
 
                 <div className="d-flex justify-content-end mt-5">
                   <Button 
