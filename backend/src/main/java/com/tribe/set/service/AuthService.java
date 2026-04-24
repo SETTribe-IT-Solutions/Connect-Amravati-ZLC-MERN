@@ -43,20 +43,23 @@ public class AuthService {
 
     public Authentication authenticateUser(UserRequest request, HttpServletRequest httpRequest) {
         String ip = httpRequest.getRemoteAddr();
-        
+
         try {
             // find user by phone first to get their email (username)
             User user = userRepository.findByPhone(request.getPhone())
                     .orElseThrow(() -> new RuntimeException("User not found with this mobile number"));
 
             if (user.getStatus() != UserStatus.ACTIVE) {
-                auditLogRepository.save(new AuditLog("LOGIN_FAILED", "Phone: " + request.getPhone(), ip, "FAILURE", "Account status: " + user.getStatus()));
+                auditLogRepository.save(new AuditLog("LOGIN_FAILED", "Phone: " + request.getPhone(), ip, "FAILURE",
+                        "Account status: " + user.getStatus()));
                 throw new RuntimeException("User account is " + user.getStatus().toString().toLowerCase());
             }
 
             if (user.getFailedLoginAttempts() != null && user.getFailedLoginAttempts() >= 5) {
-                auditLogRepository.save(new AuditLog("LOGIN_BLOCKED", "Phone: " + request.getPhone(), ip, "FAILURE", "Account locked due to too many failed attempts"));
-                throw new RuntimeException("User account is locked due to too many failed login attempts. Please contact Administrator.");
+                auditLogRepository.save(new AuditLog("LOGIN_BLOCKED", "Phone: " + request.getPhone(), ip, "FAILURE",
+                        "Account locked due to too many failed attempts"));
+                throw new RuntimeException(
+                        "User account is locked due to too many failed login attempts. Please contact Administrator.");
             }
 
             // Authenticate using AuthenticationManager
@@ -72,45 +75,47 @@ public class AuthService {
             }
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            
+
             // Update last login metadata and reset failed attempts
             user.setFailedLoginAttempts(0);
             user.setLastLogin(java.time.LocalDateTime.now());
             user.setLastLoginIP(ip);
             user.setLastLoginDevice(httpRequest.getHeader("User-Agent"));
             userRepository.save(user);
-            
-            auditLogRepository.save(new AuditLog("LOGIN_SUCCESS", "Phone: " + request.getPhone(), ip, "SUCCESS", "User logged in successfully via mobile"));
-            
+
+            auditLogRepository.save(new AuditLog("LOGIN_SUCCESS", "Phone: " + request.getPhone(), ip, "SUCCESS",
+                    "User logged in successfully via mobile"));
+
             return authentication;
         } catch (Exception e) {
-            auditLogRepository.save(new AuditLog("LOGIN_FAILED", "Phone: " + request.getPhone(), ip, "FAILURE", e.getMessage()));
+            auditLogRepository
+                    .save(new AuditLog("LOGIN_FAILED", "Phone: " + request.getPhone(), ip, "FAILURE", e.getMessage()));
             throw e;
         }
     }
 
-//    public String register(RegisterRequest request) {
-//        if (userRepository.findByUserID(request.getUserID()).isPresent()) {
-//            throw new RuntimeException("User already exists");
-//        }
+    // public String register(RegisterRequest request) {
+    // if (userRepository.findByUserID(request.getUserID()).isPresent()) {
+    // throw new RuntimeException("User already exists");
+    // }
 
-//        User user = new User();
-//        user.setUserID(request.getUserID());
-//        // Encrypt the password before saving
-//        user.setPassword(passwordEncoder.encode(request.getPassword()));
-//        user.setName(request.getName());
-//        user.setEmail(request.getEmail());
-//        user.setDistrict(request.getDistrict());
-//        user.setTaluka(request.getTaluka());
-//        user.setVillage(request.getVillage());
-//        user.setRole(request.getRole());
-//        user.setActive(true);
-//
-//        userRepository.save(user);
-//
-//        return "User registered successfully";
-//    }
-        
+    // User user = new User();
+    // user.setUserID(request.getUserID());
+    // // Encrypt the password before saving
+    // user.setPassword(passwordEncoder.encode(request.getPassword()));
+    // user.setName(request.getName());
+    // user.setEmail(request.getEmail());
+    // user.setDistrict(request.getDistrict());
+    // user.setTaluka(request.getTaluka());
+    // user.setVillage(request.getVillage());
+    // user.setRole(request.getRole());
+    // user.setActive(true);
+    //
+    // userRepository.save(user);
+    //
+    // return "User registered successfully";
+    // }
+
     public String register(RegisterRequest request) {
 
         if (userRepository.findByUserID(request.getUserID()).isPresent()) {
@@ -156,7 +161,7 @@ public class AuthService {
     public String resetPasswordByEmail(String email, String newPassword) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with this email: " + email));
-        
+
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         return "Password reset successfully";
