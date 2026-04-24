@@ -44,10 +44,10 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 20)
     private UserStatus status = UserStatus.ACTIVE;
 
-    @Column(name = "is_appreciated", columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Column(name = "is_appreciated", columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isAppreciated = false;
 
-    @Column(name = "ever_appreciated", columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Column(name = "ever_appreciated", columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean everAppreciated = false;
 
     private LocalDateTime lastLogin;
