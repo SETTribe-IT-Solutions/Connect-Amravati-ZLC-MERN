@@ -21,7 +21,7 @@ import org.springframework.web.util.WebUtils;
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    @Value("${amravati.app.jwtSecret:Z3JlYXRlc3Qtc2VjcmV0LWtleS1mb3Itamp3dC1hcHAtZGV2ZWxvcG1lbnQ=}")
+    @Value("${amravati.app.jwtSecret}")
     private String jwtSecret;
 
     @Value("${amravati.app.jwtExpirationMs:900000}")
