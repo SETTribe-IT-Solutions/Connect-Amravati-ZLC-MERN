@@ -147,7 +147,6 @@ public class User extends BaseEntity {
         this.status = status;
     }
 
-
     public Boolean getIsAppreciated() {
         return isAppreciated;
     }
@@ -187,9 +186,6 @@ public class User extends BaseEntity {
     public void setLastLoginDevice(String lastLoginDevice) {
         this.lastLoginDevice = lastLoginDevice;
     }
-
-
-
 
     public Integer getFailedLoginAttempts() {
         return failedLoginAttempts;
