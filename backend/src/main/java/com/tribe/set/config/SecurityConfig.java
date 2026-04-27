@@ -34,7 +34,7 @@ public class SecurityConfig {
     @Autowired
     UserDetailsServiceImpl userDetailsService;
 
-    @Value("${amravati.app.frontendUrl}")
+    @Value("${amravati.app.frontendUrl:http://localhost:5173}")
     private String frontendUrl;
 
     @Autowired
