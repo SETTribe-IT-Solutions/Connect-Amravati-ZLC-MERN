@@ -78,11 +78,21 @@ public class JwtUtils {
     }
 
     public ResponseCookie getCleanAccessCookie() {
-        return ResponseCookie.from(jwtAccessCookieName, null).path("/").maxAge(0).build();
+        return ResponseCookie.from(jwtAccessCookieName, null)
+                .path("/")
+                .maxAge(0)
+                .secure(secureCookie)
+                .sameSite(sameSitePolicy)
+                .build();
     }
 
     public ResponseCookie getCleanRefreshCookie() {
-        return ResponseCookie.from(jwtRefreshCookieName, null).path("/").maxAge(0).build();
+        return ResponseCookie.from(jwtRefreshCookieName, null)
+                .path("/")
+                .maxAge(0)
+                .secure(secureCookie)
+                .sameSite(sameSitePolicy)
+                .build();
     }
 
     public String generateTokenFromUserId(String userId, int expirationMs) {

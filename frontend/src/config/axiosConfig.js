@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
 const axiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://prod-connect-amravati-zlc-mern6.onrender.com/api',
   timeout: 10000,
   withCredentials: true,
   headers: {
