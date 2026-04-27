@@ -7,6 +7,7 @@ const axiosInstance = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+
   },
 });
 
@@ -33,7 +34,7 @@ axiosInstance.interceptors.response.use(
 
     // If error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
-      
+
       // If we are already refreshing, queue this request
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -61,13 +62,13 @@ axiosInstance.interceptors.response.use(
 
         isRefreshing = false;
         processQueue(null);
-        
+
         // Retry the original request
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         isRefreshing = false;
         processQueue(refreshError);
-        
+
         // Refresh token failed (usually expired) - clear session and redirect
         localStorage.clear();
         if (window.location.pathname !== '/login') {
