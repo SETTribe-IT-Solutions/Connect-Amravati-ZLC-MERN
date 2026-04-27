@@ -11,6 +11,18 @@ const axiosInstance = axios.create({
   },
 });
 
+// Request Interceptor to add Bearer token
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 let isRefreshing = false;
 let failedQueue = [];
 
