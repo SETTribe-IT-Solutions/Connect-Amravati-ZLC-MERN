@@ -39,6 +39,9 @@ public class JwtUtils {
     @Value("${amravati.app.cookie.secure:false}")
     private boolean secureCookie;
 
+    @Value("${amravati.app.cookie.sameSite:Lax}")
+    private String sameSitePolicy;
+
     public long getRefreshExpirationMs() {
         return refreshExpirationMs;
     }
@@ -60,7 +63,7 @@ public class JwtUtils {
                 .maxAge(jwtExpirationMs / 1000)
                 .httpOnly(true)
                 .secure(secureCookie)
-                .sameSite("Lax")
+                .sameSite(sameSitePolicy)
                 .build();
     }
 
@@ -70,7 +73,7 @@ public class JwtUtils {
                 .maxAge(refreshExpirationMs / 1000)
                 .httpOnly(true)
                 .secure(secureCookie)
-                .sameSite("Lax")
+                .sameSite(sameSitePolicy)
                 .build();
     }
 

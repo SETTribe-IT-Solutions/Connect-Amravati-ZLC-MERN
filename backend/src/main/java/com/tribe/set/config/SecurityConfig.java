@@ -33,6 +33,9 @@ public class SecurityConfig {
     @Autowired
     UserDetailsServiceImpl userDetailsService;
 
+    @Value("${amravati.app.frontendUrl}")
+    private String frontendUrl;
+
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
 
@@ -54,13 +57,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow all local development variants
+        // Allow local development and production origins
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
                 "http://localhost:5174",
                 "http://localhost:5175",
                 "http://127.0.0.1:5173",
-                "http://127.0.0.1:5174"));
+                "http://127.0.0.1:5174",
+                frontendUrl));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         // Allow all headers during development to prevent preflight blocks
         configuration.setAllowedHeaders(Arrays.asList("*"));
