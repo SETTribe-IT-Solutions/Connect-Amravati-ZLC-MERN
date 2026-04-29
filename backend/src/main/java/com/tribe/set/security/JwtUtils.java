@@ -21,7 +21,7 @@ import org.springframework.web.util.WebUtils;
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    @Value("${amravati.app.jwtSecret:Z3JlYXRlc3Qtc2VjcmV0LWtleS1mb3Itamp3dC1hcHAtZGV2ZWxvcG1lbnQ=}")
+    @Value("${amravati.app.jwtSecret:default_secret_for_dev_only_change_in_production}")
     private String jwtSecret;
 
     @Value("${amravati.app.jwtExpirationMs:900000}")
@@ -38,6 +38,9 @@ public class JwtUtils {
 
     @Value("${amravati.app.cookie.secure:false}")
     private boolean secureCookie;
+
+    @Value("${amravati.app.cookie.sameSite:Lax}")
+    private String sameSitePolicy;
 
     public long getRefreshExpirationMs() {
         return refreshExpirationMs;
@@ -60,7 +63,7 @@ public class JwtUtils {
                 .maxAge(jwtExpirationMs / 1000)
                 .httpOnly(true)
                 .secure(secureCookie)
-                .sameSite("Lax")
+                .sameSite(sameSitePolicy)
                 .build();
     }
 
@@ -70,16 +73,26 @@ public class JwtUtils {
                 .maxAge(refreshExpirationMs / 1000)
                 .httpOnly(true)
                 .secure(secureCookie)
-                .sameSite("Lax")
+                .sameSite(sameSitePolicy)
                 .build();
     }
 
     public ResponseCookie getCleanAccessCookie() {
-        return ResponseCookie.from(jwtAccessCookieName, null).path("/").maxAge(0).build();
+        return ResponseCookie.from(jwtAccessCookieName, null)
+                .path("/")
+                .maxAge(0)
+                .secure(secureCookie)
+                .sameSite(sameSitePolicy)
+                .build();
     }
 
     public ResponseCookie getCleanRefreshCookie() {
-        return ResponseCookie.from(jwtRefreshCookieName, null).path("/").maxAge(0).build();
+        return ResponseCookie.from(jwtRefreshCookieName, null)
+                .path("/")
+                .maxAge(0)
+                .secure(secureCookie)
+                .sameSite(sameSitePolicy)
+                .build();
     }
 
     public String generateTokenFromUserId(String userId, int expirationMs) {

@@ -51,7 +51,7 @@ public class AuthController {
         ResponseCookie jwtRefreshCookie = jwtUtils.generateRefreshCookie(refreshToken.getToken());
 
         JwtResponse responseBody = new JwtResponse(
-                null, // Access token is in cookie
+                jwtCookie.getValue(), // Access token is now returned in body
                 userDetails.getUserID(),
                 userDetails.getName(),
                 userDetails.getEmail(),
