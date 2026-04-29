@@ -381,15 +381,14 @@ const UserManagementComponent = () => {
               status: userData.status === 'Active' ? 'ACTIVE' : 'INACTIVE' 
             };
             delete payload.id; // Removed after use
-            delete payload.userID; // NOT present in UpdateUserRequest DTO
-            
-            
             if (selectedUser) {
-              delete payload.userID; // NOT present in UpdateUserRequest DTO
+              // Update mode: userID is not in the Update DTO, and we don't change the ID anyway
+              delete payload.userID;
               if (!payload.password) delete payload.password;
               await updateUser(selectedUser.id, payload);
               showToast("Success", "User updated successfully");
             } else {
+              // Create mode: userID is REQUIRED in the CreateuserRequest DTO
               await addUser(payload);
               showToast("Success", "User added successfully");
             }

@@ -2,13 +2,26 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
+  baseURL: 'https://prod-connect-amravati-zlc-mern6.onrender.com/api',
   timeout: 10000,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+
   },
 });
+
+// Request Interceptor to add Bearer token
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 let isRefreshing = false;
 let failedQueue = [];
@@ -33,7 +46,7 @@ axiosInstance.interceptors.response.use(
 
     // If error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
-      
+
       // If we are already refreshing, queue this request
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -61,13 +74,13 @@ axiosInstance.interceptors.response.use(
 
         isRefreshing = false;
         processQueue(null);
-        
+
         // Retry the original request
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         isRefreshing = false;
         processQueue(refreshError);
-        
+
         // Refresh token failed (usually expired) - clear session and redirect
         localStorage.clear();
         if (window.location.pathname !== '/login') {

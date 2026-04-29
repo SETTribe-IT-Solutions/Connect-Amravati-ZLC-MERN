@@ -1,10 +1,9 @@
 package com.tribe.set.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
 
 public class JwtResponse {
 
-    @JsonIgnore
     private String accessToken;
     private String id;
     private String name;

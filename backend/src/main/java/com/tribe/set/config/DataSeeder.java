@@ -22,14 +22,14 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (userRepository.count() == 0) {
-            System.out.println("No users found in database. Seeding initial SYSTEM_ADMINISTRATOR...");
+        if (userRepository.findByPhone("9876543210").isEmpty()) {
+            System.out.println("No admin found with phone 9876543210. Seeding initial SYSTEM_ADMINISTRATOR...");
 
             User admin = new User();
-            admin.setUserID("1"); // Using 1 as initial ID
+            admin.setUserID("admin"); // Changed from "1" to "admin" to force re-seed
             admin.setName("System Admin");
             admin.setEmail("admin@amravati.gov.in");
-            admin.setPassword(passwordEncoder.encode("Admin123"));
+            admin.setPassword(passwordEncoder.encode("Admin@123"));
             admin.setRole(Role.SYSTEM_ADMINISTRATOR);
             admin.setStatus(UserStatus.ACTIVE);
             admin.setDistrict("Amravati");
@@ -40,9 +40,9 @@ public class DataSeeder implements CommandLineRunner {
 
             userRepository.save(admin);
             System.out.println("Initial SYSTEM_ADMINISTRATOR created successfully!");
-            System.out.println("UserID: 1");
+            System.out.println("UserID: admin");
             System.out.println("Email: admin@amravati.gov.in");
-            System.out.println("Password: admin123");
+            System.out.println("Password: Admin@123");
         } else {
             System.out.println("Database already populated. Skipping seeding.");
         }

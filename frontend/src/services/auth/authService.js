@@ -6,6 +6,10 @@ export const loginUser = async (phone, password) => {
     password
   });
 
+  if (response.data.accessToken) {
+    localStorage.setItem('accessToken', response.data.accessToken);
+  }
+
   return response.data; // Backend returns LoginResponse object
 };
 
@@ -15,6 +19,7 @@ export const registerUser = async (userData) => {
 };
 
 export const logoutUser = async () => {
+  localStorage.removeItem('accessToken');
   return await axiosInstance.post("/auth/logout");
 };
 
